@@ -60,7 +60,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             if ( length(unique(datL[,chk1[["dependent"]]])) == 2 && all(sort(unique(datL[,chk1[["dependent"]]])) == 0:1) == TRUE && forceTable == FALSE ) {
                  attr(datL, "modus") <- modus
                  ret <- jk2.mean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], repWgt = repWgt,
-                        nest = chk1[["nest"]], imp = chk1[["imp"]], groups = chk1[["group"]], group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
+                        nest = chk1[["nest"]], imp = chk1[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                         group.delimiter =group.delimiter, trend = chk1[["trend"]], linkErr = chk1[["linkErr"]], dependent = chk1[["dependent"]], na.rm=na.rm,doCheck = doCheck)
                  return(ret)
             }  else  {
@@ -89,7 +89,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
                            attr(datL, "modus") <- modus
                            attr(datL,"depOri") <- chk[["dependent"]]
                            res <- jk2.mean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt,
-                                             nest = chk[["nest"]], imp = chk[["imp"]], groups = chk[["group"]], group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
+                                             nest = chk[["nest"]], imp = chk[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                                              group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,doCheck = doCheck)
                            return(res) } )
     ### Output zusammenfassen: kein Trend ... dann ist "resT" eine Liste mit nur einem Element, das ein data.frame ist
@@ -148,7 +148,6 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice")    {
           i     <- 0
           fc    <- NULL                                                         ### initialisieren
-          # change line
 	  while ( !is.null(sys.call(i))) { fc <- c(fc, crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
           fc   <- fc[max(which(fc %in% c("jk2.mean", "jk2.table", "jk2.glm", "jk2.quantile")))]
           toCall<- match.arg(toCall)                                            ### 'oberste' Funktion suchen, die eatRep gecallt hat; zweiter Teil des Aufrufs ist dazu da, dass nicht "by" drinsteht, wenn "jk2.mean" innerhalb einer anderen "by"-Funktion aufgerufen wird
