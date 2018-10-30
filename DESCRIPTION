@@ -1,11 +1,11 @@
 Package: eatRep
 Type: Package
 Title: Educational Assessment Tools for Replication Methods
-Version: 0.9.5
+Version: 0.9.6
 Depends: R (>= 3.0.0), survey, stringr, progress
 Imports: Hmisc, fmsb, mice (>= 2.46), boot, car, reshape2, plyr,
-        combinat, miceadds, tidyr
-Date: 2018-10-08
+        combinat, miceadds, tidyr, eatTools (>= 0.0.19)
+Date: 2018-10-30
 Author: Sebastian Weirich, Martin Hecht
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 Description: Compute descriptives and regression models for complex survey designs with multiple imputed data
@@ -13,4 +13,4 @@ License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
 NeedsCompilation: no
-Packaged: 2018-10-04 18:44:58 UTC; Sebastian Weirich
+Packaged: 2018-10-29 23:58:32 UTC; Sebastian Weirich
