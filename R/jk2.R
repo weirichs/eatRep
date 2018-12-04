@@ -805,7 +805,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    ### svyby wird dreimal aufgerufen ...
                   do   <- paste(" res <- svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
-                  suppressWarnings(eval(parse(text=do)))                        ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
+                  suppressWarnings(eval(parse(text=do)))                        ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant für Paket
                   resL <- melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
                   stopifnot(length(table(resL[,"coefficient"])) == 2)
                   resL[,"coefficient"] <- recode(resL[,"coefficient"], "'se'='se'; else ='est'")
@@ -813,7 +813,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
                   attr(resL, "original") <- res
                   return(resL)})
           sds  <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,allNam[["group"]]], FUN = function (uu) {
-                  namen   <- uu[1, allNam[["group"]], drop=FALSE]               ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
+                  namen   <- uu[1, allNam[["group"]], drop=FALSE]               ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant für Paket
                   sub.rep <- repl[ match(uu[,allNam[["ID"]]], repl[,allNam[["ID"]]] ) ,  ]
                   des.uu  <- svrepdesign(data = uu[,c(allNam[["group"]], allNam[["dependent"]])], weights = uu[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = sub.rep[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
                   var.uu  <- suppressWarnings(svyvar(x = as.formula(paste("~",allNam[["dependent"]],sep="")), design = des.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm))
@@ -1020,42 +1020,6 @@ getOutputIfSingularT1<- function ( glmRes) {
                        coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
                        return(coefs)}
                        
-
-desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
-         variable <- asNumericIfPossible( data.frame(as.matrix(variable),stringsAsFactors = FALSE), verbose = FALSE )
-         if(!is.null(p.weights)) {
-             Mis.weight <- FALSE
-             stopifnot( length(p.weights) == nrow(variable) )
-         } else { Mis.weight <- TRUE}
-         onlyMis  <- sapply(variable, FUN = function ( y ) { all( is.na(y) ) } )
-         if(sum(onlyMis)>0) {
-            cat("Folgende Variablen wurden aufgrund durchgehend fehlender oder nicht-numerischer Werte ausgeschlossen: \n")
-            cat(paste(colnames(variable)[which(onlyMis)], collapse = ", ")); cat("\n")
-            variable <- variable[, -which(onlyMis), drop = FALSE ]
-         }
-         weg      <- which(!sapply(variable, class) %in% c("numeric", "integer"))
-         if(length(weg) == ncol(variable)) {stop("No numeric variable(s).\n")}
-         if(length(weg)>0) {
-            cat(paste("Following ",length(weg)," non-numeric variable(s) will be ignored: ", paste(colnames(variable)[weg], collapse = ", "), "\n", sep=""))
-            variable <- variable[,-weg]
-         }
-         ret      <- do.call("rbind", lapply(variable, FUN = function ( y ) {
-                     if(Mis.weight == TRUE ) {
-                        Summe      <- sum(y, na.rm = na.rm)
-                        Mittelwert <- mean(y, na.rm = na.rm)
-                        Varianz    <- var(y, na.rm = na.rm)
-                        N          <- length(y)
-                        N.valid    <- length(na.omit(y)) }
-                     if(Mis.weight == FALSE ) {
-                        Summe      <- sum( y * p.weights )
-                        Mittelwert <- wtd.mean(x = y, weights = p.weights, na.rm = na.rm)
-                        Varianz    <- wtd.var(x = y, weights = p.weights, na.rm = na.rm)
-                        N          <- sum(p.weights)
-                        N.valid    <- sum(p.weights[which(!is.na(y))]) }
-                     dataFrame <- data.frame ( N = N, N.valid = N.valid, Missing = length(y) - length(na.omit(y)), Minimum = min(y, na.rm = na.rm), Maximum = max(y, na.rm = na.rm), Summe = Summe, Mittelwert = Mittelwert, std.err = sd(y, na.rm = na.rm) / sqrt(length(na.omit(y))), sig = ifelse(length(table(y))==1, NA, t.test(x = y)$p.value), Median = median(y, na.rm = na.rm), Streuung = sqrt(Varianz), Varianz = Varianz , stringsAsFactors = FALSE )
-                     return(dataFrame)} ))
-         rownames(ret) <- colnames(variable)
-         return(ret)}
 
 clearTab <- function ( jk2.table.output, allNam , depVarOri, fc, toCall, datL) {
             if ( fc == "jk2.table" && toCall == "mean" ) {
