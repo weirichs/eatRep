@@ -6,7 +6,7 @@ Depends: R (>= 3.0.0), survey, stringr, progress
 Imports: Hmisc, fmsb, mice (>= 2.46), boot, car, reshape2, plyr,
         combinat, miceadds, tidyr, eatTools (>= 0.1.4)
 Date: 2018-11-30
-Author: Sebastian Weirich, Martin Hecht
+Author: Sebastian Weirich, Martin Hecht, Benjamin Becker
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 Description: Compute descriptives and regression models for complex survey designs with multiple imputed data
 License: GPL (>= 2)
