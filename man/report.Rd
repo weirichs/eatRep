@@ -24,7 +24,7 @@ report(jk2.out, trendDiffs = FALSE, add = list(),
 }
 
 \author{
-Sebastian Weirich
+Benjamin Becker, Sebastian Weirich
 }
 \examples{
 ### see examples of the jk2-functions.
