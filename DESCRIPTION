@@ -14,3 +14,4 @@ LazyLoad: yes
 LazyData: yes
 NeedsCompilation: no
 Packaged: 2018-11-30 21:53:58 UTC; Sebastian Weirich
+Remotes: weirichs/eatTools 
