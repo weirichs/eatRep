@@ -434,9 +434,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                                pb$tick(); flush.console()
                                                if( toCall == "mean" ) {    ### hier wird an die meanfunktion uebergeben
                                                    if ( doJK == TRUE ) {
-                                                        ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
+                                                        ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus)
                                                    }  else  {
-                                                        ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter)
+                                                        ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus)
                                                    }
                                                }
                                                if( toCall == "table" ) {
@@ -735,13 +735,13 @@ jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA
                    if(!is.null(allNam[["group.differences.by"]]))   {return(facToChar(rbind.fill(ret,difs)))} else {return(facToChar(ret))}}
 
 
-conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
-                  deskr    <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
+conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
+                  deskr    <- data.frame ( do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                               prefix <- sub.dat[1,allNam[["group"]], drop=FALSE]
                               if ( all(sub.dat[,allNam[["wgt"]]] == 1) )  { useWGT <- NULL}  else  {useWGT <- sub.dat[,allNam[["wgt"]]] }
                               ret    <- data.frame ( nValidUnweighted = length(na.omit(sub.dat[, allNam[["dependent"]] ])), prefix, desk(sub.dat[, allNam[["dependent"]] ], p.weights = useWGT, na.rm=na.rm)[,c("N", "N.valid", "Mittelwert", "std.err", "Varianz", "Streuung")], stringsAsFactors = FALSE)
                               names(ret) <- c( "nValidUnweighted", allNam[["group"]] , "Ncases", "NcasesValid", "mean", "se.mean", "var","sd")
-                              return(ret)}))
+                              return(ret)})), modus=modus, stringsAsFactors = FALSE)
                   if(!is.null(allNam[["group.differences.by"]]))   {
                      nCat <- table(as.character(dat.i[,allNam[["group.differences.by"]]]))
                      if ( length(nCat) < 2 ) {
@@ -782,7 +782,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
                   deskrR   <- melt(data = deskr, id.vars = allNam[["group"]], measure.vars = setdiff(colnames(deskr), c("nValidUnweighted",allNam[["group"]]) ), na.rm=TRUE)
                   deskrR[,"coefficient"] <- recode(deskrR[,"variable"], "'se.mean'='se';else='est'")
                   deskrR[,"parameter"]   <- gsub("se.mean","mean",deskrR[,"variable"])
-                  deskrR   <- data.frame ( group = apply(deskrR[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], comparison = NA, deskrR[,c( "parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE)
+                  deskrR   <- data.frame ( group = apply(deskrR[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus=modus, comparison = NA, deskrR[,c( "parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE)
                   if(!is.null(allNam[["group.differences.by"]]))   {
                       if ( length (nCat ) >1 ) {
                            return(facToChar(rbind.fill(deskrR,difs)))
@@ -795,7 +795,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
 
 
 
-jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) {
+jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, modus) {
           dat.i[,"N_weighted"]      <- 1
           dat.i[,"N_weightedValid"] <- 1
           if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) > 0 ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
@@ -821,7 +821,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
                   return(ret)}) )
           sds  <- data.frame ( melt(data = sds, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE), parameter = "sd", stringsAsFactors = FALSE)
           resAl<- rbind(do.call("rbind",ret), sds)
-          resAl<- data.frame ( group = apply(resAl[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], comparison = NA, resAl[,c("parameter","coefficient","value",allNam[["group"]])] , stringsAsFactors = FALSE)
+          resAl<- data.frame ( group = apply(resAl[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus=modus, comparison = NA, resAl[,c("parameter","coefficient","value",allNam[["group"]])] , stringsAsFactors = FALSE)
           if(!is.null(allNam[["group.differences.by"]]))   {
              nCat <- table(as.character(dat.i[,allNam[["group.differences.by"]]]))
              if ( length(nCat) < 2 ) {
@@ -862,7 +862,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
                                               return(dif.iii)
                                          } }))
                                   return(ret)}))
-                difsL<- data.frame ( depVar = allNam[["dependent"]], melt(data = difs, measure.vars = c("dif", "se", "es") , variable.name = "coefficient" , na.rm=TRUE), parameter = "mean", stringsAsFactors = FALSE)
+                difsL<- data.frame ( depVar = allNam[["dependent"]], melt(data = difs, measure.vars = c("dif", "se", "es") , variable.name = "coefficient" , na.rm=TRUE), modus=modus, parameter = "mean", stringsAsFactors = FALSE)
                 difsL[,"coefficient"] <- recode(difsL[,"coefficient"], "'se'='se'; 'es'='es'; else = 'est'")
                 difsL[,"comparison"]  <- "groupDiff"
                 difsL[,"group"] <- apply(difsL[,c("group","vgl")],1,FUN = function (z) {paste(z,collapse="____")})
