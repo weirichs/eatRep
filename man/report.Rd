@@ -10,8 +10,8 @@ Summarizes the output of the jk2-functions \code{jk2.mean}, \code{jk2.table},
 
 \usage{
 report(jk2.out, trendDiffs = FALSE, add = list(),
-      exclude = c("Ncases", "NcasesValid", "var"), printGlm = FALSE, digits = 3,
-      printDeviance = FALSE)
+      exclude = c("Ncases", "NcasesValid", "var"), printGlm = FALSE, round = TRUE,
+      digits = 3, printDeviance = FALSE)
 }
 \arguments{
   \item{jk2.out}{ output of the jk2-functions }
@@ -19,7 +19,8 @@ report(jk2.out, trendDiffs = FALSE, add = list(),
   \item{add}{Optional: additional columns for output. See examples of the jk2-functions}
   \item{exclude}{Which parameters should be excluded from reporting?}
   \item{printGlm}{Only relevant for \code{jk2.glm}: print summary on console?}
-  \item{digits}{Only relevant if \code{printGlm} is TRUE. How many digits should be printed?}
+  \item{round}{Logical: should the results be rounded to a limited number of digits?}
+  \item{digits}{How many digits should be used for rounding?}
   \item{printDeviance}{Only relevant if \code{printGlm} is TRUE. Should the deviance information printed additionally?}
 }
 
