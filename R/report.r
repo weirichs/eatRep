@@ -1,4 +1,5 @@
-report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var"), printGlm = FALSE, digits = 3, printDeviance = FALSE) {
+report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE) {
+          if(is.null(jk2.out)) {return(NULL)}
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
           if ( length(grep("glm", as.character(jk2.out[["resT"]][[1]][1,"modus"]))) ==1 ) {
                if ( printGlm == TRUE ) { dG(jk2.out, digits = digits, printDeviance = printDeviance ) }
@@ -55,7 +56,13 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
           }                                                                     ### was muss in die Spalten? das haengt davon ab, ob es einen Trend gibt
           frml     <- as.formula(paste0("... ~ ", paste(spltVar,collapse=" + ") ) )
           jk2wide  <- dcast(data = jk2, formula = frml, value.var = "value")
-    ### to do: gesamtfiltervariable bestimmen (das was Felix/Steffi haben wollten)
+    ### runden, falls gewuenscht
+          if ( round == TRUE) {
+               coln<- which(sapply(jk2wide, is.numeric))
+               if ( length(coln)>0) {
+                    for ( i in coln) { jk2wide[,i] <- round(jk2wide[,i], digits = digits)}
+               }
+          }
           return(jk2wide)}
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {

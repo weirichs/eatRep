@@ -588,6 +588,7 @@ checkRegression <- function ( dat, allNam ) {
 
 createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc, toCall) {
           if ( is.null ( allNam[["linkErr"]] ) ) {
+               cat("Note: No linking error was defined. Linking error will be defaulted to '0'.\n")
                allNam[["linkErr"]] <- "le"
                datL[,"le"]         <- 0
           }
@@ -779,7 +780,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
                         difs[,"comparison"] <- "groupDiff"
                      }
                   }
-                  deskrR   <- melt(data = deskr, id.vars = allNam[["group"]], measure.vars = setdiff(colnames(deskr), c("nValidUnweighted",allNam[["group"]]) ), na.rm=TRUE)
+                  deskrR   <- melt(data = deskr, id.vars = allNam[["group"]], measure.vars = setdiff(colnames(deskr), c("nValidUnweighted", "modus", allNam[["group"]]) ), na.rm=TRUE)
                   deskrR[,"coefficient"] <- recode(deskrR[,"variable"], "'se.mean'='se';else='est'")
                   deskrR[,"parameter"]   <- gsub("se.mean","mean",deskrR[,"variable"])
                   deskrR   <- data.frame ( group = apply(deskrR[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus=modus, comparison = NA, deskrR[,c( "parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE)
