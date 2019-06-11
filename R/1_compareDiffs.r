@@ -70,6 +70,8 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
 ### common function for crosslevel and trenddifferences
 # comp_type only for naming in comparison variable!
 compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
+  # SW: output ggf. sortieren
+  df_allP<- df_allP[with(df_allP, order(parameter, group)),]
   # drop all irrelevant coefficients
   df_allP   <- df_allP[which(df_allP[,"coefficient"] %in% c("est", "se")),]
   ## for means: extract SDs
