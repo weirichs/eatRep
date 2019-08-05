@@ -44,7 +44,7 @@ pool.R2 <- function ( r2, N, quiet = FALSE ) {
            Q.i     <- lapply(r2, FUN = function (x) {0.5*log( (1 + sqrt(x)) / (1-sqrt(x))  )})
            Q.i.err <- lapply(N,  FUN = function (n) {1 / (n-3)})
            untransformed <- pool.means(m = Q.i, se = Q.i.err)$summary[c("m.pooled","se.pooled")]
-           transformed   <- ((exp(2*untransformed)-1) / (exp(2*untransformed)+1) )^2
+           transformed   <- as.data.frame ( ((exp(2*untransformed)-1) / (exp(2*untransformed)+1) )^2)
            if(mis.N) {return(transformed[1])} else {return(transformed)} }
 
 
