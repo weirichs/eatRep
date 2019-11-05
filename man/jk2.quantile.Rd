@@ -11,8 +11,8 @@ the \code{svyquantile()} function of the survey package.
 jk2.quantile(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
-            probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, 
-            bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)}
+            probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, bootMethod = c("wSampling","wQuantiles") ,
+            doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -113,6 +113,9 @@ weighted quantiles are computed.
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
 analysis to prevent subsequent functions from crashing.
 }
+  \item{engine}{
+Which package should be used for estimation?
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -145,9 +148,6 @@ frequency is given further.}
 values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).}
 \item{value}{The value of the parameter, i.e. the relative frequency or its standard error.}
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
-}
-\references{
-%% ~put references to the literature/web site here ~
 }
 \author{
 Sebastian Weirich

@@ -10,8 +10,9 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, cross.differences = FALSE, group.delimiter = "_",
-            trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE)}
+            group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE,
+            engine = c("survey", "BIFIEsurvey"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -74,6 +75,13 @@ Either a list of vectors, specifying the pairs of levels for which cross-level d
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
 differences are computed. (see example 2a, 3, and 4)
 }
+  \item{crossDiffSE}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Method for standard error estimation for cross level differences, where groups are dependent.
+\code{wec} uses weighted effect coding, \code{pisa} uses the covariance between the total mean
+and the group mean for standard error estimation, \code{old} does not account for dependent
+groups and treat the groups as if they were independent from each other.
+}
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
@@ -97,6 +105,9 @@ Logical: Should cases with missing values be dropped?
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
 analysis to prevent subsequent functions from crashing.
+}
+  \item{engine}{
+Which package should be used for estimation?
 }
 }
 \details{
@@ -130,9 +141,6 @@ group differences were requested.}
 values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).}
 \item{value}{The value of the parameter estimate in the corresponding group.}
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
-}
-\references{
-%% ~put references to the literature/web site here ~
 }
 \author{
 Sebastian Weirich

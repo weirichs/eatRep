@@ -14,7 +14,7 @@ jk2.table(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repIn
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
           group.differences.by = NULL, cross.differences = FALSE, chiSquare = FALSE, correct = TRUE, group.delimiter = "_",
           trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE, 
-          expected.values = NULL, doCheck = TRUE, forceTable = FALSE )}
+          expected.values = NULL, doCheck = TRUE, forceTable = FALSE, engine = c("survey", "BIFIEsurvey") )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -79,9 +79,9 @@ Alternatively, if TRUE, cross-level differences for all pairs of levels are comp
 differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mean)
 }
   \item{chiSquare}{
-Logical. Applies only if 'group.differences.by' was specified and does not contain 'wholePop'. Defines whether 
+Logical. Applies only if \code{group.differences.by} was specified. Defines whether 
 group differences should be represented in a chi square test or in (mean) differences of each 
-group's relative frequency. 
+group's relative frequency. Note: To date, chi square test is not available for \code{engine = "BIFIEsurvey"}.
 }
   \item{correct}{
 Logical. Applies only if 'group.differences.by' is requested without cluster replicates. A logical indicating whether to apply 
@@ -127,6 +127,9 @@ If the mean function is called, the polytomous dependent variable is converted t
 variables. If mean is called, group differences for each category of the polytomous dependent variable
 can be computed. If table is called, a chi square statistic may be computed. The argument allows to
 force the function either to call mean or table.
+}
+  \item{engine}{
+Which package should be used for estimation?
 }
 }
 \details{

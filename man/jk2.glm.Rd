@@ -13,7 +13,7 @@ jk2.glm(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd 
         group.delimiter = "_", cross.differences = FALSE, trend = NULL,
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
-        poolMethod = c("mice", "scalar") )}
+        poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey") )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -33,7 +33,7 @@ all cases will be equally weighted.
   \item{type}{
 %%     ~~Describe \code{abs.dif.bound} here~~
 Defines the replication method for cluster replicates which is to be applied. Without cluster replicates (i.e., if \code{PSU} 
-and/or \code{repInd} is NULL, \code{type} will be ignored.
+and/or \code{repInd} is \code{NULL}, \code{type} will be ignored.
 }
   \item{PSU}{
 %%     ~~Describe \code{abs.dif.bound} here~~
@@ -71,7 +71,7 @@ Character string which separates the group names in the output frame.
   \item{cross.differences}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
-Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
+Alternatively, if \code{TRUE}, cross-level differences for all pairs of levels are computed. If \code{FALSE}, no cross-level
 differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mean)
 }
   \item{trend}{
@@ -81,7 +81,7 @@ grouping variables must be equal in both 'sub populations' partitioned by the tr
 }
   \item{linkErr}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
+Optional: name or column number of the trend variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.
 }
   \item{formula}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -98,7 +98,7 @@ Logical: Forces the function to use the workaround to handle singularities in re
   \item{glmTransformation}{
 Optional: Allows for transformation of parameters from linear regression and logistic regression before pooling.
 Useful to compare parameters from different glm models, see Mood (2010). Note: This argument applies only if 
-forceSingularityTreatment is set to 'TRUE'.
+\code{forceSingularityTreatment} is set to 'TRUE'.
 }
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
@@ -110,6 +110,12 @@ Logical: Should cases with missing values be dropped?
   \item{poolMethod}{
 Which pooling method should be used? The ``mice'' method is recommended.
 }
+  \item{useWec}{
+Logical: use weighted effect coding? 
+}
+  \item{engine}{
+Which package should be used for estimation?
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -117,7 +123,7 @@ Function first creates replicate weights based on \code{PSU} and \code{repInd} v
 BRR procedure. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{'survey'} package.
 The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested 
-imputations if the \code{dependent} argument implies a nested structure.
+imputations if the \code{nest} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -144,13 +150,11 @@ values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
 }
 \references{
-%% ~put references to the literature/web site here ~
+te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A., & Konig, R. (2017).
+When size matters: advantages of weighted effect coding in observational studies. \emph{International Journal of Public Health.} \bold{62}, 163--167.
 }
 \author{
 Sebastian Weirich
-}
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
 ### load example data (long format)
@@ -171,19 +175,24 @@ res1 <- report(mod1, printGlm = TRUE)
 ### Example 2: Computes log linear regression from pass/fail on ses and gender
 ### separately for each country in a nested structure
 dat  <- lsa[intersect(which(lsa[,"year"] == 2010), which(lsa[,"domain"] == "reading")),]
-mod1 <- jk2.glm(datL = dat, ID = "idstud", wgt = "wgt", type = "JK2",  PSU = "jkzone",
+mod2 <- jk2.glm(datL = dat, ID = "idstud", wgt = "wgt", type = "JK2",  PSU = "jkzone",
         repInd = "jkrep", imp = "imp", nest="nest", groups = "country",
         formula = passReg~sex*ses, family = binomial(link="logit"))
-res1 <- report(mod1, printGlm = TRUE)
+res2 <- report(mod2, printGlm = TRUE)
 
 ### Example 3: Like example 1, but with JK1 instead of JK2, trend estimation (without
 ### linking error) and nested imputation
 dat  <- lsa[which(lsa[,"domain"] == "reading"),]
-mod1 <- jk2.glm(datL = dat, ID = "idstud", wgt = "wgt", type = "jk1", PSU = "jkzone",
+mod3 <- jk2.glm(datL = dat, ID = "idstud", wgt = "wgt", type = "jk1", PSU = "jkzone",
         imp = "imp", nest = "nest", groups = "country",  formula = score~sex, trend = "year")
-res1 <- report(mod1, printGlm = TRUE)
+res3 <- report(mod3, printGlm = TRUE)
+
+### Example 4: weighted effect coding to estimate whether a specific country's mean
+### differs from the overall mean (whereas the overall population is a composite of 
+### all countries). The procedure adapts the weighted effect coding procedures 
+### described in te Grotenhuis (2017) for multiple imputation and replication methods. 
+mod4 <- jk2.glm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
+        PSU = "jkzone", repInd = "jkrep", imp = "imp", formula = score~country, useWec=TRUE)
+res4 <- report(mod4, printGlm = FALSE)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
