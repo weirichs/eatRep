@@ -14,7 +14,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
        gr  <- paste(gr[,"a"], gr[,"b"], sep="_")
        ret <- do.call("rbind", by ( data = jk2, INDICES = gr, FUN = function ( d ) {
     ### Hierarchy levels bestimmen
-    ### Logik: alle mit einem nicht fehlenden Wert auf der Gruppenvariablen werden gegen die mit zwei fehlenden Werten vergleichen
+    ### Logik: alle mit einem nicht fehlenden Wert auf der Gruppenvariablen werden gegen die mit zwei fehlenden Werten verglichen
     ### alle mit keinem fehlenden Werte werden gegen die mit einem fehlenden Wert verglichen
     ### allgemein: alle mit x fehlenden Werten werden gegen alle mit x-1 fehlenden Werten verglichen
     ### ah == 'Anzahl hierarchien' == 'Anzahl Gruppenvariablen'
@@ -72,7 +72,6 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
 compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
   # SW: output ggf. sortieren
   df_allP<- df_allP[with(df_allP, order(parameter, group)),]
-  # stopifnot(all(jk2_wideS[jk2_wideS$parameter == "mean", c("depVar", "group", "comparison")] == jk2_wideS[jk2_wideS$parameter == "sd", c("depVar", "group", "comparison")], na.rm = TRUE)) ### zusaetzlich eingebauter Check, jetzt kein Hotfix mehr, 12.06.2019
   # drop all irrelevant coefficients
   df_allP   <- df_allP[which(df_allP[,"coefficient"] %in% c("est", "se")),]
   ## for means: extract SDs

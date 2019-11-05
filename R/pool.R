@@ -69,7 +69,7 @@ jk2.pool <- function ( datLong, allNam, forceSingularityTreatment, modus ) {    
                         uES  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "es"),"value"]})
                         esP  <- mean(unlist(lapply(uES, mean)))
                   }
-                  if(u[1,"parameter"] %in% c("R2", "R2nagel")) {                   ### vorerst werden keine Standardfehler des R^2 berechnet
+                  if(u[1,"parameter"] %in% c("R2", "R2nagel")) {                ### vorerst werden keine Standardfehler des R^2 berechnet
                      getNvalid <- datLong[ intersect( intersect(  which(datLong[,"group"] == u[1,"group"]), which( datLong[,"parameter"] == "Nvalid")), which( datLong[,"coefficient"] == "est") ) ,]
                      if(nrow(getNvalid)==0) {
                         pooled    <- t(pool.R2(r2 = u[,"value"]))

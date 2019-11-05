@@ -27,11 +27,10 @@ computeTrend <- function(jk2, tv, le, fun) {
    ### Effect size for means (only for jk2.mean)
         es      <- character(0)
         if (  fun == "mean" ) {
-          jk2_wide[, "es_trend"]  <- NA                                       ### not for groupDiffs as no SD is provided by eatRep, split up data frame and rbind later
+            jk2_wide[, "es_trend"]  <- NA                                       ### not for groupDiffs as no SD is provided by eatRep, split up data frame and rbind later
             jk2_wideS<- jk2_wide[!jk2_wide[, "comparison"] %in% c("crossDiff_of_groupDiff", "groupDiff") | is.na(jk2_wide[, "comparison"]), ]
             stopifnot(all ( table(jk2_wideS[,"group"]) == 2))                   ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen
             jk2_wideS<- jk2_wideS[with(jk2_wideS, order(parameter, group)),]    ### sortieren nach "group" und "parameter"; siehe Mail an Benjamin, 11.06.2019
-            stopifnot(all(jk2_wideS[jk2_wideS$parameter == "mean", c("depVar", "group", "comparison")] == jk2_wideS[jk2_wideS$parameter == "sd", c("depVar", "group", "comparison")], na.rm = TRUE)) ### zusaetzlich eingebauter Check, jetzt kein Hotfix mehr, 12.06.2019
             pooledSD <- sqrt(0.5 * (jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",lev[1], sep="")]^2 +
                              jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",lev[2], sep="")]^2))
             jk2_wideS[jk2_wideS[, "parameter"] == "mean", "es_trend"]  <- jk2_wideS[jk2_wideS[, "parameter"] == "mean", "est_trend"] / pooledSD
