@@ -67,13 +67,20 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                                   dat <- by(datL, INDICES = datL[,nam], FUN = function ( d ) {return(d)})
                                   grp <- setdiff(unlist(strsplit(as.character(vgl[2,"groups.divided.by"]), split=" |\\+")) , nam)
                                   grp <- grp[which(nchar(grp)>0)]
-                              }  else  {                                        ### else = Refrenz ist Gesamtdatensatz -> Liste mit nur einem Element
+                              }  else  {                                        ### else = Referenz ist Gesamtdatensatz -> Liste mit nur einem Element
                                   dat <- list(datL)
                                   grp <- as.character(vgl[2,"groups.divided.by"])
                               }
                               stopifnot(length(grp)==1)
                               weci<- lapply(dat, FUN = function ( d ) {
-                                     a <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = ret[["allNam"]][["wgt"]], type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], 
+                                     if ( !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
+                                          stopifnot(is.null(wgt))               ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
+                                          cat("   'pisa' method: Assume equally weighted cases.\n")
+                                          gew <- NULL                           ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung 
+                                     } else {                                   ### Fuer diesen Fall wird fuer 'wgt' das Argument 'NULL' uebergeben
+                                          gew <- ret[["allNam"]][["wgt"]]
+                                     }     
+                                     a <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], 
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ret[["allNam"]][["nest"]], imp=ret[["allNam"]][["imp"]], trend = trend,
                                                   formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = engine )
                                      a[["vgl"]]      <- vgl  
@@ -104,7 +111,14 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                               }
                               stopifnot(length(grp)==1)
                               psa1<- lapply(dat, FUN = function ( d ) {
-                                     a <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = ret[["allNam"]][["wgt"]], type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",
+                                     if ( !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
+                                          stopifnot(is.null(wgt))               ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
+                                          cat("   'pisa' method: Assume equally weighted cases.\n")
+                                          gew <- NULL                           ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung 
+                                     } else {                                   ### Fuer diesen Fall wird fuer 'wgt' das Argument 'NULL' uebergeben
+                                          gew <- ret[["allNam"]][["wgt"]]
+                                     }     
+                                     a <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",
                                           nest=ret[["allNam"]][["nest"]], imp=ret[["allNam"]][["imp"]], groups = grp, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine=engine, modus=modus)
                                      return(a)})
                               return(psa1)})
