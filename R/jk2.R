@@ -75,7 +75,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                               }
                               stopifnot(length(grp)==1)
                               weci<- lapply(dat, FUN = function ( d ) {
-                                     if ( !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
+                                     if ( is.null(ret[["allNam"]][["wgt"]]) || !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
                                           stopifnot(is.null(wgt))               ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
                                           cat("   'pisa' method: Assume equally weighted cases.\n")
                                           gew <- NULL                           ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung 
