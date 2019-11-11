@@ -63,6 +63,11 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
                     for ( i in coln) { jk2wide[,i] <- round(jk2wide[,i], digits = digits)}
                }
           }
+    ### SE correction durchfuehren (siehe Paper Weirich & Hecht)
+          if(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]])) {
+            seCorrect(jk2wide = jk2wide, SE_correction = jk2.out[["SE_correction"]])
+          }
+                
           return(jk2wide)}
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
@@ -78,3 +83,8 @@ addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
                  }
                  return(x)}))                                                   ### untere Zeile: wenn 'table' ueber 'jk2.mean' gewrappt wurde, muessen hier die parameterbezeichnungen geaendert werden
           return(dat)}
+
+
+seCorrect <- function( jk2wide, SE_correction ) {
+  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+}
