@@ -57,83 +57,63 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                          if ( is.null(gdb)) {gdb <- NA}
                          res <-  data.frame ( analysis.number = y, hierarchy.level = length(toAppl[[y]]), groups.divided.by = paste(toAppl[[y]], collapse=" + "), group.differences.by = gdb)
                          return(res)}))
-                  ana <- combn(x=vgl[,"analysis.number"], m=2, simplify=FALSE)
-                  if ( cdse == "wec") {                                         ### hier beginnt 'wec'-Methode
-                       cat("Compute cross level differences using 'weighted effect coding' (wec).\n")
-                       wec <- lapply(ana, FUN = function ( a ) {  
-                              chk <- abs(diff(vgl[ match(a, vgl[,"analysis.number"]),"hierarchy.level"])) == 1
-                              if ( chk == FALSE ) {return(NULL)}
-                              vgl <- vgl[a,]
-                              if (vgl[1,"hierarchy.level"] != 0) {              ### wenn referenzdatensatz bspw. alle Maedchen sein soll,wird der jetzt nach den Gruppierungsvariablen gesplittet
-                                  nam <- unlist(strsplit(as.character(vgl[1,"groups.divided.by"]), split=" |\\+"))
-                                  nam <- nam[which(nchar(nam)>0)]
-                                  dat <- by(datL, INDICES = datL[,nam], FUN = function ( d ) {return(d)})
-                                  grp <- setdiff(unlist(strsplit(as.character(vgl[2,"groups.divided.by"]), split=" |\\+")) , nam)
-                                  grp <- grp[which(nchar(grp)>0)]
-                              }  else  {                                        ### else = Referenz ist Gesamtdatensatz -> Liste mit nur einem Element
-                                  dat <- list(datL)
-                                  grp <- as.character(vgl[2,"groups.divided.by"])
-                              }
-                              stopifnot(length(grp)==1)
-                              weci<- lapply(dat, FUN = function ( d ) {
-                                     if ( is.null(ret[["allNam"]][["wgt"]]) || !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
-                                          stopifnot(is.null(wgt))               ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
-                                          cat("   'wec' method: Assume equally weighted cases.\n")
-                                          gew <- NULL                           ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung 
-                                     } else {                                   ### Fuer diesen Fall wird fuer 'wgt' das Argument 'NULL' uebergeben
-                                          gew <- ret[["allNam"]][["wgt"]]
-                                     }     
-                                     b <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], 
+                  ana <- lapply ( combn(x=vgl[,"analysis.number"], m=2, simplify=FALSE), FUN = function ( a ) {
+                         t1 <- abs(diff(vgl[ match(a, vgl[,"analysis.number"]),"hierarchy.level"])) == 1
+                         t2 <- TRUE                                             ### Vergleiche sollen nur angestellt werden, wenn Differenz der Hierarchielevel = 1 und
+                         if ( vgl[min(a),"hierarchy.level"] != 0 ) {            ### alle bis auf eine Gruppierungsvariable der hoeheren Ebene in der unteren enthalten sind
+                              nam<- lapply(sort(a), FUN = function ( z ) {
+                                    n1 <- unlist(strsplit(as.character(vgl[z,"groups.divided.by"]), split=" |\\+"))
+                                    n1 <- n1[which(nchar(n1)>0)]
+                                    return(n1)})
+                              if ( length(setdiff(nam[[2]], nam[[1]])) != 1) { t2 <- FALSE }
+                         }
+                         if(t1==TRUE && t2 == TRUE) {return(a)} else {return(NULL)} })
+                  ana <- ana[which(unlist(lapply(ana, FUN = function (l) {!is.null(l)}))==TRUE)]
+                  cat(paste0("Compute cross level differences using '",cdse,"' method.\n"))
+                  spl <- lapply(ana, FUN = function ( a ) {
+                         vgl <- vgl[a,]
+                         if (vgl[1,"hierarchy.level"] != 0) {                   ### wenn referenzdatensatz bspw. alle Maedchen sein soll,wird der jetzt nach den Gruppierungsvariablen gesplittet
+                             nam <- unlist(strsplit(as.character(vgl[1,"groups.divided.by"]), split=" |\\+"))
+                             nam <- nam[which(nchar(nam)>0)]
+                             dat <- by(datL, INDICES = datL[,nam], FUN = function ( d ) {return(d)})
+                             grp <- setdiff(unlist(strsplit(as.character(vgl[2,"groups.divided.by"]), split=" |\\+")) , nam)
+                             grp <- grp[which(nchar(grp)>0)]
+                         }  else  {                                             ### else = Referenz ist Gesamtdatensatz -> Liste mit nur einem Element
+                             dat <- list(datL)
+                             grp <- as.character(vgl[2,"groups.divided.by"])
+                         }
+                         stopifnot(length(grp)==1)
+                         cld <- lapply(dat, FUN = function ( d ) {              ### 'cld' = cross level differences
+                                if ( is.null(ret[["allNam"]][["wgt"]]) || !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
+                                     stopifnot(is.null(wgt))                    ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
+                                     cat(paste0("   '",cdse,"' method: Assume equally weighted cases.\n"))
+                                     gew <- NULL                                ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung
+                                } else {                                        ### Fuer diesen Fall wird fuer 'wgt' das Argument 'NULL' uebergeben
+                                     gew <- ret[["allNam"]][["wgt"]]
+                                }
+                                if ( cdse == "wec" ) {
+                                     b <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]],
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ret[["allNam"]][["nest"]], imp=ret[["allNam"]][["imp"]], trend = trend,
                                                   formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = engine )
                                      b[["vgl"]]      <- vgl  
+                                     b[["focGrp"]]   <- grp                     ### Fokus- und Referenzgruppe in Ergebnisoutput eintragen,
+                                     b[["refGrp"]]   <- "all"                   ### zur Weiterverarbeitung in den Reportingfunktionen
                                      if ( vgl[1,"hierarchy.level"] != 0) {
-                                          rg <- d[1,nam, drop=FALSE]
-                                          rg <- paste(unlist(lapply(names(rg), FUN = function ( r ) {paste0(r, " = '",rg[[r]])})), collapse = ", ")
-                                          b[["refGroup"]] <- rg
+                                          rg <- facToChar(d[1,nam, drop=FALSE])
+                                          rg <- do.call("rbind", lapply(names(rg), FUN = function (r){data.frame ( groupName = r, groupValue = rg[1,r], stringsAsFactors = FALSE) }))
+                                          b[["refGrp"]] <- rg
                                      }
-                                     return(b)})
-                              return(weci)})
-                       class(wec) <- c("wec_se_correction", "list")
-                       ret[["SE_correction"]] <- wec
-                  }
-                  if ( cdse == "pisa") {                                        ### hier beginnt die 'pisa'-Methode
-                       cat("Compute cross level differences using 'pisa' method.\n")
-                       pisa<- lapply(ana, FUN = function ( a ) {
-                              chk <- abs(diff(vgl[ match(a, vgl[,"analysis.number"]),"hierarchy.level"])) == 1
-                              if ( chk == FALSE ) {return(NULL)}
-                              vgl <- vgl[a,]
-                              if (vgl[1,"hierarchy.level"] != 0) {              ### wenn referenzdatensatz bspw. alle Maedchen sein soll,wird der jetzt nach den Gruppierungsvariablen gesplittet
-                                  nam <- unlist(strsplit(as.character(vgl[1,"groups.divided.by"]), split=" |\\+"))
-                                  nam <- nam[which(nchar(nam)>0)]
-                                  dat <- by(datL, INDICES = datL[,nam], FUN = function ( d ) {return(d)})
-                                  grp <- setdiff(unlist(strsplit(as.character(vgl[2,"groups.divided.by"]), split=" |\\+")) , nam)
-                                  grp <- grp[which(nchar(grp)>0)]
-                              }  else  {                                        ### else = Referenz ist Gesamtdatensatz -> Liste mit nur einem Element
-                                  dat <- list(datL)
-                                  grp <- as.character(vgl[2,"groups.divided.by"])
-                              }
-                              stopifnot(length(grp)==1)
-                              psa1<- lapply(dat, FUN = function ( d ) {
-                                     if ( is.null(ret[["allNam"]][["wgt"]]) || !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
-                                          stopifnot(is.null(wgt))               ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
-                                          cat("   'pisa' method: Assume equally weighted cases.\n")
-                                          gew <- NULL                           ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung 
-                                     } else {                                   ### Fuer diesen Fall wird fuer 'wgt' das Argument 'NULL' uebergeben
-                                          gew <- ret[["allNam"]][["wgt"]]
-                                     }     
+                                }  else  {                                      ### hier beginnt methode 'pisa'
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot, bootMethod = bootMethod,
                                           nest=ret[["allNam"]][["nest"]], imp=ret[["allNam"]][["imp"]], groups = grp, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine=engine, modus=modus)
-                                     return(b)})
-                              return(psa1)})
-                       class(pisa) <- c("pisa_se_correction", "list")
-                       ret[["SE_correction"]] <- pisa
-                  }
-                  if ( cdse == "old") {
-                       ret[["SE_correction"]] <- list(NULL)
-                  }
+                                }
+                         return(b)})
+                  return(cld)})
+                  spl <- unlist(spl, recursive=FALSE)
+                  class(spl) <- c( recode(cdse, "'wec'='wec_se_correction'; 'pisa'='pisa_se_correction'"), "list")
+                  ret[["SE_correction"]] <- spl
             }
-            return(ret) }
+            return(ret)}
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
@@ -745,7 +725,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    ### svyby wird dreimal aufgerufen ...
                   do   <- paste(" res <- svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
-                  suppressWarnings(eval(parse(text=do)))                        ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant für Paket
+                  suppressWarnings(eval(parse(text=do)))                        ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant f�r Paket
                   resL <- melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
                   stopifnot(length(table(resL[,"coefficient"])) == 2)
                   resL[,"coefficient"] <- recode(resL[,"coefficient"], "'se'='se'; else ='est'")
@@ -753,7 +733,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
                   attr(resL, "original") <- res
                   return(resL)})
           sds  <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,allNam[["group"]]], FUN = function (uu) {
-                  namen   <- uu[1, allNam[["group"]], drop=FALSE]               ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant für Paket
+                  namen   <- uu[1, allNam[["group"]], drop=FALSE]               ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant f�r Paket
                   sub.rep <- repl[ match(uu[,allNam[["ID"]]], repl[,allNam[["ID"]]] ) ,  ]
                   des.uu  <- svrepdesign(data = uu[,c(allNam[["group"]], allNam[["dependent"]])], weights = uu[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = sub.rep[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
                   var.uu  <- suppressWarnings(svyvar(x = as.formula(paste("~",allNam[["dependent"]],sep="")), design = des.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm))
