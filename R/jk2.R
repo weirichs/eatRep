@@ -49,7 +49,8 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                    cross.differences = cross.differences, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine)
             if ( isFALSE(ret[["allNam"]][["cross.differences"]])) {return(ret)}
             if ( is.list(cross.differences) || cross.differences == TRUE ) {
-                  toAppl<- superSplitter(group = ret[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = ret[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=ret[["allNam"]][["dependent"]] )
+                #browser()  
+                toAppl<- superSplitter(group = ret[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = ret[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=ret[["allNam"]][["dependent"]] )
                   stopifnot(length ( toAppl ) > 1) 
                   vgl <- do.call("rbind", lapply(1:length(toAppl), FUN = function ( y ) {
                          gdb <- attr(toAppl[[y]], "group.differences.by")
@@ -77,7 +78,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                               weci<- lapply(dat, FUN = function ( d ) {
                                      if ( is.null(ret[["allNam"]][["wgt"]]) || !ret[["allNam"]][["wgt"]] %in% colnames(d)) {
                                           stopifnot(is.null(wgt))               ### workaround: wenn keine gewichte spezifiziert wurden, werden sie auf 1 gesetzt und allNam$wgt ist nicht NULL
-                                          cat("   'pisa' method: Assume equally weighted cases.\n")
+                                          cat("   'wec' method: Assume equally weighted cases.\n")
                                           gew <- NULL                           ### deswegen sucht er im Datensatz eine gewichtungsvariable, die nur 1en enthaelt und gibt Fehlermeldung 
                                      } else {                                   ### Fuer diesen Fall wird fuer 'wgt' das Argument 'NULL' uebergeben
                                           gew <- ret[["allNam"]][["wgt"]]
