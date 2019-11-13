@@ -91,6 +91,8 @@ seCorrect <- function( SE_correction, jk2wide, grpv ) {
 }
 
 seCorrect.wec_se_correction <- function( SE_correction, jk2wide, grpv ) {
+  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+  
   ### reporting fuer GLM?
   #test <- report(SE_correction)
   
