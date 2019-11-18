@@ -59,16 +59,24 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
                   ana <- lapply ( combn(x=vgl[,"analysis.number"], m=2, simplify=FALSE), FUN = function ( a ) {
                          t1 <- abs(diff(vgl[ match(a, vgl[,"analysis.number"]),"hierarchy.level"])) == 1
                          t2 <- TRUE                                             ### Vergleiche sollen nur angestellt werden, wenn Differenz der Hierarchielevel = 1 und
-                         if ( vgl[min(a),"hierarchy.level"] != 0 ) {            ### alle bis auf eine Gruppierungsvariable der hoeheren Ebene in der unteren enthalten sind
-                              nam<- lapply(sort(a), FUN = function ( z ) {
+                         if ( vgl[min(a),"hierarchy.level"] != 0 ) {            ### alle bis auf eine Gruppierungsvariable der hoeheren Ebene in der unteren enthalten sind, und
+                              nam<- lapply(sort(a), FUN = function ( z ) {      ### wenn Vergleiche Teilmenge dessen ist, was in 'cross.differences' angegeben ist
                                     n1 <- unlist(strsplit(as.character(vgl[z,"groups.divided.by"]), split=" |\\+"))
                                     n1 <- n1[which(nchar(n1)>0)]
                                     return(n1)})
                               if ( length(setdiff(nam[[2]], nam[[1]])) != 1) { t2 <- FALSE }
                          }
-                         if(t1==TRUE && t2 == TRUE) {return(a)} else {return(NULL)} })
+                         t3 <- TRUE
+                         if (  is.list(cross.differences) ) { 
+                             if ( sum(unlist(lapply(cross.differences, FUN = function (v1) { all(sort(vgl[ match(a, vgl[,"analysis.number"]),"hierarchy.level"]) == sort(v1))}))) == 0) {t3 <- FALSE}
+                         }
+                         if(t1==TRUE && t2 == TRUE && t3 == TRUE) {return(a)} else {return(NULL)} })
                   ana <- ana[which(unlist(lapply(ana, FUN = function (l) {!is.null(l)}))==TRUE)]
-                  cat(paste0("Compute cross level differences using '",cdse,"' method.\n"))
+                  if ( sum(abs(unlist(lapply(cross.differences, diff))) > 1) > 0 ) {
+                      cat(paste0("Warning: Computation of cross level differences using '",cdse,"' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.\n"))
+                  }  else { 
+                      cat(paste0("Compute cross level differences using '",cdse,"' method.\n"))
+                  }
                   spl <- lapply(ana, FUN = function ( a ) {
                          vgl <- vgl[a,]
                          if (vgl[1,"hierarchy.level"] != 0) {                   ### wenn referenzdatensatz bspw. alle Maedchen sein soll,wird der jetzt nach den Gruppierungsvariablen gesplittet
