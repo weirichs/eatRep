@@ -39,6 +39,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = 
             bootMethod = c("wSampling","wMeans"), group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey") ) {
             cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "pisa","old"))
             bootMethod <- match.arg ( bootMethod )
+            if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = type, PSU = PSU )
             }  else  {
@@ -129,6 +130,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey") ) {                             ### untere Zeile: wrapper! hier wird jk2.table ueber jk2.mean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen
             modus <- identifyMode ( name = "table", type = type, PSU = PSU )    ### untere Zeile, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
+           if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
@@ -222,6 +224,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
           cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine) {
+          if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
           if ( useWec == TRUE ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           i     <- 0                                                            ### wenn wec genutzt werden soll, geht das nur ueber den Hotfix, der auch fuer Singularitaet verwendet wird 
           fc    <- NULL                                                         ### initialisieren
