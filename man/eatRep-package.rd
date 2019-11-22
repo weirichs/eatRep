@@ -31,17 +31,18 @@
   in the middle loop to account for multiple imputed data, and \dQuote{cluster replicates} in the inner loop to 
   account for the clustered sampling structure. While the functional principle of \code{survey} is based on 
   replication of standard analyses, \code{eatRep} is based on replication of \code{survey} analyses to take 
-  multiple imputed data into account. 
+  multiple imputed data into account. More recent versions of the package additionally allow estimations using
+  the \code{BIFIEsurvey} package instead of \code{survey} which provide substantial advantages in terms of speed. 
   
   For each imputed data set in each measurement, i.e. in the inner loop, the \code{eatRep} function first creates 
   replicate weights based on the primary sampling unit (PSU) variable and the replication indicator variable. In 
-  the jackknife procedure, the first one is often referred to as \dQuote{Jackknife Zone}, whereas the second one 
-  is often referred to as \dQuote{Jackknife Replicate}. The number of distinct units in the PSU variable define 
+  the jackknife procedure, the first one is often referred to as \dQuote{jackknife zone}, whereas the second one 
+  is often referred to as \dQuote{jackknife replicate}. The number of distinct units in the PSU variable define 
   the number of replications which are necessary due to the clustered structure. A design object is created and 
   the appropriate \code{survey} function is called. The process is repeated for each imputed dataset and the 
   results of the analyses are pooled. The pooling procedure varies in relation to the type of variable to be 
   pooled. For examples, means or regression coefficients are pooled according to Rubin (1987) or Rubin (2003). 
-  \eqn{R^2} is pooled according to Harel (2009), using a Fisher z-transformation. Chi-square distributed values 
+  \eqn{R^2} is pooled according to Harel (2009), using a Fisher \emph{z}-transformation. Chi-square distributed values 
   are pooled according to Thomas and Rao (1990) for clustered data and according to Enders (2010) and 
   Allison (2002) for multiple imputed data. For trend analyses, the whole process is repeated two times 
   (according to the two measurements) and the difference of the estimates are computed along with their 
@@ -67,8 +68,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.9.34\cr
-Date: \tab 2019-11-18\cr
+Version: \tab 0.9.35\cr
+Date: \tab 2019-11-22\cr
 License: \tab GPL(>=2)
 }
 }

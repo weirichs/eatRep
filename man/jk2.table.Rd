@@ -10,7 +10,7 @@ multiple imputed data and nested imputed data, if necessary. Conceptually, the f
 methods. Technically, this is a wrapper for the svymean() function of the survey package.
 }
 \usage{
-jk2.table(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
+jk2.table(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
           group.differences.by = NULL, cross.differences = FALSE, chiSquare = FALSE, correct = TRUE, group.delimiter = "_",
           trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE, 

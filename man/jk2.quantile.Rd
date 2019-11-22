@@ -8,7 +8,7 @@ the function combines replication methods and methods for multiple imputed data.
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-jk2.quantile(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
+jk2.quantile(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, bootMethod = c("wSampling","wQuantiles") ,
