@@ -63,11 +63,6 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
                     for ( i in coln) { jk2wide[,i] <- round(jk2wide[,i], digits = digits)}
                }
           }
-    ### SE correction durchfuehren (siehe Paper Weirich & Hecht)
-          if(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]])) {
-            jk2wide <- seCorrect(SE_correction = jk2.out[["SE_correction"]], jk2wide = jk2wide, grpv = grpv)
-          }
-                
           return(jk2wide)}
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
@@ -83,44 +78,3 @@ addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
                  }
                  return(x)}))                                                   ### untere Zeile: wenn 'table' ueber 'jk2.mean' gewrappt wurde, muessen hier die parameterbezeichnungen geaendert werden
           return(dat)}
-
-
-seCorrect <- function( SE_correction, jk2wide, grpv ) {
-  # stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
-  UseMethod("seCorrect")
-}
-
-seCorrect.wec_se_correction <- function( SE_correction, jk2wide, grpv ) {
-  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
-  
-  ### reporting fuer GLM?
-  #test <- report(SE_correction)
-  
-  ### next: trend, groupdiffs...
-  
-  
-  # Achtung: vgl Objekt verwenden, um herauszufinden, welche Hierarchiebene gemeint ist
-  output <- SE_correction[[1]][[1]]$resT$noTrend
-  
-  ##
-  #browser()
-  SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient == "se", c("parameter", "value")]
-  SEs[, "parameter"] <- gsub(grpv, "", SEs[, "parameter"])
-  
-  no_cross_diff <- jk2wide[is.na(jk2wide$comparison) | jk2wide$comparison != "crossDiff", ]
-  cross_diff <- jk2wide[which(jk2wide$comparison == "crossDiff"), ]
-  
-  for(i in SEs[["parameter"]]) {
-    grp_regexp <- paste0("^", i, "\\.vs")
-    cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group), "se"] <- SEs[SEs[, "parameter"] == i, "value"]
-  }
-
-  rbind(no_cross_diff, cross_diff)
-}
-
-
-seCorrect.pisa_se_correction <- function( SE_correction, jk2wide, grpv ) {
-  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
-}
-
-
