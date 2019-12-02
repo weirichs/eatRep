@@ -25,6 +25,23 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
                       }
                       return(df)})
           }
+    
+    ### 2.b) SE correction durchfuehren (siehe Paper Weirich & Hecht)
+          if(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]])) {
+            ## checks, ob Vergleiche dabei, fuer die keine Korrektur verfuehgbar ist
+            if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
+              warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
+            }
+            mult_hierarchy <- any(unlist(lapply(jk2.out$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
+            if(mult_hierarchy) warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")
+            
+            # browser()
+            ## correction durchfuehren
+            jk2 <- lapply(jk2, function(jk2_single) {
+              seCorrect(SE_correction = jk2.out[["SE_correction"]], jk2 = jk2_single, grpv = grpv)
+            })
+          }
+          
     ### 3. Trend bestimmen
           if ( !is.null(tv) ) {
                jk2 <- computeTrend(jk2 = jk2, le = jk2.out[["le"]], tv = tv, fun = fun)
@@ -63,11 +80,6 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
                     for ( i in coln) { jk2wide[,i] <- round(jk2wide[,i], digits = digits)}
                }
           }
-    ### SE correction durchfuehren (siehe Paper Weirich & Hecht)
-          if(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]])) {
-            jk2wide <- seCorrect(SE_correction = jk2.out[["SE_correction"]], jk2wide = jk2wide, grpv = grpv)
-          }
-                
           return(jk2wide)}
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
@@ -85,41 +97,76 @@ addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
           return(dat)}
 
 
-seCorrect <- function( SE_correction, jk2wide, grpv ) {
+seCorrect <- function( SE_correction, jk2, grpv ) {
   # stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
   UseMethod("seCorrect")
 }
 
-seCorrect.wec_se_correction <- function( SE_correction, jk2wide, grpv ) {
-  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+
+## an der falschen Stelle! muss vor Trends passieren!
+seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
+  browser()
+  #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
   
   ### reporting fuer GLM?
-  #test <- report(SE_correction)
+  SE_list <- lapply( SE_correction, report)
+  
+  ## dissect results so far
+  no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff", ]
+  cross_diff <- jk2[which(jk2$comparison == "crossDiff"), ]
+  year <- unique(jk2[["year"]])
+  parameter_names <- paste0(c("p_", "se_"), year)
+  # View(cross_diff)
+  
+  # get var names
+  #se_names <- grep("^se_", names(SE_list[[1]]), value = TRUE)
+  #p_names <- grep("^p_", names(SE_list[[1]]), value = TRUE)
+  
+  ## mehr Fragen
+  # _ in Faktorlevels erlaubt?
+  
+  ## Fragen
+  # crossDiff of groupDiff? -> wird hinten angestellt! vlt. warning/cat, dass es dafuer nicht implementiert ist
+  
+  # Vgl. ueber mehrere lvls (zB Male in Berlin vs. Deutschland): da hat Sebastian keine Lust das zu implementieren,
+  # findet er inhaltlich keine spannende Fragestellung!
+  # vlt. Warnmeldung?
+  
+  # generell nochmal ueberlegen: einfacher zu ersetzn oder in crossDiff funktion einzubauen?
+  
+  for(i in seq_along(SE_list)) {
+    output <- SE_correction[[i]]$resT[[as.character(year)]]
+    
+    ## huihui, Achtung: jenachdem ob Trend oder nicht, heißen die Spalten ja anders!
+    # also eher nicht die reporting Funktion verwenden
+    SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient == "se", c("parameter", "value")]
+    SEs[, "parameter"] <- gsub(grpv, "", SEs[, "parameter"])
+    
+    for(param in SEs[["parameter"]]) {
+      # param <- SEs$parameter[1]
+      
+      if(SE_correction[[i]]$refGrp == "all") {
+        grp_regexp <- paste0("^", param, "\\.vs")
+        # funktioniert, wenn die Gesamtheit die Vergleichsgruppe ist
+        cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "se", 
+                   "value"] <- SEs[SEs[, "parameter"] == param, "value"]
+      } else stop()
+    }
+      
+    ### offene Frage: wieso gibt es soviele wec-Objekte, auch fuer Vergleiche, die gar nicht relevant sind (in cross.diffs)
+    # spezifiziert wurden?
+  }
   
   ### next: trend, groupdiffs...
-  
-  
   # Achtung: vgl Objekt verwenden, um herauszufinden, welche Hierarchiebene gemeint ist
-  output <- SE_correction[[1]][[1]]$resT$noTrend
-  
-  ##
-  #browser()
-  SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient == "se", c("parameter", "value")]
-  SEs[, "parameter"] <- gsub(grpv, "", SEs[, "parameter"])
-  
-  no_cross_diff <- jk2wide[is.na(jk2wide$comparison) | jk2wide$comparison != "crossDiff", ]
-  cross_diff <- jk2wide[which(jk2wide$comparison == "crossDiff"), ]
-  
-  for(i in SEs[["parameter"]]) {
-    grp_regexp <- paste0("^", i, "\\.vs")
-    cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group), "se"] <- SEs[SEs[, "parameter"] == i, "value"]
-  }
+    ##
+ 
 
   rbind(no_cross_diff, cross_diff)
 }
 
 
-seCorrect.pisa_se_correction <- function( SE_correction, jk2wide, grpv ) {
+seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
   stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
 }
 
