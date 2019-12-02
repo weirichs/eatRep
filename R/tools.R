@@ -23,7 +23,7 @@ make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, 
                   colnames(ind.i)[-1] <- paste(name.var, names(t.var), sep=sep)
                   return(ind.i)}
 
-identifyMode <- function ( name, type, PSU) {
-            if ( is.null (PSU) ) { m1 <- "CONV"} else { m1 <- type}
+identifyMode <- function ( name, type, PSU, repWgt) {
+            if ( is.null (PSU) && is.null(repWgt) ) { m1 <- "CONV"} else { m1 <- type}
             res <- paste0( m1, ".", name)
             return(res)}

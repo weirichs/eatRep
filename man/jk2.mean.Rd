@@ -8,11 +8,11 @@ or Balanced Repeated Replicates (BRR) procedure. Conceptually, the function comb
 methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
-jk2.mean (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
+jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
-            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE,
-            engine = c("survey", "BIFIEsurvey"))}
+            nBoot = 100, bootMethod = c("wSampling","wMeans"), group.delimiter = "_", trend = NULL, 
+            linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -82,6 +82,20 @@ Method for standard error estimation for cross level differences, where groups a
 and the group mean for standard error estimation, \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
+  \item{nBoot}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Without replicates (i.e., for completely random samples), the pisa method for standard error estimation for 
+cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
+This argument is only necessary, if \code{crossDiffSE = "pisa"} \emph{and} none of the replicate methods 
+(JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
+}
+  \item{bootMethod}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If standard error are computed in a bootstrap, two possible methods may be applied.
+\code{'wSampling'} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted means
+are computed. \code{'wMeans'} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
+weighted means are computed.
+}
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
@@ -141,6 +155,10 @@ group differences were requested.}
 values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).}
 \item{value}{The value of the parameter estimate in the corresponding group.}
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
+}
+\references{
+te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A., & Konig, R. (2017).
+When size matters: advantages of weighted effect coding in observational studies. \emph{International Journal of Public Health.} \bold{62}, 163--167.
 }
 \author{
 Sebastian Weirich
@@ -211,7 +229,3 @@ means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
 ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
           report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
