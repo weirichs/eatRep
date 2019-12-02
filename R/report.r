@@ -102,25 +102,22 @@ seCorrect <- function( SE_correction, jk2, grpv ) {
   UseMethod("seCorrect")
 }
 
+seCorrect.old <- function( SE_correction, jk2, grpv ) {
+  jk2
+}
 
 ## an der falschen Stelle! muss vor Trends passieren!
 seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
-  # browser()
-  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+  #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
   
-  ### reporting fuer GLM?
-  SE_list <- lapply( SE_correction, report)
-  
+  ## Trend or no trend
+  # if(is.null(jk2[["year"]])) browser()
+  year <- as.character(unique(jk2[["year"]]))
+  if(length(year) == 0) year <- 1
+
   ## dissect results so far
   no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff", ]
   cross_diff <- jk2[which(jk2$comparison == "crossDiff"), ]
-  year <- unique(jk2[["year"]])
-  parameter_names <- paste0(c("p_", "se_"), year)
-  # View(cross_diff)
-  
-  # get var names
-  #se_names <- grep("^se_", names(SE_list[[1]]), value = TRUE)
-  #p_names <- grep("^p_", names(SE_list[[1]]), value = TRUE)
   
   ## mehr Fragen
   # _ in Faktorlevels erlaubt?
@@ -134,36 +131,56 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
   
   # generell nochmal ueberlegen: einfacher zu ersetzn oder in crossDiff funktion einzubauen?
   
-  for(i in seq_along(SE_list)) {
-    output <- SE_correction[[i]]$resT[[as.character(year)]]
+  # if(length(SE_correction) > 2) browser()
+  for(i in seq_along(SE_correction)) {
+    output <- SE_correction[[i]][["resT"]][[year]]
+    
+    rows <- length(SE_correction[[i]][["vgl"]][["groups.divided.by"]])
+    single_grpv <- as.character(SE_correction[[i]][["vgl"]][["groups.divided.by"]])[rows]
+    
+    #if(grepl(" \\+ ", single_grpv)) browser()
+    if(grepl(" \\+ ", single_grpv)) {
+      single_grpv <- gsub(SE_correction[[i]][["vgl"]][["groups.divided.by"]][rows-1], "", single_grpv)
+      single_grpv <- gsub(" \\+ ", "", single_grpv)
+    }
+    
+    ### Achtung: ueberpruefen, ob allNam$independent nicht die Info einfacher bereit haelt
     
     ## huihui, Achtung: jenachdem ob Trend oder nicht, heißen die Spalten ja anders!
     # also eher nicht die reporting Funktion verwenden
-    SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient == "se", c("parameter", "value")]
-    SEs[, "parameter"] <- gsub(grpv, "", SEs[, "parameter"])
+    SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient %in% c("se", "p"), c("parameter", "value", "coefficient")]
+    SEs[, "parameter"] <- gsub(single_grpv, "", SEs[, "parameter"])
+    SEs <- as.data.frame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
     
     for(param in SEs[["parameter"]]) {
-      # param <- SEs$parameter[1]
-      
-      if(SE_correction[[i]]$refGrp == "all") {
+      ## if reference level is the whole group
+      if(identical(SE_correction[[i]]$refGrp, "all")) {
         grp_regexp <- paste0("^", param, "\\.vs")
         # funktioniert, wenn die Gesamtheit die Vergleichsgruppe ist
         cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "se", 
-                   "value"] <- SEs[SEs[, "parameter"] == param, "value"]
-      } else stop()
+                   "value"] <- SEs[SEs[, "parameter"] == param, "se"]
+        cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "p", 
+                   "value"] <- SEs[SEs[, "parameter"] == param, "p"]
+      } else { ## if reference level is a subgroup
+        grp_regexp <- paste0("_", param, "$")
+        
+        col_name <- SE_correction[[i]]$refGrp[, "groupName"]
+        col_level <- SE_correction[[i]]$refGrp[, "groupValue"]
+        # if(col_level == "LandA") browser()
+        
+        cross_diff[which(cross_diff[[col_name]] == col_level & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "se"), 
+                   "value"] <- SEs[SEs[, "parameter"] == param, "se"]
+        cross_diff[which(cross_diff[[col_name]] == col_level & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "p"), 
+                   "value"] <- SEs[SEs[, "parameter"] == param, "p"]
+      }
     }
-      
-    ### offene Frage: wieso gibt es soviele wec-Objekte, auch fuer Vergleiche, die gar nicht relevant sind (in cross.diffs)
-    # spezifiziert wurden?
   }
   
-  ### next: trend, groupdiffs...
-  # Achtung: vgl Objekt verwenden, um herauszufinden, welche Hierarchiebene gemeint ist
-    ##
- 
-
+  ### next: trend, groupdiffs checken, ob hier SEs korrekt beruecksichtigt werden
+  
   rbind(no_cross_diff, cross_diff)
 }
+
 
 
 seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
