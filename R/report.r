@@ -105,8 +105,8 @@ seCorrect <- function( SE_correction, jk2, grpv ) {
 
 ## an der falschen Stelle! muss vor Trends passieren!
 seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
-  browser()
-  #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+  # browser()
+  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
   
   ### reporting fuer GLM?
   SE_list <- lapply( SE_correction, report)
