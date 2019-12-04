@@ -113,23 +113,12 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
   if(length(year) == 0) year <- 1
 
   ## dissect results so far
-  no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff", ]
-  cross_diff <- jk2[which(jk2$comparison == "crossDiff"), ]
+  no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff" | jk2$parameter != "mean", ]
+  cross_diff <- jk2[which(jk2$comparison == "crossDiff" & jk2$parameter == "mean"), ]
+  stopifnot(identical(nrow(no_cross_diff) + nrow(cross_diff), nrow(jk2)))
   
-  ## mehr Fragen
-  # _ in Faktorlevels erlaubt?
-  
-  ## Fragen
-  # crossDiff of groupDiff? -> wird hinten angestellt! vlt. warning/cat, dass es dafuer nicht implementiert ist
-  
-  # Vgl. ueber mehrere lvls (zB Male in Berlin vs. Deutschland): da hat Sebastian keine Lust das zu implementieren,
-  # findet er inhaltlich keine spannende Fragestellung!
-  # vlt. Warnmeldung?
-  
-  # generell nochmal ueberlegen: einfacher zu ersetzn oder in crossDiff funktion einzubauen?
-  
-  # if(length(SE_correction) > 2) browser()
   for(i in seq_along(SE_correction)) {
+    # debug 3 grp-vars: i <- 4
     output <- SE_correction[[i]][["resT"]][[year]]
     
     rows <- length(SE_correction[[i]][["vgl"]][["groups.divided.by"]])
@@ -140,36 +129,62 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     SEs[, "parameter"] <- gsub(single_grpv, "", SEs[, "parameter"])
     SEs <- as.data.frame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
     
+    #if(is.data.frame(SE_correction[[i]]$refGrp) && identical(SE_correction[[i]]$refGrp$groupValue, "LandA")) browser()
     for(param in SEs[["parameter"]]) {
-      ## if reference level is the whole group
-      if(identical(SE_correction[[i]]$refGrp, "all")) {
+      if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
         grp_regexp <- paste0("^", param, "\\.vs")
-        # funktioniert, wenn die Gesamtheit die Vergleichsgruppe ist
+        # funktioniert nur, da keine correction ueber mehrere Hierarchieebenen hinweg funktioniert!
         cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "se", 
                    "value"] <- SEs[SEs[, "parameter"] == param, "se"]
         cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "p", 
                    "value"] <- SEs[SEs[, "parameter"] == param, "p"]
-      } else { ## if reference level is a subgroup
-        grp_regexp <- paste0("_", param, "$")
+      } else { ### if reference level is a subgroup
         
-        col_name <- SE_correction[[i]]$refGrp[, "groupName"]
-        col_level <- SE_correction[[i]]$refGrp[, "groupValue"]
-        # if(col_level == "LandA") browser()
+        # create variable to select right rows in jk2 output
+        #param_finder <- cross_diff$group
+        #param_finder <- sapply(strsplit(param_finder, ".vs."), function(x) x[1])
         
-        cross_diff[which(cross_diff[[col_name]] == col_level & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "se"), 
+        ## complicated to find param match, because the factor string of another level can contain the string of the current level!
+        param_selector <- paste0("^", param, "\\.|", "^", param, "_|", "_", param, "\\.|", "_", param, "_")
+        
+        col_names <- SE_correction[[i]]$refGrp[, "groupName"]
+        col_levels <- SE_correction[[i]]$refGrp[, "groupValue"]
+        
+        #if(identical(col_levels, c("female", "TRUE"))) browser()
+        # filter relevant rows for flexibel number of filter variables
+        filt_var <- recursive_filter(df = cross_diff, vars = col_names, var_levels = col_levels)
+        
+        #if(length(which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se")) != 1) browser()
+        cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se"), 
                    "value"] <- SEs[SEs[, "parameter"] == param, "se"]
-        cross_diff[which(cross_diff[[col_name]] == col_level & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "p"), 
+        cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "p"), 
                    "value"] <- SEs[SEs[, "parameter"] == param, "p"]
       }
     }
   }
   
-  ### next: trend, groupdiffs checken, ob hier SEs korrekt beruecksichtigt werden
+  
+  ## mehr Fragen
+  # _ in Faktorlevels erlaubt?
+  
+  # next: trend, groupdiffs checken, ob hier SEs korrekt beruecksichtigt werden
+  
+  # was passiert eig. wenn faktorlevel verschiedener Variablen gleich heissen?
   
   rbind(no_cross_diff, cross_diff)
 }
 
-
+recursive_filter <- function(df, vars, var_levels) {
+  stopifnot(length(vars) == length(var_levels))
+  
+  filt_var <- rep(TRUE, nrow(df))
+  
+  for(i in seq_along(vars)) {
+    filt_var <- filt_var & df[[vars[i]]] == var_levels[[i]]
+  }
+  # output: vector with T/F
+  filt_var
+}
 
 seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
   stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")

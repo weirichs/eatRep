@@ -1,7 +1,7 @@
 Package: eatRep
 Type: Package
 Title: Educational Assessment Tools for Replication Methods
-Version: 0.9.40
+Version: 0.9.41
 Depends: R (>= 3.0.0), survey, stringr, progress, BIFIEsurvey, estimatr
 Imports: Hmisc, fmsb, mice (>= 2.46), boot, car, reshape2, plyr, combinat, miceadds, tidyr, eatTools (>= 0.1.19), eatGADS
 Date: 2019-12-04

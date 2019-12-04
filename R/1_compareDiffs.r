@@ -34,17 +34,20 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                      redDF_1 <- d[which(d[, "sum"] %in% comp_vec),]
                      fac     <- by(data = redDF_1, INDICES = redDF_1[, "sum"], FUN = function ( x ) { unique(x[, "group"])})
     ### Achtung: nur ineinander geschachtelte CrossLevel-Differenzen werden gebildet
-                     all_grp <- do.call("rbind", lapply(fac[[1]], function(high_lvl) {
+                     all_grp_list <- lapply(fac[[1]], function(high_lvl) {
     ### all comparisons if wholeGroup higher level
-                                name_part <- high_lvl
-                                if(identical(high_lvl, "wholeGroup") | substr(high_lvl, 1,9) == "all.group") {name_part <- "."}
+                                hl_levels <- unlist(strsplit(high_lvl, "_"))
+                                if(identical(high_lvl, "wholeGroup") | substr(high_lvl, 1,9) == "all.group") {hl_levels <- "."}
     ### extrahiere alle in hoehere Ebene geschachtelten lower levels
           # falls diese doch gebraucht werden:
           # if(allCrossLvlDiffs) name_part <- "."
-                                low_lvl <- grep(name_part, fac[[2]], value = TRUE)
+                                all_ll_levels <- lapply(fac[[2]], FUN = function ( x) {unlist(strsplit(x, "_"))})
+                                ## Suche matches
+                                matching_levels <- sapply(all_ll_levels, FUN = function ( a ) {all(hl_levels %in% a)})
+                                low_lvl <- fac[[2]][matching_levels]
                                 if ( length(low_lvl)==0) {
     ### workaround: wenn cross-level diffs von group.diffs bestimmt werden sollen (comparison != NA), dann muessen 'low_lvl' anders gefunden werden
-                                     low_lvl <- grep(colsplit(string = name_part, pattern="___", names=c("a", "b"))[,"a"], fac[[2]], value = TRUE)
+                                     low_lvl <- grep(colsplit(string = paste0(hl_levels, collapse = "_"), pattern="___", names=c("a", "b"))[,"a"], fac[[2]], value = TRUE)
                                 }
                                 vgl     <- expand.grid(high_lvl, low_lvl)
     ### loop over comparison to be made!
@@ -58,9 +61,10 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                        return(newRows)
                                 }))
                                 return(grp)
-                     }))
-                     return(all_grp)
-              }))
+                     })
+                     all_grp <- do.call("rbind", all_grp_list) 
+                     return(all_grp)})
+              )
               return(ret)
        }))
        ret <- rbind(ori, ret)
@@ -104,7 +108,10 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
     }
     ret[,"coefficient"] <- c("est","se", "p", "es")
     ret[,"value"]       <- c(mea, se, pval, es)
-    ret[,"group"]       <- paste(unique(df[,"group"]), collapse=".vs.")
+    
+    ### group column: consistent ordering of higher hierarchy level 
+    hierarchy_levels <- unique(df[order(df$sum, decreasing = TRUE), "group"])
+    ret[,"group"]       <- paste(hierarchy_levels, collapse=".vs.")
     ret[,"sum"]         <- NULL
     # set group variable to NA for group that is compared against complete group (other remain)
     for(i in grpv) {
