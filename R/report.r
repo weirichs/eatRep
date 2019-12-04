@@ -108,10 +108,7 @@ seCorrect.old <- function( SE_correction, jk2, grpv ) {
 
 ## an der falschen Stelle! muss vor Trends passieren!
 seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
-  #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
-  
   ## Trend or no trend
-  # if(is.null(jk2[["year"]])) browser()
   year <- as.character(unique(jk2[["year"]]))
   if(length(year) == 0) year <- 1
 
@@ -136,18 +133,9 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     output <- SE_correction[[i]][["resT"]][[year]]
     
     rows <- length(SE_correction[[i]][["vgl"]][["groups.divided.by"]])
-    single_grpv <- as.character(SE_correction[[i]][["vgl"]][["groups.divided.by"]])[rows]
+    single_grpv <- SE_correction[[i]][["focGrp"]]
     
-    #if(grepl(" \\+ ", single_grpv)) browser()
-    if(grepl(" \\+ ", single_grpv)) {
-      single_grpv <- gsub(SE_correction[[i]][["vgl"]][["groups.divided.by"]][rows-1], "", single_grpv)
-      single_grpv <- gsub(" \\+ ", "", single_grpv)
-    }
-    
-    ### Achtung: ueberpruefen, ob allNam$independent nicht die Info einfacher bereit haelt
-    
-    ## huihui, Achtung: jenachdem ob Trend oder nicht, heißen die Spalten ja anders!
-    # also eher nicht die reporting Funktion verwenden
+    # Nicht output reporten, da spalten sonst je nach Trend unterschiedlich heissen
     SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient %in% c("se", "p"), c("parameter", "value", "coefficient")]
     SEs[, "parameter"] <- gsub(single_grpv, "", SEs[, "parameter"])
     SEs <- as.data.frame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
