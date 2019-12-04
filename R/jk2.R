@@ -250,6 +250,10 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
           allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = dependent, independent=independent)
           allNam<- lapply(allVar, FUN=function(ii) {existsBackgroundVariables(dat = datL, variable=ii)})
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
+    ### check: Gruppierungsvariablen duerfen nicht numerisch sein
+          if(!is.null(allNam[["group"]])) {
+             chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
+          }
     ### check: Manche Variablennamen sind in der Ergebnisstruktur fest vergeben und duerfen daher nutzerseitig nicht als namen von Gruppenvariablen vergeben werden
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
           naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable")
@@ -263,7 +267,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
     ### fuer weighted effect coding muss UV ein Faktor sein, und es darf auch nur eine UV geben 
           if (useWec == TRUE ) { 
               if ( length(independent) != 1 ) {stop("Only one independent (grouping) variable is allowed for weighted effect coding.\n")}
-              if ( class(datL[,independent]) != "factor") {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor'.\n"))}
+              if ( !class(datL[,independent]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
           }
     ### Methode "mice" geht nur fuer nicht-genestete Imputationen
           if (poolMethod == "mice" && !is.null(allNam[["nest"]]) && toCall == "glm" ) {
@@ -873,7 +877,7 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
                                           coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),rep("est", 2)),
                                           value=c(r.squared[["N"]],r.squared[["N.valid"]],glm.ii$coefficient,NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                             }
-                            if(!is.null(repA)) {                                ### jetzt kommt die Behandlung, wenn zusaetzlich zu JK noch singularitaet auftritt. das ueberschreibt nun die bisherige "res.bl"
+                            if(!is.null(repA) || useWec == TRUE ) {             ### jetzt kommt die Behandlung, wenn zusaetzlich zu JK noch singularitaet auftritt. das ueberschreibt nun die bisherige "res.bl"
                                 if(length(which(is.na(glm.ii$coefficients))) > 0 ) {
                                    cat(paste("Singularity problem in regression estimation for ", length(singular)," coefficient(s): ",paste(singular, collapse = ", "),". Try workaround ... \n", sep = "")); flush.console()
                                 }
@@ -901,14 +905,34 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
 #                                      diffs  <- (matrix(thetas, nrow=1)[rep(1, nrow(allReps)),] - allReps)^2
 #                                      resRoh <- data.frame ( theta = thetas, SE = sqrt(colSums(diffs)))
                                        contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[1], weights = dat.i[,allNam[["wgt"]]])
-                                       design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
-                                       string1<- paste("resRoh1 <- data.frame( withReplicates(design1, quote(eatRep:::getOutputIfSingularWec(lm_robust(formula = ",formelNew,", weights=.weights, se_type =\"stata\")))), stringsAsFactors = FALSE)",sep="")
-                                       eval ( parse ( text = string1 ) )
-                                       contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
-                                       design2<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
-                                       string2<- paste("resRoh2 <- data.frame( withReplicates(design2, quote(eatRep:::getOutputIfSingularWec(lm_robust(formula = ",formelNew,", weights=.weights, se_type = \"stata\")))), stringsAsFactors = FALSE)",sep="")
-                                       eval ( parse ( text = string2 ) )
-                                       resRoh <- rbind(resRoh1, resRoh2)[which(!duplicated(c(row.names(resRoh1), row.names(resRoh2)))),]
+                                       if(!is.null(repA) ) {
+                                           design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                                           string1<- paste("resRoh1 <- data.frame( withReplicates(design1, quote(eatRep:::getOutputIfSingularWec(lm_robust(formula = ",formelNew,", weights=.weights, se_type =\"stata\")))), stringsAsFactors = FALSE)",sep="")
+                                           eval ( parse ( text = string1 ) )
+                                           contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
+                                           design2<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                                           string2<- paste("resRoh2 <- data.frame( withReplicates(design2, quote(eatRep:::getOutputIfSingularWec(lm_robust(formula = ",formelNew,", weights=.weights, se_type = \"stata\")))), stringsAsFactors = FALSE)",sep="")
+                                           eval ( parse ( text = string2 ) )
+                                           resRoh <- rbind(resRoh1, resRoh2)[which(!duplicated(c(row.names(resRoh1), row.names(resRoh2)))),]
+                                       }  else  {
+                                           if (is.null(allNam[["wgt"]])) {
+                                               res1   <- lm_robust(as.formula(formelNew), data = dat.i, se_type = "stata")
+                                           }  else  {
+                                               str1   <- paste0("res1 <- lm_robust(as.formula(formelNew), data = dat.i, weights = ",allNam[["wgt"]],", se_type = \"stata\")")
+                                               eval(parse(text=str1))
+                                           }
+                                           contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
+                                           if (is.null(allNam[["wgt"]])) {
+                                               res2   <- lm_robust(as.formula(formelNew), data = dat.i, se_type = "stata")
+                                           }  else  {
+                                               str2   <- paste0("res2 <- lm_robust(as.formula(formelNew), data = dat.i, weights = ",allNam[["wgt"]],", se_type = \"stata\")")
+                                               eval(parse(text=str2))
+                                           }
+                                           resRoh <- data.frame (theta = c(res1[["coefficients"]],res2[["coefficients"]], res1[["r.squared"]], length(res1[["fitted.values"]])), SE = c(res1[["std.error"]],res2[["std.error"]], NA, NA), stringsAsFactors = FALSE)
+                                           rowNam <- c(names(res1[["coefficients"]]),names(res2[["coefficients"]]),"R2", "Nvalid")
+                                           resRoh <- resRoh[which(!duplicated(rowNam)),]
+                                           rownames(resRoh) <- rowNam[which(!duplicated(rowNam))]
+                                       }
                                    }                                            ### rownames(resRoh) <- gsub("N", "Ncases", rownames(resRoh))
                                    index      <- which(nchar(rownames(resRoh)) == 0)
                                    if(length(index)>0) { for ( j in 1:length(index)) { rownames(resRoh)[index[j]] <- paste("dummyPar",j,sep="")}}
