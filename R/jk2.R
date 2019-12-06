@@ -162,7 +162,14 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
                          cat(paste0("Warning: Found ",length(isNa)," missing values in dependent variable '",chk[["dependent"]],"'.\n"))
                          if ( separate.missing.indicator == TRUE ) {
                               stopifnot ( length( intersect ( "missing" , names(table(datL[, chk[["dependent"]] ])) )) == 0 )
-                              datL[isNa, chk[["dependent"]] ] <- "missing"
+                              if(class(datL[, chk[["dependent"]] ]) == "factor") {# Hotfix: fuer Faktorvariablen funktioniert das einfache subsetting 
+                                  levOld <- levels(datL[, chk[["dependent"]] ]) ### dat[which(is.na(dat[,"var"])) ,"var"] <- "missing" nicht
+                                  datL[, chk[["dependent"]] ] <- as.character(datL[, chk[["dependent"]] ])
+                                  datL[isNa, chk[["dependent"]] ] <- "missing"
+                                  datL[, chk[["dependent"]] ] <- factor(datL[, chk[["dependent"]] ], levels=c(levOld, "missing"))
+                              }  else  {
+                                  datL[isNa, chk[["dependent"]] ] <- "missing"
+                              }
                          }  else  {
                               if ( na.rm == FALSE ) { stop("If no separate missing indicator is used ('separate.missing.indicator == FALSE'), 'na.rm' must be TRUE if missing values occur.\n")}
                               datL <- datL[-isNa,]
@@ -1149,20 +1156,22 @@ reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, 
                pool.R2(unlist(r2n), unlist(Nval), quiet = TRUE )[["m.pooled"]]), grps[[1]][[mat]], stringsAsFactors = FALSE, row.names = NULL)
         return(ret)}
 
+### MH wollte in grauer Vorzeit, dass unten stehendes keinen Fehler ergibt; da das aber spaeter schiefgeht, muss es hier eine Fehlermeldung geben
+### 06.12.2019, SW: habe jetzt wieder Fehlermeldungen draus gemacht
 checkData <- function ( sub.dat, allNam, toCall, separate.missing.indicator, na.rm) {
         if(!is.null(allNam[["PSU"]])) {
             nJkZones <- length(table(as.character(sub.dat[,allNam[["PSU"]]])))
             if(nJkZones<2)  {
-               cat("Warning! Found group with less than 2 PSUs. Please check your data!\n"); flush.console()
-               sub.dat[,"isClear"] <- FALSE
+               stop("Found group with less than 2 PSUs. Please check your data!\n")
+               #sub.dat[,"isClear"] <- FALSE
             }
         }                                                                       ### untere Zeile: prueft; es darf GAR KEINE Missings geben
         if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {
             nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
-            if(nObserved>0) {
+            if(nObserved>0) {                                                   
                if ( toCall %in% c("mean", "quantile", "glm") ) {
-                    cat("Warning! Found unexpected missing data in dependent variable for at least one group. Execution haltered. Please check your data!\n"); flush.console()
-                    sub.dat[,"isClear"] <- FALSE
+                    stop("Found unexpected missing data in dependent variable for at least one group. Please check your data or set 'na.rm==TRUE'.\n")
+                    #sub.dat[,"isClear"] <- FALSE
                }  else  {
                     cat("Warning! Found unexpected missing data in dependent variable for at least one group although 'separate.missing.indicator' was set to 'FALSE'. \n    Sure that this is intended? Try to continue execution ... \n"); flush.console()
                }
@@ -1171,8 +1180,8 @@ checkData <- function ( sub.dat, allNam, toCall, separate.missing.indicator, na.
         if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) {          ### es darf NICHT ALLES missing sein
             nMissing <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
             if(nMissing == nrow(sub.dat))  {
-               cat("Warning! Some groups without any observed data. Please check your data!\n"); flush.console()
-               sub.dat[,"isClear"] <- FALSE
+               stop("Some groups without any observed data. Please check your data!\n")
+               #sub.dat[,"isClear"] <- FALSE
             }
         }
         return(sub.dat)}
