@@ -6,7 +6,7 @@
 for complex cluster designs with multiple imputed variables (e.g. plausible values) based on Jackknife (JK1, JK2)
 or Balanced Repeated Replicates (BRR) procedure. Conceptually, the function combines replication methods and 
 methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
-Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
+Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{survey} package.}
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
@@ -202,16 +202,17 @@ means2 <- jk2.mean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", re
 res2   <- report(means2,add = list(domain = "reading"))
 
 ### Example 2a: Additionally to example 2, we decide to estimate whether
-### each country's mean differ significantly from the overall mean. Moreover, we estimate
-### whether each country's sex difference differ significantly from the sex difference in
-### the whole population. 
-means2a<- jk2.mean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+### each country's mean differ significantly from the overall mean. (Note: by default, such 
+### cross level differences are estimated using 'weighted effect coding'. Use the 'crossDiffSE'
+### argument to choose alternative methods.) Moreover, we estimate whether each country's sex 
+### difference differ significantly from the sex difference in the whole population. 
+means2a<- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
           cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE)
-res2a  <- report(means2a,add = list(domain = "reading"))
+res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 
 ### Third example: like example 2a, but using nested imputations of dependent variable,
-### and additionally estimating trend: use 'rd' indtead of 'rdN1y10'
+### and additionally estimating trend: use 'rd' instead of 'rdN1y10'
 means3T<- jk2.mean(datL = rd, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", nest="nest", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
           cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
