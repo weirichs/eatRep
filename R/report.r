@@ -108,18 +108,12 @@ seCorrect.old <- function( SE_correction, jk2, grpv ) {
 
 ## an der falschen Stelle! muss vor Trends passieren!
 seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
-  ## Trend or no trend
-  year <- as.character(unique(jk2[["year"]]))
-  if(length(year) == 0) year <- 1
+  sep_jk2 <- separate_jk2(jk2 = jk2)
+  cross_diff <- sep_jk2[["cross_diff"]]
 
-  ## dissect results so far
-  no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff" | jk2$parameter != "mean", ]
-  cross_diff <- jk2[which(jk2$comparison == "crossDiff" & jk2$parameter == "mean"), ]
-  stopifnot(identical(nrow(no_cross_diff) + nrow(cross_diff), nrow(jk2)))
-  
   for(i in seq_along(SE_correction)) {
     # debug 3 grp-vars: i <- 4
-    output <- SE_correction[[i]][["resT"]][[year]]
+    output <- SE_correction[[i]][["resT"]][[sep_jk2[["year"]]]]
     
     rows <- length(SE_correction[[i]][["vgl"]][["groups.divided.by"]])
     single_grpv <- SE_correction[[i]][["focGrp"]]
@@ -162,8 +156,6 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
       }
     }
   }
-  
-  
   ## mehr Fragen
   # _ in Faktorlevels erlaubt?
   
@@ -171,7 +163,22 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
   
   # was passiert eig. wenn faktorlevel verschiedener Variablen gleich heissen?
   
-  rbind(no_cross_diff, cross_diff)
+  rbind(sep_jk2[["no_cross_diff"]], cross_diff)
+}
+
+## Prepare jk2 object for se_correction
+separate_jk2 <- function(jk2) {
+  ## Trend or no trend
+  year <- as.character(unique(jk2[["year"]]))
+  if(length(year) == 0) year <- 1
+  
+  ## dissect results so far
+  no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff" | jk2$parameter != "mean", ]
+  cross_diff <- jk2[which(jk2$comparison == "crossDiff" & jk2$parameter == "mean"), ]
+  stopifnot(identical(nrow(no_cross_diff) + nrow(cross_diff), nrow(jk2)))
+  stopifnot(nrow(cross_diff) > 0)
+  
+  list(cross_diff = cross_diff, no_cross_diff = no_cross_diff, year = year)
 }
 
 recursive_filter <- function(df, vars, var_levels) {
@@ -187,6 +194,10 @@ recursive_filter <- function(df, vars, var_levels) {
 }
 
 seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
+  sep_jk2 <- separate_jk2(jk2 = jk2)
+  cross_diff <- sep_jk2[["cross_diff"]]
+  
+  #browser()
   stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
 }
 
