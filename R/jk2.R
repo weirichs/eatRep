@@ -50,14 +50,13 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by,
                    cross.differences = cross.differences, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine)
             if ( isFALSE(ret[["allNam"]][["cross.differences"]])) {return(ret)}
-
             if ( (is.list(cross.differences) || cross.differences == TRUE) && cdse == "old" ) {
                  ret[["SE_correction"]] <- list(NULL)
                  class(ret[["SE_correction"]]) <- c("old", "list")
                  return(ret)
             }
             if ( is.list(cross.differences) || cross.differences == TRUE ) {
-                  toAppl<- superSplitter(group = ret[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = ret[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=ret[["allNam"]][["dependent"]] )
+                  toAppl<- eatRep:::superSplitter(group = ret[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = ret[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=ret[["allNam"]][["dependent"]] )
                   stopifnot(length ( toAppl ) > 1)
                   vgl <- do.call("rbind", lapply(1:length(toAppl), FUN = function ( y ) {
                          gdb <- attr(toAppl[[y]], "group.differences.by")
@@ -108,22 +107,24 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
                                 }                                               ### untere Zeilen: bloeder hotfix, notwendig wegen anderem Hotfix, weil ret$allNam$nest nicht NULL ist, selbst wenn keine nests spezifiziert werden (damit 'by' funktioniert)
                                 if (is.null(nest)) {ne <- NULL} else {ne <- ret[["allNam"]][["nest"]]}
                                 if (is.null(imp))  {im <- NULL} else {im <- ret[["allNam"]][["imp"]]}
+                                if ( vgl[1,"hierarchy.level"] != 0) {
+                                     rg <- facToChar(d[1,nam, drop=FALSE])
+                                     rg <- do.call("rbind", lapply(names(rg), FUN = function (r){data.frame ( groupName = r, groupValue = rg[1,r], stringsAsFactors = FALSE) }))
+                                }  else  {
+                                     rg <- NULL
+                                }
                                 if ( cdse == "wec" ) {
                                      b <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]],
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ne, imp=im, trend = trend,
                                                   formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = engine )
-                                     b[["vgl"]]      <- vgl
-                                     b[["focGrp"]]   <- grp                     ### Fokus- und Referenzgruppe in Ergebnisoutput eintragen,
-                                     b[["refGrp"]]   <- "all"                   ### zur Weiterverarbeitung in den Reportingfunktionen
-                                     if ( vgl[1,"hierarchy.level"] != 0) {
-                                          rg <- facToChar(d[1,nam, drop=FALSE])
-                                          rg <- do.call("rbind", lapply(names(rg), FUN = function (r){data.frame ( groupName = r, groupValue = rg[1,r], stringsAsFactors = FALSE) }))
-                                          b[["refGrp"]] <- rg
-                                     }
                                 }  else  {                                      ### hier beginnt methode 'pisa'
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot, bootMethod = bootMethod,
-                                          nest=ne, imp=im, groups = grp, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine=engine, modus=modus)
+                                          nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine=engine, modus=modus)
                                 }
+                                b[["vgl"]]      <- vgl
+                                b[["focGrp"]]   <- grp                          ### Fokus- und Referenzgruppe in Ergebnisoutput eintragen,
+                                b[["refGrp"]]   <- "all"                        ### zur Weiterverarbeitung in den Reportingfunktionen
+                                if(!is.null(rg)) {b[["refGrp"]] <- rg}
                          return(b)})
                   return(cld)})
                   spl <- unlist(spl, recursive=FALSE)
@@ -135,8 +136,8 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
-            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, chiSquare = FALSE,
-            correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
+            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+            nBoot = 100, bootMethod = c("wSampling","wMeans"),chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey") ) {                             ### untere Zeile: wrapper! hier wird jk2.table ueber jk2.mean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen; untere Zeilen, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
             modus <- identifyMode ( name = "table", type = type, PSU = PSU, repWgt=repWgt )
            if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
@@ -148,7 +149,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
                  attr(datL, "modus") <- modus
                  ret <- jk2.mean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], repWgt = repWgt,
                         nest = chk1[["nest"]], imp = chk1[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
-                        group.delimiter =group.delimiter, trend = chk1[["trend"]], linkErr = chk1[["linkErr"]], dependent = chk1[["dependent"]], na.rm=na.rm,doCheck = doCheck, engine=engine)
+                        crossDiffSE = crossDiffSE, nBoot = nBoot, bootMethod = bootMethod,group.delimiter =group.delimiter, trend = chk1[["trend"]], linkErr = chk1[["linkErr"]], dependent = chk1[["dependent"]], na.rm=na.rm,doCheck = doCheck, engine=engine)
                  return(ret)
             }  else  {
                  if ( !is.null(group.differences.by) && chiSquare == FALSE) {
@@ -184,7 +185,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
                            attr(datL,"depOri") <- chk[["dependent"]]
                            res <- jk2.mean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt,
                                              nest = chk[["nest"]], imp = chk[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
-                                             group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,doCheck = doCheck, engine=engine)
+                                             crossDiffSE = crossDiffSE, nBoot = nBoot, bootMethod = bootMethod,group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,doCheck = doCheck, engine=engine)
                            return(res) } )
     ### Output zusammenfassen: kein Trend ... dann ist "resT" eine Liste mit nur einem Element, das ein data.frame ist
                     if ( length(ret[[1]][["resT"]]) == 1) {
@@ -840,7 +841,12 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
           }
           return(facToChar(resAl)) }
 
-jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA){
+giveRefgroup <- function ( refGrp) {
+          if ( is.null(refGrp)) {return(".vs.wholeGroup")}
+          ret <- paste0(".vs.", paste(apply(refGrp, MARGIN = 1, FUN = function ( zeile ) { paste(zeile, collapse="")}), collapse="_"))
+          return(ret)}
+
+jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, refGrp){
           repl<- merge(repA, dat.i, by = allNam[["ID"]], all.x = FALSE, all.y = TRUE)
           covs<- do.call("rbind", lapply(setdiff(colnames(repA),allNam[["ID"]]), FUN = function ( r ) {
                  gm <- by(data=repl[which(repl[,r]>0),], INDICES = repl[which(repl[,r]>0),allNam[["group"]]], FUN = function ( j ){wtd.mean(x=j[,allNam[["dependent"]]], weights=j[,r])})
@@ -848,18 +854,18 @@ jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA){
                  names(ms) <- names(gm)
                  return(data.frame ( totalMean = wtd.mean(x=repl[,allNam[["dependent"]]], weights = repl[,r] ),t(ms), stringsAsFactors=FALSE))}))
           covs<- cov(covs)[1,]
-          rs  <- data.frame ( group = paste0("wholeGroup.vs.",names(covs)[-1]), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(covs)[-1] , stringsAsFactors = FALSE)
+          rs  <- data.frame ( group = paste0(names(covs)[-1], giveRefgroup(refGrp)), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(covs)[-1] , stringsAsFactors = FALSE)
           colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
-conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, bootMethod){
+conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, bootMethod, refGrp){
           if ( bootMethod == "wMeans") {
               covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { c(wtd.mean(x[i,allNam[["dependent"]]], weights = x[i,allNam[["wgt"]]]), as.vector(unlist(by(data = x[i,], INDICES = x[i,allNam[["group"]]], FUN = function ( g ) { wtd.mean(g[,allNam[["dependent"]]], weights = g[,allNam[["wgt"]]])}))))})
           }  else  {
               covs<- boot(data=dat.i, weights = dat.i[,allNam[["wgt"]]], R = nBoot, statistic = function ( x, i) { c(mean(x[i,allNam[["dependent"]]]), as.vector(unlist(by(data = x[i,], INDICES = x[i,allNam[["group"]]], FUN = function ( g ) { mean(g[,allNam[["dependent"]]])}))))})
           }
           covs<- cov(covs$t)[1,]
-          rs  <- data.frame ( group = paste0("wholeGroup.vs.",names(table(dat.i[,allNam[["group"]]]))), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(table(dat.i[,allNam[["group"]]])), stringsAsFactors = FALSE)
+          rs  <- data.frame ( group = paste0(names(table(dat.i[,allNam[["group"]]])), giveRefgroup(refGrp)), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(table(dat.i[,allNam[["group"]]])), stringsAsFactors = FALSE)
           colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
@@ -1112,9 +1118,9 @@ chooseFunction <- function (datI, allNam, na.rm, group.delimiter,type, repA, mod
         }
         if( toCall == "cov" ) {
             if ( doJK == TRUE ) {
-                 ana.i <- jackknife.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
+                 ana.i <- jackknife.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, refGrp=refGrp)
             }  else  {
-                 ana.i <- conv.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, nBoot=nBoot, bootMethod=bootMethod)
+                 ana.i <- conv.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, nBoot=nBoot, bootMethod=bootMethod, refGrp=refGrp)
             }
         }
     ### glms initialisieren, wird ueberschrieben, wenn toCall = 'glm'
