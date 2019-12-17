@@ -91,9 +91,9 @@ This argument is only necessary, if \code{crossDiffSE = "pisa"} \emph{and} none 
 }
   \item{bootMethod}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: If standard error are computed in a bootstrap, two possible methods may be applied.
-\code{'wSampling'} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted means
-are computed. \code{'wMeans'} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
+Optional: If standard errors are computed in a bootstrap, two possible methods may be applied.
+\code{"wSampling"} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted means
+are computed. \code{"wMeans"} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
 weighted means are computed.
 }
   \item{group.delimiter}{

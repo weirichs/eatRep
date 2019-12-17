@@ -7,14 +7,16 @@ cluster designs. Estimation of standard errors optionally takes the clustered st
 variables into account. To date, Jackknife-1 (JK1), Jackknife-2 (JK2) and Balanced repeated replicate (BRR) methods are 
 implemented to account for clustered designs. Procedures of Rubin (1987) and Rubin (2003) are implemented to account for 
 multiple imputed data and nested imputed data, if necessary. Conceptually, the function combines replication and imputation 
-methods. Technically, this is a wrapper for the svymean() function of the survey package.
+methods. Technically, this is a wrapper for the \code{svymean()} function of the \code{survey} package.
 }
 \usage{
 jk2.table(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-          group.differences.by = NULL, cross.differences = FALSE, chiSquare = FALSE, correct = TRUE, group.delimiter = "_",
-          trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE, 
-          expected.values = NULL, doCheck = TRUE, forceTable = FALSE, engine = c("survey", "BIFIEsurvey") )}
+          group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+          nBoot = 100, bootMethod = c("wSampling","wMeans"), chiSquare = FALSE,
+          correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
+          separate.missing.indicator = FALSE, na.rm=FALSE, expected.values = NULL,
+          doCheck = TRUE, forceTable = FALSE, engine = c("survey", "BIFIEsurvey") )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -78,6 +80,27 @@ Either a list of vectors, specifying the pairs of levels for which cross-level d
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
 differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mean)
 }
+  \item{crossDiffSE}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Method for standard error estimation for cross level differences, where groups are dependent.
+\code{wec} uses weighted effect coding, \code{pisa} uses the covariance between the total mean
+and the group mean for standard error estimation, \code{old} does not account for dependent
+groups and treat the groups as if they were independent from each other.
+}
+  \item{nBoot}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Without replicates (i.e., for completely random samples), the pisa method for standard error estimation for 
+cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
+This argument is only necessary, if \code{crossDiffSE = "pisa"} \emph{and} none of the replicate methods 
+(JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
+}
+  \item{bootMethod}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If standard errors are computed in a bootstrap, two possible methods may be applied.
+\code{"wSampling"} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted means
+are computed. \code{"wMeans"} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
+weighted means are computed.
+}
   \item{chiSquare}{
 Logical. Applies only if \code{group.differences.by} was specified. Defines whether 
 group differences should be represented in a chi square test or in (mean) differences of each 
@@ -136,7 +159,7 @@ Which package should be used for estimation?
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in the \code{'survey'} package.
+The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in the \code{survey} package.
 Relative frequencies of the categories of the dependent variable are computed by the means of the dichotomous indicators
 (e.g. dummy variables) of each category. The results of the several analyses are then pooled according to Rubin's rule,
 which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
@@ -175,7 +198,7 @@ If groups were specified, further columns which are denoted by the group names a
 Sebastian Weirich
 }
 \examples{
-data(lsa)
+library(eatRep); data(lsa)
 
 ### Example 1: only means, SD and variances for each country
 ### We only consider domain 'reading'
@@ -205,11 +228,12 @@ freq.tab2 <- jk2.table(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
 res2      <- report(freq.tab2, add = list ( domain = "reading" ))
 
 ### Third example: trend estimation and nested imputation and 'by' loop
+### (to date, only crossDiffSE = "old" works)
 freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) {
              jk2.table(datL = subdat, ID = "idstud", wgt = "wgt", imp="imp", nest = "nest",
                  type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
                  group.differences.by = "country", group.splits = 0:1, cross.differences = TRUE,
-                 dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = "leComp") })
+                 crossDiffSE = "old", dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = "leComp") })
 res3      <- do.call("rbind", lapply(names(freq.tab3), FUN = function (domain) {
              report(freq.tab3[[domain]], trendDiffs = TRUE, add = list ( domain = domain ))}))
 }
