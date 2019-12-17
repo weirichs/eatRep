@@ -84,7 +84,7 @@ differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mea
 %%     ~~Describe \code{sig.dif.bound} here~~
 Method for standard error estimation for cross level differences, where groups are dependent.
 \code{wec} uses weighted effect coding, \code{pisa} uses the covariance between the total mean
-and the group mean for standard error estimation, \code{old} does not account for dependent
+and the group mean for standard error estimation (adjusted z test), \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
   \item{nBoot}{

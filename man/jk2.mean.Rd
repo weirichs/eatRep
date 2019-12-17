@@ -79,7 +79,7 @@ differences are computed. (see example 2a, 3, and 4)
 %%     ~~Describe \code{sig.dif.bound} here~~
 Method for standard error estimation for cross level differences, where groups are dependent.
 \code{wec} uses weighted effect coding, \code{pisa} uses the covariance between the total mean
-and the group mean for standard error estimation, \code{old} does not account for dependent
+and the group mean for standard error estimation (adjusted z test), \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
   \item{nBoot}{
@@ -216,7 +216,7 @@ res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 means3T<- jk2.mean(datL = rd, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", nest="nest", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
           cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
-          trend = "year", linkErr = "leScore")
+          trend = "year", linkErr = "leScore", crossDiffSE = c("wec", "pisa","old"))
 res3T  <- report(means3T, add = list(domain = "reading"))
           
 ### Fourth example: using a loop do analyse 'reading' and 'listening' comprehension
