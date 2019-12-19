@@ -197,8 +197,52 @@ seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
   sep_jk2 <- separate_jk2(jk2 = jk2)
   cross_diff <- sep_jk2[["cross_diff"]]
   
-  #browser()
-  stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+  for(i in seq_along(SE_correction)) {
+    output <- SE_correction[[i]][["resT"]][[sep_jk2[["year"]]]]
+    
+    rows <- length(SE_correction[[i]][["vgl"]][["groups.divided.by"]])
+    single_grpv <- SE_correction[[i]][["focGrp"]]
+    
+    SEs <- output[output$coefficient %in% c("est"), ]
+    for(param in SEs[["group"]]) {
+      if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
+        # funktioniert nur, da keine correction ueber mehrere Hierarchieebenen hinweg funktioniert!
+        row_num_se <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "se")
+        row_num_est <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "est") 
+        row_num_p <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "p") 
+        cross_diff[row_num_se, "value"] <- sqrt((cross_diff[row_num_se, "value"]^2) - (2 * SEs[SEs[, "group"] == param, "value"]))
+        
+        ## p-Wert anders bilden, steht noch aus!
+        cross_diff[row_num_p, "value"] <- 2*pnorm(abs(cross_diff[row_num_est, "value"]/cross_diff[row_num_se, "value"]), lower=FALSE)
+      } else { ### if reference level is a subgroup
+        stop("PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
+        
+        #browser()
+        # create variable to select right rows in jk2 output
+        #param_finder <- cross_diff$group
+        #param_finder <- sapply(strsplit(param_finder, ".vs."), function(x) x[1])
+        
+        ## complicated to find param match, because the factor string of another level can contain the string of the current level!
+        param_selector <- paste0("^", param, "\\.|", "^", param, "_|", "_", param, "\\.|", "_", param, "_")
+        
+        col_names <- SE_correction[[i]]$refGrp[, "groupName"]
+        col_levels <- SE_correction[[i]]$refGrp[, "groupValue"]
+        
+        #if(identical(col_levels, c("female", "TRUE"))) browser()
+        # filter relevant rows for flexibel number of filter variables
+        filt_var <- recursive_filter(df = cross_diff, vars = col_names, var_levels = col_levels)
+        
+        #if(length(which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se")) != 1) browser()
+        cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se"), 
+                   "value"] <- SEs[SEs[, "parameter"] == param, "se"]
+        cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "p"), 
+                   "value"] <- SEs[SEs[, "parameter"] == param, "p"]
+      }
+    }
+  }
+  rbind(sep_jk2[["no_cross_diff"]], cross_diff)
+  
+  #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
 }
 
 

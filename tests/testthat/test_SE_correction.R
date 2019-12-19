@@ -7,7 +7,8 @@ context("SE correction for WEC and PISA")
 load("helper_SE_correction.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_wec_complex.RData")
 load("helper_SE_correction_wec_complex.RData")
-#load("helper_SE_correction_pisa_complex.RData")
+#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_pisa_complex.RData")
+load("helper_SE_correction_pisa_complex.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_table.RData")
 load("helper_SE_correction_table.RData")
 
@@ -22,18 +23,23 @@ test_that("Warnings for not supported crossDiffs", {
   # expect_error(report(m_wec), "SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
 })
 
-test_that("Temporary error", {
+#test_that("Temporary error", {
   #expect_error(report(m_wec), "SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
   #wec_out <- report(m_wec)
   #expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 1.954211, tolerance=1e-3)
-  expect_error(report(m_pisa), "SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
+  #expect_error(report(m_pisa), "SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
   # expect_error(report(m_wec), "SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
-})
+#})
 
 test_that("wec 1 grouping variable, no trend", {
   wec_out <- report(m_wec)
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 1.954, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "male.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0, tolerance=1e-3)
+})
+test_that("pisa 1 grouping variable, no trend", {
+  pisa_out <- report(m_pisa)
+  expect_lt(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 3.495)
+  expect_lte(pisa_out[pisa_out$group == "male.vs.wholeGroup" & pisa_out$parameter == "mean", "p"], 0.05)
 })
 
 test_that("wec 2 grouping variables, trend", {
@@ -43,6 +49,22 @@ test_that("wec 2 grouping variables, trend", {
   expect_equal(wec_out[wec_out$group == "LandA.vs.wholeGroup" & wec_out$parameter == "mean", "p_2010"], 0.003, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "LandC.vs.wholeGroup" & wec_out$parameter == "mean", "p_2015"], 0.017, tolerance=1e-3)
 })
+
+# means3T_old <- means3T_pisa
+# means3T_old[["SE_correction"]] <- NULL
+# report(means3T_old)[which(report(means3T_old)$comparison == "crossDiff"), ]
+# report(means3T)[which(report(means3T)$comparison == "crossDiff"), ]
+# report(means3T_pisa)[which(report(means3T_pisa)$comparison == "crossDiff"), ]
+
+# means3T_pisa$resT$`2010`[which(means3T_pisa$resT$`2010`$comparison == "crossDiff"),]
+test_that("pisa 2 grouping variables, trend", {
+  pisa_out <- suppressWarnings(report(means3T_pisa))
+  expect_lt(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2010"], 6.660)
+  expect_lt(pisa_out[pisa_out$group == "male.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2015"], 6.499)
+  expect_lte(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2010"], 0.751)
+  expect_lte(pisa_out[pisa_out$group == "LandC.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2015"], 0.016)
+})
+
 
 test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
   wec_out <- suppressWarnings(report(means3Tb))
@@ -56,6 +78,21 @@ test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
   expect_equal(wec_out[wec_out$group == "LandC_female.vs.LandC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "LandC_male.vs.LandC" & wec_out$parameter == "mean", "se"], 3.325, tolerance=1e-3)
 })
+
+test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
+  expect_error(suppressWarnings(report(means3Tb_pisa)), "PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
+  #pisa_out <- suppressWarnings(report(means3Tb_pisa))
+  #table(pisa_out[which(pisa_out$comparison == "crossDiff"), "group"])
+  #expect_equal(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
+  #expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
+  
+  #expect_equal(wec_out[wec_out$group == "LandA_female.vs.LandA" & wec_out$parameter == "mean", "se"], 3.344, tolerance=1e-3)
+  #expect_equal(wec_out[wec_out$group == "LandA_male.vs.LandA" & wec_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
+  
+  #expect_equal(wec_out[wec_out$group == "LandC_female.vs.LandC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
+  #expect_equal(wec_out[wec_out$group == "LandC_male.vs.LandC" & wec_out$parameter == "mean", "se"], 3.325, tolerance=1e-3)
+})
+
 
 
 test_that("wec 3 grouping variables, no trend, cross diff on higher level", {

@@ -34,3 +34,12 @@ test_that("error for two logical grouping variables", {
            cross.differences = FALSE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="old",
            engine = "BIFIEsurvey")), "Factor levels of grouping variables are not disjunct.")
 })
+
+
+### PISA method
+test_that("PISA runs through", {
+  expect_silent(suppressWarnings(suppressMessages(txt2 <- capture.output ( m_oldCross <- jk2.mean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+                                                                imp="imp", nest="nest", groups = c("sex"), group.splits = 0:1,
+                                                                cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="pisa")))))
+})
+
