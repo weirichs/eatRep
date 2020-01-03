@@ -1205,7 +1205,7 @@ doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm=na.rm, group.delimiter=
     ### progress bar fuer analysen anzeigen
             cri1<- nrep > 4 & length(unique(datL1[,allNam[["ID"]]]))>2000 & doJK
             cri2<- FALSE
-            if ( isFALSE(doJK) {
+            if ( isFALSE(doJK)) {
                  cri2<- nrep > 9 & length(unique(datL1[,allNam[["ID"]]]))>5000
             }
             if ( isTRUE(cri1) | isTRUE(cri2) ) {
