@@ -11,7 +11,7 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
-            nBoot = 100, bootMethod = c("wSampling","wMeans"), group.delimiter = "_", trend = NULL, 
+            nBoot = 100, group.delimiter = "_", trend = NULL,
             linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -88,13 +88,6 @@ Without replicates (i.e., for completely random samples), the pisa method for st
 cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
 This argument is only necessary, if \code{crossDiffSE = "pisa"} \emph{and} none of the replicate methods 
 (JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
-}
-  \item{bootMethod}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: If standard errors are computed in a bootstrap, two possible methods may be applied.
-\code{"wSampling"} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted means
-are computed. \code{"wMeans"} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
-weighted means are computed.
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
