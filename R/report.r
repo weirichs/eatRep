@@ -196,6 +196,7 @@ recursive_filter <- function(df, vars, var_levels) {
 seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
   sep_jk2 <- separate_jk2(jk2 = jk2)
   cross_diff <- sep_jk2[["cross_diff"]]
+  no_cross_diff <- sep_jk2[["no_cross_diff"]]
   
   for(i in seq_along(SE_correction)) {
     output <- SE_correction[[i]][["resT"]][[sep_jk2[["year"]]]]
@@ -210,7 +211,14 @@ seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
         row_num_se <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "se")
         row_num_est <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "est") 
         row_num_p <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "p") 
-        cross_diff[row_num_se, "value"] <- sqrt((cross_diff[row_num_se, "value"]^2) - (2 * SEs[SEs[, "group"] == param, "value"]))
+        
+        # select raw standard errors for sub groups
+        group_names <- strsplit(cross_diff[row_num_se, "group"], split = "\\.vs\\.")[[1]]
+        group_ses <- lapply(group_names, function(group_name) {
+          no_cross_diff[no_cross_diff$group == group_name & no_cross_diff$parameter == "mean" & no_cross_diff$coefficient == "se", "value"]
+        })
+        #browser()
+        cross_diff[row_num_se, "value"] <- sqrt(group_ses[[1]]^2 + group_ses[[2]]^2 - (2 * SEs[SEs[, "group"] == param, "value"]))
         
         ## p-Wert anders bilden, steht noch aus!
         cross_diff[row_num_p, "value"] <- 2*pnorm(abs(cross_diff[row_num_est, "value"]/cross_diff[row_num_se, "value"]), lower=FALSE)
@@ -237,10 +245,11 @@ seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
                    "value"] <- SEs[SEs[, "parameter"] == param, "se"]
         cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "p"), 
                    "value"] <- SEs[SEs[, "parameter"] == param, "p"]
+        
       }
     }
   }
-  rbind(sep_jk2[["no_cross_diff"]], cross_diff)
+  rbind(no_cross_diff, cross_diff)
   
   #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
 }
