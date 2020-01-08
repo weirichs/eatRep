@@ -850,12 +850,13 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           typeS<- recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
-          strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)), return.replicates=TRUE)",sep="")
+          strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
           eval(parse(text=strng))
-#          rs  <- data.frame ( group = paste0(names(covs)[-1], giveRefgroup(refGrp)), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(covs)[-1] , stringsAsFactors = FALSE)
-#          colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
+          rs   <- data.frame ( group = paste0(rep(rownames(ret), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], zusatz = names(table(dat.i[,allNam[["group"]]])), stringsAsFactors=FALSE)
+          colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
+### Hilfsfunktion fuer jackknife.cov
 fun <- function(d, g, w){                                                       ### 'd' = dependent; 'g' = grouping; 'w' = weights
        dat <- data.frame ( d, g, w, stringsAsFactors = FALSE)
        ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { wtd.mean(y[,"d"], weights = y[,"w"])})
