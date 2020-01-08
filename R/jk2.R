@@ -135,7 +135,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
-            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey") ) {                             ### untere Zeile: wrapper! hier wird jk2.table ueber jk2.mean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen; untere Zeilen, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
             modus <- identifyMode ( name = "table", type = type, PSU = PSU, repWgt=repWgt )
@@ -144,7 +144,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                      expected.values=expected.values, na.rm=na.rm, doCheck=FALSE, onlyCheck= TRUE, modus = modus, engine=engine)
-            if ( length(unique(datL[,chk1[["dependent"]]])) == 2 && all(sort(unique(datL[,chk1[["dependent"]]])) == 0:1) == TRUE && forceTable == FALSE ) {
+            if ( length(unique(datL[,chk1[["dependent"]]])) == 2 && isTRUE(all(sort(unique(datL[,chk1[["dependent"]]])) == 0:1)) && isFALSE(forceTable)) {
                  attr(datL, "modus") <- modus
                  ret <- jk2.mean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], repWgt = repWgt,
                         nest = chk1[["nest"]], imp = chk1[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
@@ -171,7 +171,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
                                   datL[isNa, chk[["dependent"]] ] <- "missing"
                               }
                          }  else  {
-                              if ( na.rm == FALSE ) { stop("If no separate missing indicator is used ('separate.missing.indicator == FALSE'), 'na.rm' must be TRUE if missing values occur.\n")}
+                              if ( isFALSE(na.rm ) ) { stop("If no separate missing indicator is used ('separate.missing.indicator == FALSE'), 'na.rm' must be TRUE if missing values occur.\n")}
                               datL <- datL[-isNa,]
                          }
                     }                                                           ### Ende des missing handlings
@@ -250,7 +250,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
           type  <- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR"))
           engine<- match.arg(arg = engine, choices = c("survey", "BIFIEsurvey"))
           glmTransformation <- match.arg(glmTransformation)
-          if(forceSingularityTreatment == FALSE & glmTransformation != "none") {
+          if(isFALSE(forceSingularityTreatment) & glmTransformation != "none") {
              cat("'forceSingularityTreatment' was set to 'FALSE'. Please note that 'glmTransformation' is only possible if 'forceSingularityTreatment' is 'TRUE'.\n"); flush.console()
           }
           if(toCall == "glm") {                                                 ### fuer glm muessen abhaengge und unabhaengige Variablen aus Formel extrahiert werden
@@ -552,7 +552,7 @@ checkRegression <- function ( dat, allNam, useWec ) {
                               cat(paste("Warning: predictor '",i,"' has class 'character'. Please check your data.\n",sep=""))
                          }
                          if ( class ( dat[,i] ) %in% c("character", "factor") ) {
-                              if ( isKonst > 15 && useWec == FALSE ) {
+                              if ( isKonst > 15 && isFALSE(useWec) ) {
                                    cat(paste("Warning: predictor '",i,"' of class '",class ( dat[,i] ),"' has ",isKonst," levels. Please check whether this is intended.\n",sep=""))
                               }
                          } })   }                                               ### keine Rueckgabe
@@ -887,7 +887,7 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
                             if(!is.null(repA)) {
                                 typeS      <- recode(type, "'JK2'='JKn'")
                                 design     <- svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
-                                if(length(singular) == 0 & forceSingularityTreatment == FALSE ) {
+                                if(length(singular) == 0 & isFALSE(forceSingularityTreatment) ) {
                                    glm.ii  <- svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
                                 }
                             }
@@ -1173,7 +1173,7 @@ checkData <- function ( sub.dat, allNam, toCall, separate.missing.indicator, na.
                #sub.dat[,"isClear"] <- FALSE
             }
         }                                                                       ### untere Zeile: prueft; es darf GAR KEINE Missings geben
-        if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {
+        if( (toCall == "table" & isFALSE(separate.missing.indicator)) | (toCall %in% c("mean", "quantile", "glm") & isFALSE(na.rm) ) )  {
             nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
             if(nObserved>0) {                                                   
                if ( toCall %in% c("mean", "quantile", "glm") ) {
@@ -1184,7 +1184,7 @@ checkData <- function ( sub.dat, allNam, toCall, separate.missing.indicator, na.
                }
             }
         }
-        if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) {          ### es darf NICHT ALLES missing sein
+        if ( toCall %in% c("mean", "quantile", "glm") & isFALSE(na.rm)) {       ### es darf NICHT ALLES missing sein
             nMissing <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
             if(nMissing == nrow(sub.dat))  {
                stop("Some groups without any observed data. Please check your data!\n")
