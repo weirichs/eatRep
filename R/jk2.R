@@ -55,7 +55,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
                  return(ret)
             }
             if ( is.list(cross.differences) || isTRUE(cross.differences) ) {
-                  toAppl<- eatRep:::superSplitter(group = ret[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = ret[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=ret[["allNam"]][["dependent"]] )
+                  toAppl<- superSplitter(group = ret[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = ret[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=ret[["allNam"]][["dependent"]] )
                   stopifnot(length ( toAppl ) > 1)
                   vgl <- do.call("rbind", lapply(1:length(toAppl), FUN = function ( y ) {
                          gdb <- attr(toAppl[[y]], "group.differences.by")
@@ -846,16 +846,22 @@ giveRefgroup <- function ( refGrp) {
           return(ret)}
 
 jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, refGrp){
-          repl<- merge(repA, dat.i, by = allNam[["ID"]], all.x = FALSE, all.y = TRUE)
-          covs<- do.call("rbind", lapply(setdiff(colnames(repA),allNam[["ID"]]), FUN = function ( r ) {
-                 gm <- by(data=repl[which(repl[,r]>0),], INDICES = repl[which(repl[,r]>0),allNam[["group"]]], FUN = function ( j ){wtd.mean(x=j[,allNam[["dependent"]]], weights=j[,r])})
-                 ms <- as.vector(gm)
-                 names(ms) <- names(gm)
-                 return(data.frame ( totalMean = wtd.mean(x=repl[,allNam[["dependent"]]], weights = repl[,r] ),t(ms), stringsAsFactors=FALSE))}))
-          covs<- cov(covs)[1,]
-          rs  <- data.frame ( group = paste0(names(covs)[-1], giveRefgroup(refGrp)), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(covs)[-1] , stringsAsFactors = FALSE)
-          colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
+if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
+          typeS<- recode(type, "'JK2'='JKn'")
+          repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
+          des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
+          strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)), return.replicates=TRUE)",sep="")
+          eval(parse(text=strng))
+#          rs  <- data.frame ( group = paste0(names(covs)[-1], giveRefgroup(refGrp)), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(covs)[-1] , stringsAsFactors = FALSE)
+#          colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
+
+fun <- function(d, g, w){                                                       ### 'd' = dependent; 'g' = grouping; 'w' = weights
+       dat <- data.frame ( d, g, w, stringsAsFactors = FALSE)
+       ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { wtd.mean(y[,"d"], weights = y[,"w"])})
+       gm  <- wtd.mean(dat[,"d"], weights = dat[,"w"])                          ### Gesamtmittelwert
+       ret <- gm - ret
+       return(ret)}
 
 conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp){
           covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { c(wtd.mean(x[i,allNam[["dependent"]]], weights = x[i,allNam[["wgt"]]]), as.vector(unlist(by(data = x[i,], INDICES = x[i,allNam[["group"]]], FUN = function ( g ) { wtd.mean(g[,allNam[["dependent"]]], weights = g[,allNam[["wgt"]]])}))))})
@@ -1050,7 +1056,7 @@ getOutputIfSingular <- function ( glmRes ) {
                        rnagel<- rnagel[1]
                        coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
                        return(coefs)}
-
+                       
 ### wie oben, nur werden hier lineare Transformationen der Regressionskoeffizienten erlaubt
 ### unstandardisierte Koeffizienten werden genutzt, um den logit vorherzusagen
 ### jede person hat auf dieser logitvariablen einen wert
