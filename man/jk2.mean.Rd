@@ -10,7 +10,7 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+            group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, group.delimiter = "_", trend = NULL,
             linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
 %- maybe also 'usage' for other objects documented here.
@@ -78,15 +78,15 @@ differences are computed. (see example 2a, 3, and 4)
   \item{crossDiffSE}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Method for standard error estimation for cross level differences, where groups are dependent.
-\code{wec} uses weighted effect coding, \code{pisa} uses the covariance between the total mean
-and the group mean for standard error estimation (adjusted z test), \code{old} does not account for dependent
+\code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to 
+estimate the standard error between the total mean and group-specific means. \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Without replicates (i.e., for completely random samples), the pisa method for standard error estimation for 
+Without replicates (i.e., for completely random samples), the \code{rep} method for standard error estimation for 
 cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
-This argument is only necessary, if \code{crossDiffSE = "pisa"} \emph{and} none of the replicate methods 
+This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none of the replicate methods 
 (JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
 }
   \item{group.delimiter}{
@@ -209,7 +209,7 @@ res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 means3T<- jk2.mean(datL = rd, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", nest="nest", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
           cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
-          trend = "year", linkErr = "leScore", crossDiffSE = c("wec", "pisa","old"))
+          trend = "year", linkErr = "leScore", crossDiffSE = "rep")
 res3T  <- report(means3T, add = list(domain = "reading"))
           
 ### Fourth example: using a loop do analyse 'reading' and 'listening' comprehension

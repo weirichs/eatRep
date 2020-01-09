@@ -12,7 +12,7 @@ methods. Technically, this is a wrapper for the \code{svymean()} function of the
 \usage{
 jk2.table(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-          group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+          group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
           nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL,
           linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE,
           expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
@@ -83,15 +83,15 @@ differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mea
   \item{crossDiffSE}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Method for standard error estimation for cross level differences, where groups are dependent.
-\code{wec} uses weighted effect coding, \code{pisa} uses the covariance between the total mean
-and the group mean for standard error estimation (adjusted z test), \code{old} does not account for dependent
+\code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to 
+estimate the standard error between the total mean and group-specific means. \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Without replicates (i.e., for completely random samples), the pisa method for standard error estimation for 
+Without replicates (i.e., for completely random samples), the \code{rep} method for standard error estimation for 
 cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
-This argument is only necessary, if \code{crossDiffSE = "pisa"} \emph{and} none of the replicate methods 
+This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none of the replicate methods 
 (JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
 }
   \item{chiSquare}{
