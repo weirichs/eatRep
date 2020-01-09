@@ -35,9 +35,9 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type )   {
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
-            group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"), nBoot = 100,
+            group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey") ) {
-            cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "pisa","old"))
+            cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "rep","old"))
             type<-  match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR"))
             if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             if ( is.null ( attr(datL, "modus"))) {
@@ -116,7 +116,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
                                      b <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]],
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ne, imp=im, trend = trend,
                                                   formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = engine )
-                                }  else  {                                      ### hier beginnt methode 'pisa'
+                                }  else  {                                      ### hier beginnt methode 'rep'
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot,
                                           nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine=engine, modus=modus)
                                 }
@@ -127,7 +127,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
                          return(b)})
                   return(cld)})
                   spl <- unlist(spl, recursive=FALSE)
-                  class(spl) <- c( recode(cdse, "'wec'='wec_se_correction'; 'pisa'='pisa_se_correction'"), "list")
+                  class(spl) <- c( recode(cdse, "'wec'='wec_se_correction'; 'rep'='rep_se_correction'"), "list")
                   ret[["SE_correction"]] <- spl
             }
             return(ret)}
@@ -135,9 +135,11 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
-            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "pisa","old"),
+            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey") ) {                             ### untere Zeile: wrapper! hier wird jk2.table ueber jk2.mean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen; untere Zeilen, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
+            crossDiffSE <- "old"
+            if(isFALSE(cross.differences) == FALSE) {cat("To date, only method 'old' is applicable for cross level differences in frequency tables.\n")}
             modus <- identifyMode ( name = "table", type = type, PSU = PSU, repWgt=repWgt )
            if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
@@ -852,22 +854,28 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
           strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
           eval(parse(text=strng))
-          rs   <- data.frame ( group = paste0(rep(rownames(ret), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], zusatz = names(table(dat.i[,allNam[["group"]]])), stringsAsFactors=FALSE)
+          rs   <- data.frame ( group = paste0(rep(rownames(ret), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], zusatz = rep(names(table(dat.i[,allNam[["group"]]])),2), stringsAsFactors=FALSE)
           colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
-### Hilfsfunktion fuer jackknife.cov
+### Hilfsfunktion fuer jackknife.cov und conv.cov
 fun <- function(d, g, w){                                                       ### 'd' = dependent; 'g' = grouping; 'w' = weights
        dat <- data.frame ( d, g, w, stringsAsFactors = FALSE)
-       ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { wtd.mean(y[,"d"], weights = y[,"w"])})
-       gm  <- wtd.mean(dat[,"d"], weights = dat[,"w"])                          ### Gesamtmittelwert
+       if ( all(dat[,"w"] == 1) )  { 
+           ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { mean(y[,"d"])})
+           gm  <- mean(dat[,"d"])                                               ### Gesamtmittelwert ungewichtet           
+       }  else  {
+           ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { wtd.mean(y[,"d"], weights = y[,"w"])})
+           gm  <- wtd.mean(dat[,"d"], weights = dat[,"w"])                      ### Gesamtmittelwert gewichtet
+       }
        ret <- gm - ret
        return(ret)}
 
 conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp){
-          covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { c(wtd.mean(x[i,allNam[["dependent"]]], weights = x[i,allNam[["wgt"]]]), as.vector(unlist(by(data = x[i,], INDICES = x[i,allNam[["group"]]], FUN = function ( g ) { wtd.mean(g[,allNam[["dependent"]]], weights = g[,allNam[["wgt"]]])}))))})
-          covs<- cov(covs$t)[1,]                                                ### Boot Method wird jetzt nicht mehr variiert, ergibt keinen Sinn
-          rs  <- data.frame ( group = paste0(names(table(dat.i[,allNam[["group"]]])), giveRefgroup(refGrp)), depVar =allNam[["dependent"]], modus = NA, comparison = NA, parameter = "cov", coefficient="est", value=covs[-1], zusatz = names(table(dat.i[,allNam[["group"]]])), stringsAsFactors = FALSE)
+          covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { fun(x[i,allNam[["dependent"]]], x[i,allNam[["group"]]], x[i,allNam[["wgt"]]])})
+          mns <- colMeans(covs$t)
+          ses <- sapply(as.data.frame(covs$t), FUN = sd)
+          rs  <- data.frame ( group = paste0(rep(rownames(ret), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), zusatz = rep(names(table(dat.i[,allNam[["group"]]])),2), stringsAsFactors=FALSE)
           colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
