@@ -854,7 +854,7 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
           strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
           eval(parse(text=strng))
-          rs   <- data.frame ( group = paste0(rep(rownames(ret), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], zusatz = rep(names(table(dat.i[,allNam[["group"]]])),2), stringsAsFactors=FALSE)
+          rs   <- data.frame ( group = paste0(rep(unique(apply(dat.i[,allNam[["group"]], drop=FALSE], MARGIN = 1, FUN = paste, collapse="_")), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(unique(dat.i[,allNam[["group"]], drop=FALSE]),unique(dat.i[,allNam[["group"]], drop=FALSE])), stringsAsFactors=FALSE)
           colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
@@ -874,11 +874,11 @@ fun <- function(d, g, w){                                                       
 conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp){
           covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { fun(x[i,allNam[["dependent"]]], x[i,allNam[["group"]]], x[i,allNam[["wgt"]]])})
           mns <- colMeans(covs$t)
-          ses <- sapply(as.data.frame(covs$t), FUN = sd)
-          rs  <- data.frame ( group = paste0(rep(rownames(ret), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), zusatz = rep(names(table(dat.i[,allNam[["group"]]])),2), stringsAsFactors=FALSE)
+          ses <- sapply(as.data.frame(covs$t), FUN = sd)                        
+          rs  <- data.frame ( group = paste0(rep(unique(apply(dat.i[,allNam[["group"]], drop=FALSE], MARGIN = 1, FUN = paste, collapse="_")), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(unique(dat.i[,allNam[["group"]], drop=FALSE]),unique(dat.i[,allNam[["group"]], drop=FALSE])), stringsAsFactors=FALSE)
           colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
-
+          
 ### Hilfsfunktion fuer jk2.glm()
 jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA, modus, useWec) {
 if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
