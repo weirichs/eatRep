@@ -35,10 +35,10 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type )   {
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
-            group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), nBoot = 100,
+            group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey") ) {
             cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "rep","old"))
-            type<-  match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR"))
+            type<- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR"))
             if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = type, PSU = PSU, repWgt=repWgt )
@@ -47,7 +47,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
             }
             ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "mean",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by,
-                   cross.differences = cross.differences, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine)
+                   cross.differences = cross.differences, adjust=adjust, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine)
             if ( isFALSE(ret[["allNam"]][["cross.differences"]])) {return(ret)}
             if ( (is.list(cross.differences) || cross.differences == TRUE) && cdse == "old" ) {
                  ret[["SE_correction"]] <- list(NULL)
@@ -115,10 +115,10 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
                                 if ( cdse == "wec" ) {
                                      b <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]],
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ne, imp=im, trend = trend,
-                                                  formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = engine )
+                                                  formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = "survey" )
                                 }  else  {                                      ### hier beginnt methode 'rep'
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot,
-                                          nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine=engine, modus=modus)
+                                          nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine="survey", modus=modus)
                                 }
                                 b[["vgl"]]      <- vgl
                                 b[["focGrp"]]   <- grp                          ### Fokus- und Referenzgruppe in Ergebnisoutput eintragen,
@@ -239,7 +239,7 @@ jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
 ### Funktion ist nicht user-level, sondern wird von jk2.mean, jk2.table, jk2.quantile, jk2.glm mit entsprechenden Argumenten aufgerufen
 eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
           toCall = c("mean", "table", "quantile", "glm", "cov"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
-          cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
+          cross.differences = FALSE, group.delimiter = "_", adjust=NULL, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine) {
           if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
@@ -262,7 +262,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
              independent <- NULL
           }
           if(is.null(groups))  {groups <- "wholeGroup"; datL[,"wholeGroup"] <- "wholePop"}
-          allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = dependent, independent=independent)
+          allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = dependent, independent=independent, adjust=adjust)
           allNam<- lapply(allVar, FUN=function(ii) {existsBackgroundVariables(dat = datL, variable=ii)})
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
     ### check: Gruppierungsvariablen duerfen nicht numerisch sein
@@ -282,9 +282,13 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
                  }
              }
           }
+    ### adjustierungsvariablen duerfen nur numerisch oder dichotom sein 
+          if(!is.null(allNam[["adjust"]])) {
+             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
+          }
     ### check: Manche Variablennamen sind in der Ergebnisstruktur fest vergeben und duerfen daher nutzerseitig nicht als namen von Gruppenvariablen vergeben werden
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
@@ -767,6 +771,37 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
                       return(facToChar(deskrR))
                   } }
 
+jackknife.adjust.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, modus) { 
+          typeS<- recode(type, "'JK2'='JKn'")
+          repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
+          des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], allNam[["adjust"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
+          strng<- paste("ret <- withReplicates(des, quote(eatRep:::funadjust(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+          eval(parse(text=strng))
+          rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = NA, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          return(rs)}
+          
+### Hilfsfunktion fuer jackknife.adjust.mean
+funadjust <- function(d, x, a, w){                                              ### 'd' = dependent; 'x' = grouping; 'a' = adjust, 'w' = weights
+       dat <- data.frame ( d, x, a, w, stringsAsFactors = FALSE)                ### was fur ein riesiger bekackter Megascheiss!! Gruppierungsvariable darf nicht 'g' heissen, sonst gibt es eine hundertprozentig unverstaendliche fehlermeldung!
+       if ( all(dat[,"w"] == 1) )  {                                            ### adjustierte Mittelwerte ungewichtet
+            res <- effectLite(y = "d", x = "x", z = setdiff(colnames(dat), c("d", "x", "w")), data = dat, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
+       }  else  {
+            res <- effectLite(y = "d", x = "x", z = setdiff(colnames(dat), c("d", "x", "w")), data = dat, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~w, method="sem")
+       }
+       ret <- res@results@adjmeans[,"Estimate"]
+       names(ret) <- names(table(x))
+       return(ret)}  
+       
+conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus) {
+       if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                               ### ohne Gewichte
+            res <- effectLite(y = allNam[["dependent"]], x = allNam[["group"]], z = allNam[["adjust"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
+       }  else  { 
+            st  <- paste("res <- effectLite(y = allNam[[\"dependent\"]], x = allNam[[\"group\"]], z = allNam[[\"adjust\"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~ ",allNam[["wgt"]],", method=\"sem\")", sep="")
+            eval(parse( text=st))
+       }
+       rs   <- data.frame ( group = rep(names(table(dat.i[,allNam[["group"]]])) , 2), depVar = allNam[["dependent"]], modus = NA, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(res@results@adjmeans)), value = melt(res@results@adjmeans, measure.vars = c("Estimate", "SE"))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+       return(rs)}
+
 jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, modus) {
           dat.i[,"N_weighted"] <- dat.i[,"N_weightedValid"] <- 1
           if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) > 0 ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
@@ -855,7 +890,6 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
           eval(parse(text=strng))
           rs   <- data.frame ( group = paste0(rep(as.vector(unlist(by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { paste(x[1,allNam[["group"]]], collapse="_")}))), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
-          colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
 
 ### Hilfsfunktion fuer jackknife.cov und conv.cov
@@ -876,7 +910,6 @@ conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp){
           mns <- colMeans(covs$t)
           ses <- sapply(as.data.frame(covs$t), FUN = sd)                        
           rs  <- data.frame ( group = paste0(rep(as.vector(unlist(by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { paste(x[1,allNam[["group"]]], collapse="_")}))), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
-          colnames(rs) <- recode(colnames(rs), paste0("'zusatz'='",allNam[["group"]],"'"))
           return(rs)}
           
 ### Hilfsfunktion fuer jk2.glm()
@@ -1104,12 +1137,21 @@ clearTab <- function ( jk2.table.output, allNam , depVarOri, fc, toCall, datL) {
 ### definiert die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) fuer Funktion 'eatRep'
 chooseFunction <- function (datI, allNam, na.rm, group.delimiter,type, repA, modus, separate.missing.indicator ,
                   expected.values, probs,nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall, doJK, useWec, refGrp) {
+if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         pb$tick(); flush.console()
         if( toCall == "mean" ) {                                                ### hier wird an die meanfunktion uebergeben
             if ( isTRUE(doJK) ) {
-                 ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus)
+                 if (is.null(allNam[["adjust"]])) {
+                     ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus)
+                 }  else  { 
+                     ana.i <- jackknife.adjust.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus)
+                 }    
             }  else  {
-                 ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus)
+                 if (is.null(allNam[["adjust"]])) {
+                     ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus)
+                 }  else  {
+                     ana.i <- conv.adjust.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus)
+                 }    
             }
         }
         if( toCall == "table" ) {
@@ -1212,8 +1254,8 @@ checkNests <- function (x, allNam, toAppl, gr) {
         return(list(ret=ret, mess = mess)) }
 
 
-doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values,
-                    probs=probs, nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, pb=pb, toCall=toCall, poolMethod, useWec=useWec, refGrp=refGrp ) {
+doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type, repA, modus, separate.missing.indicator, expected.values,
+                    probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall, poolMethod, useWec, refGrp ) {
         if(datL1[1,"isClear"] == TRUE) {                                        ### nur fuer isClear==TRUE werden Analysen gemacht
             nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
             nrep<- prod(dim(nrep))
