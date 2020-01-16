@@ -10,9 +10,10 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
-            nBoot = 100, group.delimiter = "_", trend = NULL,
-            linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
+            group.differences.by = NULL, cross.differences = FALSE, 
+            crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100, 
+            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
+            na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -81,6 +82,11 @@ Method for standard error estimation for cross level differences, where groups a
 \code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to 
 estimate the standard error between the total mean and group-specific means. \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
+}
+  \item{adjust}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Variable name or column number of variable(s) for which adjusted means should be computed. Note: to date, only numeric 
+or 0/1 dichotomous variables are allowed. 
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -222,4 +228,14 @@ means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
                  trend = "year", linkErr = "leScore") })
 ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
           report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
+          
+### Fifth example: compute adjusted means
+### Note: all covariates must be numeric or 0/1 dichotomous
+rdN1y10[,"mignum"] <- as.numeric(rdN1y10[,"mig"])
+rdN1y10[,"sexnum"] <- car::recode(rdN1y10[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
+means6 <- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), dependent = "score", 
+          na.rm=FALSE, doCheck=TRUE)
+res6   <- report(means6, add = list(domain = "reading"))
 }
+
