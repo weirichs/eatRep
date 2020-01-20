@@ -5,7 +5,7 @@
 \description{Compute generalized linear models for complex cluster designs with multiple imputed variables based 
 on the Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, the function combines replication 
 methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
-of the \code{'survey'} package.
+of the \code{survey} package.
 }
 \usage{
 jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
@@ -13,7 +13,8 @@ jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd 
         group.delimiter = "_", cross.differences = FALSE, trend = NULL,
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
-        poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey") )}
+        poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey"),
+        scale = 1, rscales = 1, mse=TRUE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -116,12 +117,22 @@ Logical: use weighted effect coding?
   \item{engine}{
 Which package should be used for estimation?
 }
+  \item{scale}{
+scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+}
+  \item{rscales}{
+scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+}
+  \item{mse}{
+Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
+See help page of \code{svrepdesign} from the \code{survey} package for further details.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on \code{PSU} and \code{repInd} variables according to JK2 or 
 BRR procedure. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{'survey'} package.
+The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{survey} package.
 The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested 
 imputations if the \code{nest} argument implies a nested structure.
 }

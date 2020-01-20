@@ -12,7 +12,7 @@ jk2.quantile(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, re
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, bootMethod = c("wSampling","wQuantiles") ,
-            doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
+            doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -105,8 +105,8 @@ no standard errors will be given. In analyses containing replicates or samples w
   \item{bootMethod}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If standard error are computed in a bootstrap, two possible methods may be applied.
-\code{'wSampling'} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted quantiles
-are computed. \code{'wQuantiles'} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
+\code{wSampling} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted quantiles
+are computed. \code{wQuantiles} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
 weighted quantiles are computed.
 }
   \item{doCheck}{
@@ -116,13 +116,24 @@ analysis to prevent subsequent functions from crashing.
   \item{engine}{
 Which package should be used for estimation?
 }
+  \item{scale}{
+scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+}
+  \item{rscales}{
+scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+}
+  \item{mse}{
+Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
+See help page of \code{svrepdesign} from the \code{survey} package for further details.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables according to JK2 or BRR procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the 'survey' package.
-The results of the several analyses are then pooled according to Rubins rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
+The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in
+the \code{survey} package. The results of the several analyses are then pooled according to Rubins rule, which
+is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned

@@ -13,7 +13,8 @@ jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repIn
             group.differences.by = NULL, cross.differences = FALSE, 
             crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100, 
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
-            na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"))}
+            na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
+            scale = 1, rscales = 1, mse=TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -121,6 +122,16 @@ analysis to prevent subsequent functions from crashing.
 }
   \item{engine}{
 Which package should be used for estimation?
+}
+  \item{scale}{
+scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+}
+  \item{rscales}{
+scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+}
+  \item{mse}{
+Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
+See help page of \code{svrepdesign} from the \code{survey} package for further details.
 }
 }
 \details{
