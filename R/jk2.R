@@ -34,11 +34,11 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type )   {
                        return(ret) }
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
-jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
             group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE ) {
             cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "rep","old"))
-            type<- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR"))
+            type<- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "Fay"))
             if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = type, PSU = PSU, repWgt=repWgt )
@@ -136,7 +136,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = 
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
-jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
+jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE ) {                             
@@ -214,7 +214,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
-jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
+jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
             nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), 
@@ -227,7 +227,7 @@ jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
-jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
+jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.delimiter = "_", cross.differences = FALSE,
             trend = NULL, linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"),
             doCheck = TRUE, na.rm = FALSE, poolMethod = c("mice", "scalar") , useWec = FALSE, engine = c("survey", "BIFIEsurvey"), 
@@ -241,7 +241,7 @@ jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"),
 
 
 ### Funktion ist nicht user-level, sondern wird von jk2.mean, jk2.table, jk2.quantile, jk2.glm mit entsprechenden Argumenten aufgerufen
-eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
+eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
           toCall = c("mean", "table", "quantile", "glm", "cov"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
@@ -254,7 +254,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
           while ( !is.null(sys.call(i))) { fc <- c(fc, crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
           fc   <- fc[max(which(fc %in% c("jk2.mean", "jk2.table", "jk2.glm", "jk2.quantile")))]
           toCall<- match.arg(toCall)                                            ### 'oberste' Funktion suchen, die eatRep gecallt hat; zweiter Teil des Aufrufs ist dazu da, dass nicht "by" drinsteht, wenn "jk2.mean" innerhalb einer anderen "by"-Funktion aufgerufen wird
-          type  <- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR"))
+          type  <- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "Fay"))
           engine<- match.arg(arg = engine, choices = c("survey", "BIFIEsurvey"))
           glmTransformation <- match.arg(glmTransformation)
           if(isFALSE(forceSingularityTreatment) & glmTransformation != "none") {
