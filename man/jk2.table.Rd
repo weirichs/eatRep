@@ -16,7 +16,7 @@ jk2.table(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL
           nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL,
           linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE,
           expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
-          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE )}
+          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -156,6 +156,9 @@ scaling constant for variance, for details, see help page of \code{svrepdesign} 
   \item{mse}{
 Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
 See help page of \code{svrepdesign} from the \code{survey} package for further details.
+}
+  \item{rho}{
+Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
 }
 }
 \details{

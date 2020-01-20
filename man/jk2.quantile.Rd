@@ -12,7 +12,7 @@ jk2.quantile(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = N
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, bootMethod = c("wSampling","wQuantiles") ,
-            doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE)}
+            doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -125,6 +125,9 @@ scaling constant for variance, for details, see help page of \code{svrepdesign} 
   \item{mse}{
 Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
 See help page of \code{svrepdesign} from the \code{survey} package for further details.
+}
+  \item{rho}{
+Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
 }
 }
 \details{
