@@ -38,7 +38,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE ) {
             cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "rep","old"))
-            type<- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "Fay"))
+            type<- recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
             if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = type, PSU = PSU, repWgt=repWgt )
@@ -254,7 +254,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
           while ( !is.null(sys.call(i))) { fc <- c(fc, crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
           fc   <- fc[max(which(fc %in% c("jk2.mean", "jk2.table", "jk2.glm", "jk2.quantile")))]
           toCall<- match.arg(toCall)                                            ### 'oberste' Funktion suchen, die eatRep gecallt hat; zweiter Teil des Aufrufs ist dazu da, dass nicht "by" drinsteht, wenn "jk2.mean" innerhalb einer anderen "by"-Funktion aufgerufen wird
-          type  <- match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "Fay"))
+          type  <- recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
           engine<- match.arg(arg = engine, choices = c("survey", "BIFIEsurvey"))
           glmTransformation <- match.arg(glmTransformation)
           if(isFALSE(forceSingularityTreatment) & glmTransformation != "none") {
