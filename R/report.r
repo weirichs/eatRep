@@ -193,7 +193,7 @@ recursive_filter <- function(df, vars, var_levels) {
   filt_var
 }
 
-seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
+seCorrect.rep_se_correction <- function( SE_correction, jk2, grpv ) {
   sep_jk2 <- separate_jk2(jk2 = jk2)
   cross_diff <- sep_jk2[["cross_diff"]]
   no_cross_diff <- sep_jk2[["no_cross_diff"]]
@@ -203,25 +203,18 @@ seCorrect.pisa_se_correction <- function( SE_correction, jk2, grpv ) {
     
     rows <- length(SE_correction[[i]][["vgl"]][["groups.divided.by"]])
     single_grpv <- SE_correction[[i]][["focGrp"]]
-    
-    SEs <- output[output$coefficient %in% c("est"), ]
-    for(param in SEs[["group"]]) {
+
+    for(param in output[["group"]]) {
       if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
-        # funktioniert nur, da keine correction ueber mehrere Hierarchieebenen hinweg funktioniert!
-        row_num_se <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "se")
-        row_num_est <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "est") 
-        row_num_p <- which(cross_diff$parameter == "mean" & cross_diff$group == param & cross_diff$coefficient == "p") 
+        old_est <- cross_diff[cross_diff$group == param & cross_diff$coefficient == "est", "value"]
+        new_est <- output[output$group == param & output$coefficient == "est", "value"]
+        stopifnot(all.equal(old_est, new_est))
         
-        # select raw standard errors for sub groups
-        group_names <- strsplit(cross_diff[row_num_se, "group"], split = "\\.vs\\.")[[1]]
-        group_ses <- lapply(group_names, function(group_name) {
-          no_cross_diff[no_cross_diff$group == group_name & no_cross_diff$parameter == "mean" & no_cross_diff$coefficient == "se", "value"]
-        })
-        #browser()
-        cross_diff[row_num_se, "value"] <- sqrt(group_ses[[1]]^2 + group_ses[[2]]^2 - (2 * SEs[SEs[, "group"] == param, "value"]))
+        cross_diff[cross_diff$group == param & cross_diff$coefficient == "se", "value"] <- 
+          output[output$group == param & output$coefficient == "se", "value"]
+        cross_diff[cross_diff$group == param & cross_diff$coefficient == "p", "value"] <- 
+          output[output$group == param & output$coefficient == "p", "value"]
         
-        ## p-Wert anders bilden, steht noch aus!
-        cross_diff[row_num_p, "value"] <- 2*pnorm(abs(cross_diff[row_num_est, "value"]/cross_diff[row_num_se, "value"]), lower=FALSE)
       } else { ### if reference level is a subgroup
         stop("PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
         

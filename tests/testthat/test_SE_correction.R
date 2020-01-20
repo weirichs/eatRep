@@ -128,10 +128,6 @@ test_that("SE for SD still unaffected", {
 })
 
 test_that("Table and other functions not affected (protection against implementation from Sebastian)", {
-  ## error if argument in jk2.table specified
-  expect_error(jk2.table(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-                     imp="imp", nest="nest", groups = c("sex"), group.splits = 0:1,
-                     cross.differences = TRUE, dependent = "comp", na.rm=FALSE, doCheck=TRUE, crossDiffSE = "old"))
   # internal check
   jk2.out <- m_table
   expect_equal(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]]), FALSE)
