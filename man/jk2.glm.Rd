@@ -8,7 +8,7 @@ methods and methods for multiple imputed data. Technically, this is a wrapper fo
 of the \code{survey} package.
 }
 \usage{
-jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
+jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, 
         repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
         group.delimiter = "_", cross.differences = FALSE, trend = NULL,
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 

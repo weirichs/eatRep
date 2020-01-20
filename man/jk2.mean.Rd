@@ -8,7 +8,7 @@ or Balanced Repeated Replicates (BRR) procedure. Conceptually, the function comb
 methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{survey} package.}
 \usage{
-jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = NULL, repInd = NULL, 
+jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, cross.differences = FALSE, 
             crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100, 
