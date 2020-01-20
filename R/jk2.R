@@ -266,7 +266,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
           allNam<- lapply(allVar, FUN=function(ii) {existsBackgroundVariables(dat = datL, variable=ii)})
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
     ### check: Gruppierungsvariablen duerfen nicht numerisch sein
-          if(!is.null(allNam[["group"]])) {
+          if(!is.null(allNam[["group"]]) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
              if ( is.list(cross.differences) || isTRUE(cross.differences)) {    ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
                  for ( gg in allNam[["group"]] ) {
@@ -279,14 +279,18 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR"), PSU = N
                                datL[,gg] <- gsub("\\.|_", "", datL[,gg])
                            }
                        }
-                       if (class ( datL[,gg] ) == "factor") {                   ### ausserdem duerfen keine factor levels ohne Beobachtungen drinsein
-                           if ( any(table(datL[,gg]) == 0)) {
-                               lev <- names(which(table(datL[,gg]) !=0))
-                               nlv <- names(which(table(datL[,gg]) ==0))
-                               cat(paste0( "Delete level(s) '", paste(nlv, collapse="', '"), "' of grouping variable '",gg,"' without any observations.\n",sep=""))
-                               datL[,gg] <- factor(as.character(datL[,gg]), levels =lev)
-                           }
-                       }
+                 }      
+             }
+          }   
+          if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
+             for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
+                 if (class ( datL[,gg] ) == "factor") {                         ### ausserdem duerfen fuer Gruppierungs- und unabhaengig Variablen keine factor levels ohne Beobachtungen drinsein
+                     if ( any(table(datL[,gg]) == 0)) {
+                          lev <- names(which(table(datL[,gg]) !=0))
+                          nlv <- names(which(table(datL[,gg]) ==0))
+                          cat(paste0( "Delete level(s) '", paste(nlv, collapse="', '"), "' of grouping or independent variable '",gg,"' without any observations.\n",sep=""))
+                          datL[,gg] <- factor(as.character(datL[,gg]), levels =lev)
+                     }
                  }
              }
           }
