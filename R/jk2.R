@@ -896,7 +896,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
 
 giveRefgroup <- function ( refGrp) {
           if ( is.null(refGrp)) {return(".vs.wholeGroup")}
-          ret <- paste0(".vs.", paste(apply(refGrp, MARGIN = 1, FUN = function ( zeile ) { paste(zeile, collapse="")}), collapse="_"))
+          ret <- paste0(".vs.", paste(apply(refGrp, MARGIN = 1, FUN = function ( zeile ) { zeile[["groupValue"]]}), collapse="_"))
           return(ret)}
 
 jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, refGrp, scale , rscales , mse, rho){
