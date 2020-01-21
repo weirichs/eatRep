@@ -94,7 +94,6 @@ test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
 })
 
 
-
 test_that("wec 3 grouping variables, no trend, cross diff on higher level", {
   wec_out <- suppressWarnings(report(means4T))
   # lapply(means4T$SE_correction, function(x) x$refGrp)
@@ -108,6 +107,24 @@ test_that("wec 3 grouping variables, no trend, cross diff on higher level", {
   #report(means4T$SE_correction[[18]])
   expect_equal(wec_out[wec_out$group == "LandA_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "se"], 1.364, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "LandC_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "p"], 0.030, tolerance=1e-3)
+})
+
+test_that("Warning for different point estimates", {
+  expect_warning(compare_point_estimates(old_est = 5, new_est = 2, param = "vgl"),
+                 "Difference in point estimate of cross level difference for comparison vgl: 3")
+  
+  m_pisa2 <- m_pisa
+  m_wec2 <- m_wec
+  m_pisa2$SE_correction[[1]]$resT$noTrend[1, "value"] <- 0.5
+  expect_warning(report(m_pisa2))
+  
+  m_wec2$SE_correction[[1]]$resT$noTrend[10, "value"] <- 0.5
+  expect_warning(report(m_wec2))
+})
+
+test_that("Point estiamates for BRR are ok", {
+  expect_silent(report(m_pisa_brr))
+  expect_silent(report(m_wec_brr))
 })
 
 test_that("Old method still works", {

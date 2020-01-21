@@ -119,7 +119,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     single_grpv <- SE_correction[[i]][["focGrp"]]
     
     # Nicht output reporten, da spalten sonst je nach Trend unterschiedlich heissen
-    SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2") & output$coefficient %in% c("se", "p"), c("parameter", "value", "coefficient")]
+    SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2"), c("parameter", "value", "coefficient")]
     SEs[, "parameter"] <- gsub(single_grpv, "", SEs[, "parameter"])
     SEs <- as.data.frame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
     
@@ -127,6 +127,10 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     for(param in SEs[["parameter"]]) {
       if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
         grp_regexp <- paste0("^", param, "\\.vs")
+        
+        compare_point_estimates(old_est = cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "est", "value"],
+                                new_est = SEs[SEs[, "parameter"] == param, "est"], 
+                                param = param)
         # funktioniert nur, da keine correction ueber mehrere Hierarchieebenen hinweg funktioniert!
         cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "se", 
                    "value"] <- SEs[SEs[, "parameter"] == param, "se"]
@@ -148,7 +152,9 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
         # filter relevant rows for flexibel number of filter variables
         filt_var <- recursive_filter(df = cross_diff, vars = col_names, var_levels = col_levels)
         
-        #if(length(which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se")) != 1) browser()
+        compare_point_estimates(old_est = cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "est"), "value"],
+                                new_est = SEs[SEs[, "parameter"] == param, "est"], 
+                                param = param)
         cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se"), 
                    "value"] <- SEs[SEs[, "parameter"] == param, "se"]
         cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "p"), 
@@ -206,9 +212,9 @@ seCorrect.rep_se_correction <- function( SE_correction, jk2, grpv ) {
 
     for(param in output[["group"]]) {
       if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
-        old_est <- cross_diff[cross_diff$group == param & cross_diff$coefficient == "est", "value"]
-        new_est <- output[output$group == param & output$coefficient == "est", "value"]
-        stopifnot(all.equal(old_est, new_est))
+        compare_point_estimates(old_est = cross_diff[cross_diff$group == param & cross_diff$coefficient == "est", "value"],
+                                new_est = output[output$group == param & output$coefficient == "est", "value"], 
+                                param = param)
         
         cross_diff[cross_diff$group == param & cross_diff$coefficient == "se", "value"] <- 
           output[output$group == param & output$coefficient == "se", "value"]
@@ -218,7 +224,6 @@ seCorrect.rep_se_correction <- function( SE_correction, jk2, grpv ) {
       } else { ### if reference level is a subgroup
         stop("PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
         
-        #browser()
         # create variable to select right rows in jk2 output
         #param_finder <- cross_diff$group
         #param_finder <- sapply(strsplit(param_finder, ".vs."), function(x) x[1])
@@ -243,8 +248,12 @@ seCorrect.rep_se_correction <- function( SE_correction, jk2, grpv ) {
     }
   }
   rbind(no_cross_diff, cross_diff)
-  
-  #stop("SE correction has not been implemented yet. Use crossDiffSE = 'old'.")
 }
 
-
+compare_point_estimates <- function(old_est, new_est, param) {
+  if(abs(abs(old_est) - abs(new_est)) >= 1e-10) {
+    #browser()
+    warning("Difference in point estimate of cross level difference for comparison ", param, ": ", abs(old_est) - abs(new_est))
+  }
+  return()
+}
