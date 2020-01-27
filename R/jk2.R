@@ -86,7 +86,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
                   }
                   spl <- lapply(ana, FUN = function ( a ) {
                          vgl <- vgl[a,]
-                         if (vgl[1,"hierarchy.level"] != 0) {                   ### wenn referenzdatensatz bspw. alle Maedchen sein soll,wird der jetzt nach den Gruppierungsvariablen gesplittet
+                         if (vgl[1,"hierarchy.level"] != 0) {                   ### wenn referenzdatensatz bspw. alle Maedchen sein soll, wird der jetzt nach den Gruppierungsvariablen gesplittet
                              nam <- unlist(strsplit(as.character(vgl[1,"groups.divided.by"]), split=" |\\+"))
                              nam <- nam[which(nchar(nam)>0)]
                              dat <- by(datL, INDICES = datL[,nam], FUN = function ( d ) {return(d)})
@@ -120,7 +120,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
                                                   scale = scale, rscales = rscales, mse=mse, rho=rho )
                                 }  else  {                                      ### hier beginnt methode 'rep'
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot,
-                                          nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine="survey", modus=modus,scale = scale, rscales = rscales, mse=mse, rho=rho)
+                                          nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine="survey", modus=modus,scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge = ret[["allNam"]][["group"]])
                                 }
                                 b[["vgl"]]      <- vgl
                                 b[["focGrp"]]   <- grp                          ### Fokus- und Referenzgruppe in Ergebnisoutput eintragen,
@@ -246,7 +246,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine, 
-          scale, rscales, mse, rho) {
+          scale, rscales, mse, rho, reihenfolge = NULL) {
           if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
           if ( useWec == TRUE ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           i     <- 0                                                            ### wenn wec genutzt werden soll, geht das nur ueber den Hotfix, der auch fuer Singularitaet verwendet wird
@@ -512,7 +512,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
                       if ( engine=="survey" || isFALSE(doJK)) {
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                              type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs,
-                             nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho))
+                             nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge=reihenfolge))
 if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
                       }  else  {                                                ### hier muesste es jetzt ggf. nach BIFIEsurvey uebergeben werden
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
@@ -894,20 +894,41 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
           }
           return(facToChar(resAl)) }
 
+### vor dem "versus" immer die gruppennamen in dr reihenfolge wie sie im group-statement angegeben sind, eintragen
+### wenn reihenfolge "country", "sex", dann
+#LandA_male.vs.LandA
+#LandB_female.vs.female
+
+#erste string wird aus allNam["group"] und refGroup zusammengesetzt
+#um die reihenfolge gegenzuchecken muss das group-objekt irgendwie durchgeschleift werden, denn aus
+#allNam["group"] sind ja die referenzgruppen bereits rausgenommen
+
+### richtige Reihenfolge des gepasteten strings im Rueckgabeobjekt
+buildString <- function(dat, allNam, refGrp, reihenfolge ) {
+      strng <- paste0(rep(as.vector(unlist(by(data=dat, INDICES = dat[,allNam[["group"]]], FUN = function ( x ) {
+               def <- c(x[1,allNam[["group"]]],refGrp[["groupValue"]])
+               ref <- reihenfolge
+               reih<- unlist(lapply(ref, FUN = function ( z ) {which(def %in% dat[,z])}))
+               ret <- paste(def[reih], collapse="_")
+               return(ret)}))), 2),giveRefgroup(refGrp))
+      return(strng)}
+
+
 giveRefgroup <- function ( refGrp) {
           if ( is.null(refGrp)) {return(".vs.wholeGroup")}
           ret <- paste0(".vs.", paste(apply(refGrp, MARGIN = 1, FUN = function ( zeile ) { zeile[["groupValue"]]}), collapse="_"))
           return(ret)}
 
-jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, refGrp, scale , rscales , mse, rho){
+jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, refGrp, scale , rscales , mse, rho, reihenfolge){
 if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           typeS<- recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
           strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
           eval(parse(text=strng))
-          rs   <- data.frame ( group = paste0(rep(as.vector(unlist(by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { paste(c(x[1,allNam[["group"]]],refGrp[["groupValue"]]), collapse="_")}))), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
+
 
 ### Hilfsfunktion fuer jackknife.cov und conv.cov
 fun <- function(d, g, w){                                                       ### 'd' = dependent; 'g' = grouping; 'w' = weights
@@ -922,11 +943,11 @@ fun <- function(d, g, w){                                                       
        ret <- gm - ret
        return(ret)}
 
-conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp){
+conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp, reihenfolge){
           covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { fun(x[i,allNam[["dependent"]]], x[i,allNam[["group"]]], x[i,allNam[["wgt"]]])})
           mns <- colMeans(covs$t)
           ses <- sapply(as.data.frame(covs$t), FUN = sd)                        
-          rs  <- data.frame ( group = paste0(rep(as.vector(unlist(by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { paste(c(x[1,allNam[["group"]]],refGrp[["groupValue"]]), collapse="_")}))), 2),giveRefgroup(refGrp)) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          rs  <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
           
 ### Hilfsfunktion fuer jk2.glm()
@@ -1153,7 +1174,7 @@ clearTab <- function ( jk2.table.output, allNam , depVarOri, fc, toCall, datL) {
 
 ### definiert die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) fuer Funktion 'eatRep'
 chooseFunction <- function (datI, allNam, na.rm, group.delimiter,type, repA, modus, separate.missing.indicator ,
-                  expected.values, probs,nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall, doJK, useWec, refGrp, scale, rscales, mse, rho) {
+                  expected.values, probs,nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall, doJK, useWec, refGrp, scale, rscales, mse, rho, reihenfolge) {
 if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         pb$tick(); flush.console()
         if( toCall == "mean" ) {                                                ### hier wird an die meanfunktion uebergeben
@@ -1187,9 +1208,9 @@ if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         }
         if( toCall == "cov" ) {
             if ( isTRUE(doJK) ) {
-                 ana.i <- jackknife.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho)
+                 ana.i <- jackknife.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge=reihenfolge)
             }  else  {
-                 ana.i <- conv.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, nBoot=nBoot, refGrp=refGrp)
+                 ana.i <- conv.cov (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, nBoot=nBoot, refGrp=refGrp, reihenfolge=reihenfolge)
             }
         }
     ### glms initialisieren, wird ueberschrieben, wenn toCall = 'glm'
@@ -1272,7 +1293,7 @@ checkNests <- function (x, allNam, toAppl, gr) {
 
 
 doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type, repA, modus, separate.missing.indicator, expected.values,
-                    probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, toCall, poolMethod, useWec, refGrp, scale, rscales, mse, rho ) {
+                    probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, toCall, poolMethod, useWec, refGrp, scale, rscales, mse, rho, reihenfolge ) {
 if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
         if(isTRUE(datL1[1,"isClear"])) {                                        ### nur fuer isClear==TRUE werden Analysen gemacht
             nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
@@ -1292,7 +1313,7 @@ if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
             ana <- do.call("rbind", by(data = datL1, INDICES = datL1[,allNam[["nest"]]], FUN = function ( datN ) {
                    anaI <- by(data = datN, INDICES = datN[,allNam[["imp"]]], FUN = chooseFunction, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                            type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs,
-                           nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, pb=pb, toCall=toCall, doJK=doJK, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho)
+                           nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, pb=pb, toCall=toCall, doJK=doJK, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge=reihenfolge)
                    glms <- lapply(anaI, FUN = function ( x ) { x[["glms"]]})
                    nams <- lapply(anaI, FUN = function ( x ) { x[["nams"]]})
                    grps <- lapply(anaI, FUN = function ( x ) { x[["grps"]]})
