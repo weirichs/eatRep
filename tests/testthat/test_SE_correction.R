@@ -59,10 +59,10 @@ test_that("wec 2 grouping variables, trend", {
 # means3T_pisa$resT$`2010`[which(means3T_pisa$resT$`2010`$comparison == "crossDiff"),]
 test_that("pisa 2 grouping variables, trend", {
   pisa_out <- suppressWarnings(report(means3T_pisa))
-  expect_lt(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2010"], 6.660)
-  expect_lt(pisa_out[pisa_out$group == "male.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2015"], 6.499)
-  expect_lte(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2010"], 0.751)
-  expect_lte(pisa_out[pisa_out$group == "LandC.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2015"], 0.016)
+  expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2010"], 3.066)
+  expect_equal(pisa_out[pisa_out$group == "male.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2015"], 2.850)
+  expect_equal(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2010"], 0.002)
+  expect_equal(pisa_out[pisa_out$group == "LandC.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2015"], 0.017)
 })
 
 
@@ -80,17 +80,18 @@ test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
 })
 
 test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
-  expect_error(suppressWarnings(report(means3Tb_pisa)), "PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
-  #pisa_out <- suppressWarnings(report(means3Tb_pisa))
-  #table(pisa_out[which(pisa_out$comparison == "crossDiff"), "group"])
-  #expect_equal(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
-  #expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
+  #expect_error(suppressWarnings(report(means3Tb_pisa)), "PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
+  pisa_out <- suppressWarnings(report(means3Tb_pisa))
   
-  #expect_equal(wec_out[wec_out$group == "LandA_female.vs.LandA" & wec_out$parameter == "mean", "se"], 3.344, tolerance=1e-3)
-  #expect_equal(wec_out[wec_out$group == "LandA_male.vs.LandA" & wec_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
+  #means3Tb_pisa$SE_correction[[1]]$resT
+  expect_equal(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 2.953, tolerance=1e-3)
   
-  #expect_equal(wec_out[wec_out$group == "LandC_female.vs.LandC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
-  #expect_equal(wec_out[wec_out$group == "LandC_male.vs.LandC" & wec_out$parameter == "mean", "se"], 3.325, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "LandA_female.vs.LandA" & pisa_out$parameter == "mean", "se"], 3.346, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "LandA_male.vs.LandA" & pisa_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
+  
+  expect_equal(pisa_out[pisa_out$group == "LandC_female.vs.LandC" & pisa_out$parameter == "mean", "p"], 0.025, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "LandC_male.vs.LandC" & pisa_out$parameter == "mean", "se"], 3.366, tolerance=1e-3)
 })
 
 

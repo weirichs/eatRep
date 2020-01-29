@@ -211,40 +211,14 @@ seCorrect.rep_se_correction <- function( SE_correction, jk2, grpv ) {
     single_grpv <- SE_correction[[i]][["focGrp"]]
 
     for(param in output[["group"]]) {
-      if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
-        compare_point_estimates(old_est = cross_diff[cross_diff$group == param & cross_diff$coefficient == "est", "value"],
-                                new_est = output[output$group == param & output$coefficient == "est", "value"], 
-                                param = param)
-        
-        cross_diff[cross_diff$group == param & cross_diff$coefficient == "se", "value"] <- 
-          output[output$group == param & output$coefficient == "se", "value"]
-        cross_diff[cross_diff$group == param & cross_diff$coefficient == "p", "value"] <- 
-          output[output$group == param & output$coefficient == "p", "value"]
-        
-      } else { ### if reference level is a subgroup
-        stop("PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
-        
-        # create variable to select right rows in jk2 output
-        #param_finder <- cross_diff$group
-        #param_finder <- sapply(strsplit(param_finder, ".vs."), function(x) x[1])
-        
-        ## complicated to find param match, because the factor string of another level can contain the string of the current level!
-        param_selector <- paste0("^", param, "\\.|", "^", param, "_|", "_", param, "\\.|", "_", param, "_")
-        
-        col_names <- SE_correction[[i]]$refGrp[, "groupName"]
-        col_levels <- SE_correction[[i]]$refGrp[, "groupValue"]
-        
-        #if(identical(col_levels, c("female", "TRUE"))) browser()
-        # filter relevant rows for flexibel number of filter variables
-        filt_var <- recursive_filter(df = cross_diff, vars = col_names, var_levels = col_levels)
-        
-        #if(length(which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se")) != 1) browser()
-        cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "se"), 
-                   "value"] <- SEs[SEs[, "parameter"] == param, "se"]
-        cross_diff[which(filt_var & grepl(param_selector, cross_diff$group) & cross_diff$coefficient == "p"), 
-                   "value"] <- SEs[SEs[, "parameter"] == param, "p"]
-        
-      }
+      compare_point_estimates(old_est = cross_diff[cross_diff$group == param & cross_diff$coefficient == "est", "value"],
+                              new_est = output[output$group == param & output$coefficient == "est", "value"], 
+                              param = param)
+      
+      cross_diff[cross_diff$group == param & cross_diff$coefficient == "se", "value"] <- 
+        output[output$group == param & output$coefficient == "se", "value"]
+      cross_diff[cross_diff$group == param & cross_diff$coefficient == "p", "value"] <- 
+        output[output$group == param & output$coefficient == "p", "value"]
     }
   }
   rbind(no_cross_diff, cross_diff)
