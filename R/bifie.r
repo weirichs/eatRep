@@ -96,7 +96,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
       resML[,"coefficient"] <- recode(resML[,"coefficient"], "'SE'='se'")
       recs <- paste("'",grep("groupval", colnames(resML), value=TRUE) , "' = '" , allNam[["group"]],"'",sep="", collapse="; ")
       colnames(resML) <- recode(colnames(resML), recs)
-      resML[,"modus"] <- paste0("JK2.", toCall)
+      resML[,"modus"] <- modus
       resML[,"depVar"]<- allNam[["dependent"]]
       resML[,"comparison"] <- NA
       if ( length(allNam[["group"]]) > 1) {
