@@ -1,4 +1,4 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall){
+doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus){
       dat.i<- facToChar(dat.i, from = "character", to = "factor")
       dat.g<- import_DF(dat.i, checkVarNames = FALSE)                           ### dies hier geschieht alles, um die Variablen numerisch zu machen, BIFIEsurvey will es so
       dat2 <- extractData(dat.g, convertLabels = "numeric")
@@ -55,8 +55,8 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
                            } else {
                               add <- data.frame ( v1=vs, stringsAsFactors = FALSE)
                               colnames(add) <- allNam[["group.differences.by"]]
-                           }                                                    ### untere Zeile: "est" wird mit minus 1 multipliziert, damit es konsistent zu den survey-Ergebnissen ist
-                           ret  <- data.frame ( group = paste(rg, vs, sep="___"), depVar = allNam[["dependent"]], modus = paste0("JK2.", toCall), comparison = "groupDiff", parameter = "mean", coefficient = c("est", "se", "p", "es"), value = c( (-1) * resMd[["stat"]][["coef"]],resMd[["stat"]][["se"]],resMd[["stat"]][["p"]], es),add, stringsAsFactors = FALSE)
+                           }                                                    ### untere Zeile: "est" und "es" werden mit minus 1 multipliziert, damit sie konsistent zu den survey-Ergebnissen sind
+                           ret  <- data.frame ( group = paste(rg, vs, sep="___"), depVar = allNam[["dependent"]], modus = modus, comparison = "groupDiff", parameter = "mean", coefficient = c("est", "se", "p", "es"), value = c( (-1) * resMd[["stat"]][["coef"]],resMd[["stat"]][["se"]],resMd[["stat"]][["p"]], (-1)*es),add, stringsAsFactors = FALSE)
                            return(ret)}))
                    return(diffs)}))
       }  else  {

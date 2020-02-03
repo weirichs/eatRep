@@ -139,7 +139,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
 jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
-            engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL ) {                             
+            engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL ) {
             crossDiffSE <- "old"                                                ### untere Zeile: wrapper! hier wird jk2.table ueber jk2.mean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen; untere Zeilen, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
             if(isFALSE(cross.differences) == FALSE) {cat("To date, only method 'old' is applicable for cross level differences in frequency tables.\n")}
             modus <- identifyMode ( name = "table", type = type, PSU = PSU, repWgt=repWgt )
@@ -248,7 +248,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine, 
           scale, rscales, mse, rho, reihenfolge = NULL) {
           if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
-          if ( useWec == TRUE ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
+          if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           i     <- 0                                                            ### wenn wec genutzt werden soll, geht das nur ueber den Hotfix, der auch fuer Singularitaet verwendet wird
           fc    <- NULL                                                         ### initialisieren
           while ( !is.null(sys.call(i))) { fc <- c(fc, crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
@@ -322,6 +322,21 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
           if (poolMethod == "mice" && !is.null(allNam[["nest"]]) && toCall == "glm" ) {
               cat("Method 'mice' is not available for nested imputation. Switch to method 'scalar'.\n")
               poolMethod <- "scalar"
+          }
+    ### engine BIFIEsurvey geht noch nicht fuer alles, muss fuer manche bedingungen erstmal wieder zurueckgesetzt werden ... bifiesurvey verbieten, wenn genestet und/oder bei quantile + glm, und befie survey verbieten wenn irgendwas anderes als jk2
+          if (engine == "BIFIEsurvey") {
+              if (!is.null(allNam[["nest"]]) ) {
+                  cat("Engine 'BIFIEsurvey' currently does not work for nested imputation. Set 'engine' to 'survey'.\n")
+                  engine <- "survey"
+              }
+              if ( length(unlist(lapply(c("glm", "quantile"), FUN = function ( y ) {unlist(lapply(c(modus, toCall), FUN = function (w) { grep(y, w)}))}))) > 0 ) {
+                  cat("Engine 'BIFIEsurvey' currently does not work for regression models and quantiles. Set 'engine' to 'survey'.\n")
+                  engine <- "survey"
+              }
+              if ( type != "JK2") {
+                  cat(paste("Engine 'BIFIEsurvey' currently only works for jackknife 2. Set 'engine' to 'survey' due to type = '",type,"'.\n", sep=""))
+                  engine <- "survey"
+              }
           }
     ### Achtung: wenn Funktion nur zum checken genutzt wird, endet sie hier
           if ( isTRUE(onlyCheck) ) {
@@ -516,7 +531,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
 if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
                       }  else  {                                                ### hier muesste es jetzt ggf. nach BIFIEsurvey uebergeben werden
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
-                             separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs, formula=formula, glmTransformation=glmTransformation, toCall=toCall))
+                             separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs, formula=formula, glmTransformation=glmTransformation, toCall=toCall, modus=modus))
                       }
                       if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
                       return(list(anaA=anaA, mess=mess))})
