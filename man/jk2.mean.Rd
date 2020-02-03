@@ -193,7 +193,7 @@ rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
 means1 <- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = "country", dependent = "score", na.rm=FALSE, doCheck=TRUE)
 ### reporting function: the function does not know which content domain is being considered,
-### so it is possible to add new columns in the output using the 'add' argument
+### so the user may add new columns in the output using the 'add' argument
 res1   <- report(means1, add = list(domain = "reading"))
 
 ### Example 1a: Additionally to example 1, we decide to estimate whether 
