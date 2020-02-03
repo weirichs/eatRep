@@ -113,7 +113,11 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
                                 }  else  {
                                      rg <- NULL
                                 }
-                                if ( cdse == "wec" ) {
+                                if ( cdse == "wec" ) {                          ### untere Zeile: fuer wec muss Gruppierungsvariable faktor sein, in 'eatRep()' werden Gruppierungsvariablen generell bzw. allgemein gecheckt, duerfen dort auch character sein, nur hier eben nicht, deshalb hier ei strengeres Kriterium
+                                     if ( class(d[,grp]) != "factor") {
+                                         cat(paste("Warning! Group variable '",grp,"' must be of class 'factor' for '",cdse,"'. Change class of '",grp,"' from '",class(d[,grp]),"' to 'factor'.\n",sep=""))
+                                         d[,grp] <- as.factor(d[,grp])
+                                     }
                                      b <- jk2.glm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]],
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ne, imp=im, trend = trend,
                                                   formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = "survey",
@@ -967,7 +971,7 @@ conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp, reih
           
 ### Hilfsfunktion fuer jk2.glm()
 jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA, modus, useWec, scale, rscales, mse, rho) {
-if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Y") {browser()}
+if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                  if ( class(glm.family) == "function" ) {
                       link <- strsplit(capture.output(str(glm.family)), split="\"")[[1]][2]
                       fam  <- recode(link, "'identity'='gaussian'; 'logit'='binomial'; 'probit'='binomial'")
