@@ -204,7 +204,7 @@ If groups were specified, further columns which are denoted by the group names a
 Sebastian Weirich
 }
 \examples{
-library(eatRep); data(lsa)
+data(lsa)
 
 ### Example 1: only means, SD and variances for each country
 ### We only consider domain 'reading'
