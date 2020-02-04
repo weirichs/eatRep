@@ -277,9 +277,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
     ### check: Gruppierungsvariablen duerfen nicht numerisch sein
           if(!is.null(allNam[["group"]]) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
-             if ( is.list(cross.differences) || isTRUE(cross.differences)) {    ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
-                 for ( gg in allNam[["group"]] ) {
-                       if ( length(grep("\\.|_", datL[,gg])) > 0) {
+                 for ( gg in allNam[["group"]] ) {                              ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
+                       if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
                            cat(paste0( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.\n"))
                            if ( class ( datL[,gg] ) == "factor") {
                                levNew <- gsub("\\.|_", "", levels(datL[,gg]))
@@ -289,7 +288,6 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
                            }
                        }
                  }      
-             }
           }   
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
