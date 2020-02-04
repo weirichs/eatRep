@@ -107,9 +107,9 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
                                 }                                               ### untere Zeilen: bloeder hotfix, notwendig wegen anderem Hotfix, weil ret$allNam$nest nicht NULL ist, selbst wenn keine nests spezifiziert werden (damit 'by' funktioniert)
                                 if (is.null(nest)) {ne <- NULL} else {ne <- ret[["allNam"]][["nest"]]}
                                 if (is.null(imp))  {im <- NULL} else {im <- ret[["allNam"]][["imp"]]}
-                                if ( vgl[1,"hierarchy.level"] != 0) {
-                                     rg <- facToChar(d[1,nam, drop=FALSE])
-                                     rg <- do.call("rbind", lapply(names(rg), FUN = function (r){data.frame ( groupName = r, groupValue = rg[1,r], stringsAsFactors = FALSE) }))
+                                if ( vgl[1,"hierarchy.level"] != 0) {           ### untere Zeile: gsub() -- in eatRep() werden '_' und Punkte aus Gruppierungsvariablen geloescht
+                                     rg <- facToChar(d[1,nam, drop=FALSE])      ### sie muessen daher hier (VOR dem eatRep-Aufruf) bereits gegebenenfalls aus den Faktor levels geloescht werden
+                                     rg <- do.call("rbind", lapply(names(rg), FUN = function (r){data.frame ( groupName = r, groupValue = gsub("\\.", "", gsub("_", "",as.character(rg[1,r]))), stringsAsFactors = FALSE) }))
                                 }  else  {
                                      rg <- NULL
                                 }
@@ -278,9 +278,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
     ### Bloeder hotfix: wenn wec, wird ja die Gruppierungsvariable zur UV in regression ... wenn aus den Levels der Gruppierungsvariablen die '_' entfernt werden, muss das ja auch fuer die UV geschehen, sofern es sich um eine Regression fuer WEC handelt
     ### letzteres muss man erstmal rauskriegen ... geschieht hier ueber attribut des Datensatzes ... mann ist das alles kompliziert
           if(!is.null(attr(datL, "wrapperForWec"))) {
-             auchUV <- NULL
-          }  else  {
              auchUV <- allNam[["independent"]]
+          }  else  {
+             auchUV <- NULL
           }
     ### check: Gruppierungsvariablen duerfen nicht numerisch sein
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {

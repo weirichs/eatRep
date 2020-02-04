@@ -25,7 +25,6 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
                       }
                       return(df)})
           }
-    
     ### 2.b) SE correction durchfuehren (siehe Paper Weirich & Hecht)
           if(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]])) {
             ## checks, ob Vergleiche dabei, fuer die keine Korrektur verfuehgbar ist
@@ -41,7 +40,6 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
               seCorrect(SE_correction = jk2.out[["SE_correction"]], jk2 = jk2_single, grpv = grpv)
             })
           }
-          
     ### 3. Trend bestimmen
           if ( !is.null(tv) ) {
                jk2 <- computeTrend(jk2 = jk2, le = jk2.out[["le"]], tv = tv, fun = fun)
@@ -121,7 +119,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     # Nicht output reporten, da spalten sonst je nach Trend unterschiedlich heissen
     SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2"), c("parameter", "value", "coefficient")]
     SEs[, "parameter"] <- gsub(single_grpv, "", SEs[, "parameter"])
-    SEs <- as.data.frame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
+    SEs <- as.data.frame(pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
     
     #if(is.data.frame(SE_correction[[i]]$refGrp) && identical(SE_correction[[i]]$refGrp$groupValue, "LandA")) browser()
     for(param in SEs[["parameter"]]) {
