@@ -82,6 +82,8 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
   if(identical(fun, "mean")) { df_sd <- df_allP[df_allP[, "parameter"] == "sd", ] }
   out <- by ( data = df_allP, INDICES = df_allP[,"parameter"], FUN = function ( df ) {
     stopifnot(nrow(df) == 4 || nrow(df)==2)                                     ### checks
+    #if(df$group[1] == "female") browser()
+    df <- df[order(df$sum, decreasing = FALSE), ]                                ### Direction of crossDiff: Higher vs Lower (eg country vs all)
     mea <- diff(df[which(df[,"coefficient"] == "est"),"value"])                 ### compute mean difference
     if ( !"se" %in% df[, "coefficient"]) {
          cat(paste0( "   Warning: No standard error for parameter '",unique(df[,"parameter"]),"'. Cannot compute standard errors and p value for difference between '",df[1,"group"],"' and '",df[2,"group"],"'.\n"))
