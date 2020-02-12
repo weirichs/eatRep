@@ -11,6 +11,10 @@ load("helper_SE_correction_wec_complex.RData")
 load("helper_SE_correction_pisa_complex.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_table.RData")
 load("helper_SE_correction_table.RData")
+#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_brr.RData")
+load("helper_SE_correction_brr.RData")
+#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_others.RData")
+load("helper_SE_correction_others.RData")
 
 
 test_that("Warnings for not supported crossDiffs", {
@@ -133,6 +137,10 @@ test_that("Old method still works", {
   expect_equal(nrow(old_rep), 10)
   expect_equal(length(which(old_rep$comparison == "crossDiff")), 4)
   expect_equal(old_rep[which(old_rep$comparison == "crossDiff"), "group"], c("female.vs.wholeGroup", "female.vs.wholeGroup", "male.vs.wholeGroup", "male.vs.wholeGroup"))
+})
+
+test_that("Brackets are supported in factor levels", {
+  expect_silent(old_rep <- suppressWarnings(report(m_brack)))
 })
 
 test_that("SE for SD still unaffected", {

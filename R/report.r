@@ -123,8 +123,9 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     
     #if(is.data.frame(SE_correction[[i]]$refGrp) && identical(SE_correction[[i]]$refGrp$groupValue, "LandA")) browser()
     for(param in SEs[["parameter"]]) {
+      esc_param <- escapeRegex(param)
       if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
-        grp_regexp <- paste0("^", param, "\\.vs")
+        grp_regexp <- paste0("^", esc_param, "\\.vs")
         
         compare_point_estimates(old_est = cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "est", "value"],
                                 new_est = SEs[SEs[, "parameter"] == param, "est"], 
@@ -141,7 +142,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
         #param_finder <- sapply(strsplit(param_finder, ".vs."), function(x) x[1])
         
         ## complicated to find param match, because the factor string of another level can contain the string of the current level!
-        param_selector <- paste0("^", param, "\\.|", "^", param, "_|", "_", param, "\\.|", "_", param, "_")
+        param_selector <- paste0("^", esc_param, "\\.|", "^", esc_param, "_|", "_", esc_param, "\\.|", "_", esc_param, "_")
         
         col_names <- SE_correction[[i]]$refGrp[, "groupName"]
         col_levels <- SE_correction[[i]]$refGrp[, "groupValue"]

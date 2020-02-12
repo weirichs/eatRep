@@ -1,6 +1,6 @@
 importFrom("fmsb", NagelkerkeR2)
 importFrom("mice", pool.scalar, pool, as.mira)
-importFrom("Hmisc", hdquantile, wtd.quantile, wtd.mean)
+importFrom("Hmisc", hdquantile, wtd.quantile, wtd.mean, escapeRegex)
 importFrom("boot",  boot)
 importFrom("car",  recode)
 importFrom("reshape2",  melt, dcast, colsplit)
