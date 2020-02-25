@@ -14,7 +14,7 @@ jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL
             crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100, 
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
             na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
-            scale = 1, rscales = 1, mse=TRUE, rho=NULL)}
+            scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -135,6 +135,9 @@ See help page of \code{svrepdesign} from the \code{survey} package for further d
 }
   \item{rho}{
 Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+}
+  \item{hetero}{
+Logical: Assume heteroscedastic variance for weighted effect coding?
 }
 }
 \details{

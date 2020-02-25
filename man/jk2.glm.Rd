@@ -14,7 +14,7 @@ jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, 
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey"),
-        scale = 1, rscales = 1, mse=TRUE, rho=NULL )}
+        scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -129,6 +129,9 @@ See help page of \code{svrepdesign} from the \code{survey} package for further d
 }
   \item{rho}{
 Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+}
+  \item{hetero}{
+Logical: Assume heteroscedastic variance for weighted effect coding?
 }
 }
 \details{
