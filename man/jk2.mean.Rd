@@ -14,7 +14,8 @@ jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL
             crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100, 
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
             na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
-            scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE)}
+            scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
+            se_type = c("HC3", "HC0", "HC1", "HC2"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -139,6 +140,9 @@ Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign
   \item{hetero}{
 Logical: Assume heteroscedastic variance for weighted effect coding?
 }
+  \item{se_type}{
+The sort of standard error sought for cross level differences. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -204,11 +208,11 @@ res1   <- report(means1, add = list(domain = "reading"))
 ### as from the individual means of the other contries
 means1a<- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = "country", group.splits = 0:1, group.differences.by = "country",
-          cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE)
+          cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
 res1a  <- report(means1a, add = list(domain = "reading"))
 
-### See that only the mean of 'LandB' significantly differs from the overall mean.
-print(res1a[intersect(grep("wholeGroup.vs.", res1a[,"group"]), which(res1a[,"parameter"] == "mean")), ], digits = 3)
+### See that the means of 'LandA' and 'LandB' significantly differ from the overall mean.
+print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),which(res1a[,"parameter"] == "mean")),], digits = 3)
 
 ### Example 2: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.

@@ -14,7 +14,8 @@ jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, 
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey"),
-        scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE )}
+        scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
+        se_type = c("HC3", "HC0", "HC1", "HC2") )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -131,7 +132,10 @@ See help page of \code{svrepdesign} from the \code{survey} package for further d
 Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
 }
   \item{hetero}{
-Logical: Assume heteroscedastic variance for weighted effect coding?
+Logical: Assume heteroscedastic variance for weighted effect coding? Only applies for random samples, i.e. if no replication analyses are executed. 
+}
+  \item{se_type}{
+The sort of standard error sought for cross level differences computed with weighted effect coding. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
 }
 }
 \details{
