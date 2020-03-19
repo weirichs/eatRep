@@ -696,8 +696,8 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.m
                    table.cast <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                                  prefix <- data.frame(sub.dat[1,allNam[["group"]], drop=FALSE], row.names = NULL, stringsAsFactors = FALSE )
                                  foo    <- make.indikator(variable = sub.dat[,allNam[["dependent"]]], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = ifelse(separate.missing.indicator==TRUE, "always","no"))
-                                 if(all(dat.i[,allNam[["wgt"]]] == 1)) {ret    <- data.frame ( prefix , desk(foo[,-1, drop = FALSE],na.rm=TRUE)[,c("Mittelwert", "std.err")], stringsAsFactors = FALSE )
-                                 } else { ret    <- data.frame ( prefix , desk(foo[,-1, drop = FALSE], p.weights = sub.dat[,allNam[["wgt"]]],na.rm=TRUE)[,c("Mittelwert", "std.err")], stringsAsFactors = FALSE )}
+                                 if(all(dat.i[,allNam[["wgt"]]] == 1)) {ret    <- data.frame ( prefix , desk(foo[,-1, drop = FALSE],na.rm=TRUE)[,c("Mean", "std.err")], stringsAsFactors = FALSE )
+                                 } else { ret    <- data.frame ( prefix , desk(foo[,-1, drop = FALSE], p.weights = sub.dat[,allNam[["wgt"]]],na.rm=TRUE)[,c("Mean", "std.err")], stringsAsFactors = FALSE )}
                                  ret[,"parameter"] <- substring(rownames(ret),5)
                                  return(ret)}) )
                    if(!is.null(allNam[["group.differences.by"]]))   {
@@ -720,8 +720,8 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.m
                                       return(dif.iii)}))                        ### siehe http://www.vassarstats.net/dist2.html
                       difs[,"comparison"] <- "groupDiff"                        ### und http://onlinestatbook.com/2/tests_of_means/difference_means.html
                    }
-                   ret        <- melt(table.cast, measure.vars = c("Mittelwert", "std.err"), na.rm=TRUE)
-                   ret[,"coefficient"] <- recode(ret[,"variable"], "'Mittelwert'='est'; 'std.err'='se'")
+                   ret        <- melt(table.cast, measure.vars = c("Mean", "std.err"), na.rm=TRUE)
+                   ret[,"coefficient"] <- recode(ret[,"variable"], "'Mean'='est'; 'std.err'='se'")
                    ret        <- data.frame ( group = apply(ret[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = modus, comparison = NA, ret[,c("coefficient", "parameter")], value = ret[,"value"], ret[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                    if(!is.null(allNam[["group.differences.by"]]))   {return(facToChar(rbind.fill(ret,difs)))} else {return(facToChar(ret))}}
 
@@ -770,7 +770,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
                   deskr    <- data.frame ( do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                               prefix <- sub.dat[1,allNam[["group"]], drop=FALSE]
                               if ( all(sub.dat[,allNam[["wgt"]]] == 1) )  { useWGT <- NULL}  else  {useWGT <- sub.dat[,allNam[["wgt"]]] }
-                              ret    <- data.frame ( nValidUnweighted = length(na.omit(sub.dat[, allNam[["dependent"]] ])), prefix, desk(sub.dat[, allNam[["dependent"]] ], p.weights = useWGT, na.rm=na.rm)[,c("N", "N.valid", "Mittelwert", "std.err", "Varianz", "Streuung")], stringsAsFactors = FALSE)
+                              ret    <- data.frame ( nValidUnweighted = length(na.omit(sub.dat[, allNam[["dependent"]] ])), prefix, desk(sub.dat[, allNam[["dependent"]] ], p.weights = useWGT, na.rm=na.rm)[,c("N", "N.valid", "Mean", "std.err", "Var", "SD")], stringsAsFactors = FALSE)
                               names(ret) <- c( "nValidUnweighted", allNam[["group"]] , "Ncases", "NcasesValid", "mean", "se.mean", "var","sd")
                               return(ret)})), modus=modus, stringsAsFactors = FALSE)
                   if(!is.null(allNam[["group.differences.by"]]))   {
