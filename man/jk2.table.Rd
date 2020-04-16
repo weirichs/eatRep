@@ -131,7 +131,7 @@ Logical: Should cases with missing values be dropped?
 }
   \item{expected.values}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional. A vector auf values expected in dependent variable. Recommend to left this argument empty.
+Optional. A vector of values expected in dependent variable. Recommend to left this argument empty.
 }
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from

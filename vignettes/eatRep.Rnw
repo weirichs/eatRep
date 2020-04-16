@@ -122,7 +122,7 @@ this is implemented by reproducing the original sample to several replicates. In
 unit (e.g. one class) of only one primary sampling unit (PSU) is replaced by another class, which therefore 
 occurs two times in the sample. Each replicate is analyzed if it would have been a completely random sample. 
 Recognize what is to be expected then: If the variance is explained partially by the clusters, removing
-one sampling unit should decrease the variance of the sample slighty. Conversely, the point estimates of each 
+one sampling unit should decrease the variance of the sample slightly. Conversely, the point estimates of each
 replication sample should vary slightly. The variance in the point estimates between the replicates is used to 
 estimate the corresponding standard errors. Otherwise, if there is no variance between clusters, removing one 
 cluster would have no effect on the variance estimate, and the point estimates between replicates would have 
@@ -173,7 +173,7 @@ examinees, and \code{"wgt"} a person weight. \code{"JKZone"} and \code{"JKrep"} 
 information about which unit has to be replaced by which other unit in which replicate of the original data. The next
 two variables, \code{"imp"} and \code{"nest"} describe the multiple imputed structure of the data. The data
 stem from a nested multiple imputation model with 2 nests and 3 imputations in each nest. The principles of nested
-imputations will be elucidated later; for the moment, we may content ourself with data from the first nest only,
+imputations will be elucidated later; for the moment, we may content ourselves with data from the first nest only,
 i.e. we split the data and only consider cases for which $nest=1$. \code{"country"} denotes the country the person stems
 from, \code{"sex"} denotes each person's sex, \code{"ses"} is each person's socio-economical status, \code{"mig"} is an
 indicator for migration background. \code{"domain"} denotes whether the corresponding score value is related to
@@ -440,9 +440,9 @@ option ``I don't know my parents' profession''. Conceptually, it makes considera
 sense to define a separate category during the data preparation, for example ``lowest HISEI'', 
 ``medium HISEI'', ``highest HISEI'', ``unknown HISEI''. Families without valid
 HISEI information then will be considered as a separate group in the analyses. Applying 
-\code{jk2.table} then will give frequencies for four groups. However, if the ``Dont't know'' 
+\code{jk2.table} then will give frequencies for four groups. However, if the ``Don't know''
 cases appear as ``NA'' values, \code{eatRep} has to know whether it should handle these values
-as missing or as a new distinct category named ``Dont't know'' (or whatever), for which 
+as missing or as a new distinct category named ``Don't know'' (or whatever), for which
 relative frequencies also can be computed. Only for illustration, let us generate some missing values 
 in some of the imputations and repeat the analysis subsequently. You will see that a new category 
 has joined to the output, which is labelled \code{"<NA>"}. \\
@@ -528,15 +528,15 @@ res   <- report(mod1, printGlm = TRUE)
 Inspecting the output, we found that the probability of success significantly depends on the 
 country an examinee stems from and on an examinee's sex. The probability of passing the test
 is significantly lower for males and for examinees who stem from \code{"LandB"}. Examinees 
-who stem from \code{"LandC"} do not significanty differ in their probability of passing the test 
+who stem from \code{"LandC"} do not significantly differ in their probability of passing the test
 from examinees who stem from the reference country, \code{"LandA"}. Moreover, the disadvantage of 
 boys is not consistent across countries: In \code{"LandB"}, this difference
 is significantly less substantial.\\
 
 Please note that---although we have only defined one independent variable---we obtain two 
-regression coefficients for the two categories of the country variable. Again, R choosed its 
+regression coefficients for the two categories of the country variable. Again, R chooses its
 favorite reference group by itself. The effects are expressed in relation to \code{LandA}. 
-To interpretate the effects, the coefficients may be transformed to odds ratios:\\
+To interprete the effects, the coefficients may be transformed to odds ratios:\\
 
 <<transformdef>>=
 #exp(mod1[c(1,3,5,7,9),"value"])
@@ -548,11 +548,11 @@ In \code{LandB} the odds ratio to pass is 0.58 times the corresponding odds rati
 \subsection{How to change reference group at costumer's option}
 \label{subsec:faq1}
 
-As we saw in the preceding section, R choosed the reference group of factor variables 
+As we saw in the preceding section, R chose the reference group of factor variables
 by itself. Persuading R to meet our needs is easier said than done. The essentially 
 easiest way is to redefine the factor variable and choose its levels manually. We will 
 demonstrate this procedure about the gender variable in our fictitious data set. Remember 
-the first example in section 3---R choosed the females to be the reference. Why? Simply 
+the first example in section 3---R chose the females to be the reference. Why? Simply
 because ``female'' comes before ``male'' in the alphabet. Let's redefine the gender variable:\\
 
 <<recodeSexdef>>=
@@ -627,7 +627,7 @@ but not between imputations within each nest! To date, the \code{eatRep} does no
 any consistency checks whether this requirements are fulfilled.\\
 
 All analyses specified so far treated 3 imputations. Considering the nested structure now comprises  $3\times 2=6$ imputations. 
-For the purpose of illutration, we repeat our very first example, using nested imputations now:\\
+For the purpose of illustration, we repeat our very first example, using nested imputations now:\\
 
 <<nestEx2def>>=
 read      <- subset(lsa, domain == "reading")

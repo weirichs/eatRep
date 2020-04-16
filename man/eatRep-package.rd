@@ -58,7 +58,7 @@
  
   \emph{Important note:} The internal structure of the the \code{eatRep} functions varied substantially between 
   versions 0.5.0 and 0.6.0. Up to version 0.5.0, the data has to be provided in the wide format (each line in 
-  the data represents one individual person, whereas multiple obvservations of the same person---i.e., 
+  the data represents one individual person, whereas multiple observations of the same person---i.e.,
   imputations and/or nested imputations occur as additional columns). Beginning with version 0.6.0, 
   \code{eatRep} functions need the long format (each line in the data represents one single observation of
   one single person---i.e., for 5 imputations in 3 nests, \eqn{3*5=15} lines per person should be provided). 
@@ -71,18 +71,18 @@
   \emph{Another important note:} Starting with version 0.10.0, several methods for the standard error estimation 
   of cross level differences are implemented. Prior to version 0.10.0, the standard error for the difference
   between one single group (e.g., Belgium) and the total population (which is comprised of several states including 
-  Belgium) was estimated as if both groups would have been indenpendent from each other. Then standard errors, 
+  Belgium) was estimated as if both groups would have been independent from each other. Then standard errors, 
   however, are biased then. Two new methods are now applicable using the argument \code{crossDiffSE} in 
   \code{jk2.mean} and provide unbiased standard errors---weighted effect coding (wec) and replication 
   methods (rep); see, for example te Grotenhuis et al. (2017). The old method is still available by 
-  using \code{crossDiffSE = "old"}. Note that the default method is weighted effect coding. 
+  using \code{crossDiffSE = "old"}. Note that the default method now is weighted effect coding. 
 }
 \details{
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.11.5\cr
-Date: \tab 2020-03-19\cr
+Version: \tab 0.11.6\cr
+Date: \tab 2020-04-16\cr
 License: \tab GPL(>=2)
 }
 }
@@ -95,7 +95,7 @@ License: \tab GPL(>=2)
   Enders, C. K. (2010). Applied missing data analysis. Guilford Press.
 
   Foy, P., Galia , J. & Li, I. (2008). Scaling the data from the TIMSS 2007 mathematics
-  and science asssessment. In J. F. Olson, M. O. Martin & I. V. S. Mullis (ed.),
+  and science assessment. In J. F. Olson, M. O. Martin & I. V. S. Mullis (ed.),
   \emph{TIMSS 2007 Technical Report} (S. 225--280). Chestnut Hill, MA: TIMSS & PIRLS
   International Study Center, Lynch School of Education, Boston College.
   

@@ -323,6 +323,12 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
     ### adjustierungsvariablen duerfen nur numerisch oder dichotom sein 
           if(!is.null(allNam[["adjust"]])) {
              chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
+    ### wenn es adjustierungsvariablen gibt, darf groups nicht NULL gewesen sein, also nicht "wholeGroup" sein ... es darf aber (zumindest zunaechst einmal) nur eine Gruppierungsvariable geben
+             if ( length(groups)>1) {
+                  cat("Warning! If variables for adjustment are defined, argument 'groups' should be of length 1.\n")
+             }  else  {
+                  if ( groups == "wholeGroup") {stop("If variables for adjustment are defined, argument 'groups' must be not NULL.\n")}
+             }
           }
     ### check: Manche Variablennamen sind in der Ergebnisstruktur fest vergeben und duerfen daher nutzerseitig nicht als namen von Gruppenvariablen vergeben werden
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
@@ -1270,7 +1276,7 @@ if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         return(list(ana.i=ana.i, glms=glms, nams=nams, grps=grps))}
 
 
-reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, pooled, allNam, modus) {
+reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, pooled, allNam, modus, formula) {
         r2  <- lapply(neu[[group]], FUN = function ( x ) {var(x$fitted.values)/var(x$y)})
         r2n <- lapply(neu[[group]], FUN = function ( x ) {NagelkerkeR2(x)[["R2"]]})
         Nval<- lapply(neu[[group]], FUN = function ( x ) {length(x$fitted.values)})
@@ -1289,8 +1295,16 @@ reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, 
              stopifnot ( "std.error" %in% colnames(out))
              se <- "std.error"
         }                                                                       ### ende Workaround
-        ret <- data.frame ( group=group, depVar =allNam[["dependent"]],modus = modus, comparison = NA, parameter = c(rep(c("Ncases","Nvalid",rownames(out)),2),"R2","R2nagel"),
-               coefficient = c(rep(c("est","se"),each=2+length(rownames(out))),rep("est", 2)) , value= c(NA, min(unlist(Nval)),out[,est], NA, NA, out[,se], pool.R2(unlist(r2), unlist(Nval), quiet = TRUE )[["m.pooled"]],
+    ### achtung, doppelbescheuert: in alten Versionen von mice oder miceadds oder weiss der teufel waren die Parameter die row.names des 'out'-Objekts
+    ### neuerdings gibt es sie in einer separaten spalten ... also muss hier irgendwie rausgefunden werden, in welcher Weise die Parameter enthalten sind
+    ### zur sicherheit wird versucht, die Parameternamen aus dem formula-Objekt zu extrahieren
+        prms<- all.vars(formula)[-1]
+        col <- which(unlist(lapply(out, FUN = function ( co ) { length(unlist(lapply(prms, FUN = function ( l ) { grep(l, co)})))}))>0)
+        stopifnot(length(col) <= 1)
+        if ( length(col) == 1) { prm <- as.character(out[,col])}
+        if ( length(col) == 0) { prm <- rownames(out)}
+        ret <- data.frame ( group=group, depVar =allNam[["dependent"]],modus = modus, comparison = NA, parameter = c(rep(c("Ncases","Nvalid",prm),2),"R2","R2nagel"),
+               coefficient = c(rep(c("est","se"),each=2+length(prm)),rep("est", 2)) , value= c(NA, min(unlist(Nval)),out[,est], NA, NA, out[,se], pool.R2(unlist(r2), unlist(Nval), quiet = TRUE )[["m.pooled"]],
                pool.R2(unlist(r2n), unlist(Nval), quiet = TRUE )[["m.pooled"]]), grps[[1]][[mat]], stringsAsFactors = FALSE, row.names = NULL)
         return(ret)}
 
@@ -1369,7 +1383,7 @@ if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
                         pooled <- lapply(neu, FUN = function ( x ) { pool(as.mira(x)) } )
                         names(pooled) <- names(neu) <- aussen
     ### jetzt muss hier die ergebnisstruktur rekonstruiert werden und 'anaI' genannt werden
-                        anaI   <- do.call("rbind", lapply(aussen, FUN = reconstructResultsStructureGlm, neu=neu, grps=grps, group.delimiter=group.delimiter, pooled=pooled, allNam=allNam, modus=modus))
+                        anaI   <- do.call("rbind", lapply(aussen, FUN = reconstructResultsStructureGlm, neu=neu, grps=grps, group.delimiter=group.delimiter, pooled=pooled, allNam=allNam, modus=modus, formula=formula))
                    }  else  {                                                       ### bei methode 'scalar' wird erst spaeter gepoolt
                         anaI <- do.call("rbind", lapply(anaI, FUN = function ( x ) { x[["ana.i"]]}))
                    }

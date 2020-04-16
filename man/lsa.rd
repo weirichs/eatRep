@@ -28,7 +28,7 @@ data from two fictional time points (2010 and 2015) are included.
     \item{sex}{student's sex}
     \item{ses}{student's socio-economical status}
     \item{mig}{student's migration background}
-  	\item{domain}{The domain the correponding score belongs to}
+  	\item{domain}{The domain the corresponding score belongs to}
   	\item{score}{student's achievement score (corresponding to the domain reading or listening, and to the imputation 1, 2, or 3)}
   	\item{comp}{student's competence level}
   	\item{failMin}{dichotomous indicator whether the student fails to fulfill the minimal standard}
