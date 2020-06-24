@@ -21,7 +21,9 @@ report(jk2.out, trendDiffs = FALSE, add = list(),
   \item{printGlm}{Only relevant for \code{jk2.glm}: print summary on console?}
   \item{round}{Logical: should the results be rounded to a limited number of digits?}
   \item{digits}{How many digits should be used for rounding?}
-  \item{printDeviance}{Only relevant if \code{printGlm} is TRUE. Should the deviance information printed additionally?}
+  \item{printDeviance}{Only relevant for \code{jk2.glm} and if \code{printGlm} is TRUE.
+  Should the deviance information printed additionally? Note: To print deviance information,
+  the argument \code{poolMethod} of the \code{jk2.glm} function must be set to \code{"scalar"}. }
 }
 
 \author{
