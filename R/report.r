@@ -88,7 +88,7 @@ addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
                  if ( nrow(z) == 2 ) {
                       y  <- z[1,]                                               ### dazu relevante spalten identifizieren, nach denen gesplittet werden muss
                       y[["coefficient"]] <- "p"                                 ### erste Zeile von x duplizieren und relevante Werte ersetzen
-                      y[["value"]]       <- 2*pnorm(abs(z[which(z[,"coefficient"] == "est"),"value"] / z[which(z[,"coefficient"] == "se"),"value"]), lower=FALSE)
+                      y[["value"]]       <- 2*pnorm(abs(z[which(z[,"coefficient"] == "est"),"value"] / z[which(z[,"coefficient"] == "se"),"value"]), lower.tail=FALSE)
                       x  <- rbind ( x, y)                                       ### Achtung: Signifikanzwert wird hier noch nach numerisch transformiert, muss zurueckgewandelt werden
                  }
                  return(x)}))                                                   ### untere Zeile: wenn 'table' ueber 'jk2.mean' gewrappt wurde, muessen hier die parameterbezeichnungen geaendert werden

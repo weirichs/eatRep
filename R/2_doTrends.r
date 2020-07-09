@@ -23,7 +23,7 @@ computeTrend <- function(jk2, tv, le, fun) {
         jk2_wide<- merge(jk2_wide, le, by = c("parameter", "depVar"), all = TRUE)## merge linking errors
    ### calculate trend SEs and p values
         jk2_wide[,"se_trend"] <- sqrt(jk2_wide[, paste("se_",lev[2],sep="")]^2 + jk2_wide[, paste("se_",lev[1],sep="")]^2 + jk2_wide[, "le"]^2)
-        jk2_wide[,"sig_trend"]<- 2*pnorm(abs(jk2_wide[, "est_trend"]/jk2_wide[, "se_trend"]), lower=FALSE)
+        jk2_wide[,"sig_trend"]<- 2*pnorm(abs(jk2_wide[, "est_trend"]/jk2_wide[, "se_trend"]), lower.tail=FALSE)
    ### Effect size for means (only for jk2.mean)
         es      <- character(0)
         if (  fun == "mean" ) {

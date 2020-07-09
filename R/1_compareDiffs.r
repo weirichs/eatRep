@@ -62,7 +62,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                 }))
                                 return(grp)
                      })
-                     all_grp <- do.call("rbind", all_grp_list) 
+                     all_grp <- do.call("rbind", all_grp_list)
                      return(all_grp)})
               )
               return(ret)
@@ -90,7 +90,7 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
          se <- pval <- NA
     }  else  {
          se  <- sqrt(sum(df[which(df[,"coefficient"] == "se"),"value"]^2))      ### compute SE
-         pval<- 2*pnorm(abs(mea/se), lower=FALSE)
+         pval<- 2*pnorm(abs(mea/se), lower.tail=FALSE)
     }
     es  <- NA
     if (  fun == "mean" && df[1,"parameter"] == "mean" && nrow(df_sd)>0) {
@@ -110,8 +110,8 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
     }
     ret[,"coefficient"] <- c("est","se", "p", "es")
     ret[,"value"]       <- c(mea, se, pval, es)
-    
-    ### group column: consistent ordering of higher hierarchy level 
+
+    ### group column: consistent ordering of higher hierarchy level
     hierarchy_levels <- unique(df[order(df$sum, decreasing = TRUE), "group"])
     ret[,"group"]       <- paste(hierarchy_levels, collapse=".vs.")
     ret[,"sum"]         <- NULL
