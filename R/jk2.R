@@ -1004,7 +1004,11 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                  }
                  sub.ana <- by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function (sub.dat) {
                             nam    <- sub.dat[1,allNam[["group"]],drop=FALSE]
-                            glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family)
+                            if ( allNam[["wgt"]] == "wgtOne") {
+                                 glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family)
+                            }  else  {
+                                 eval(parse(text = paste("glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family, weights = ",allNam[["wgt"]],")",sep="")))
+                            }
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
                             if(!is.null(repA)) {
                                 typeS      <- recode(type, "'JK2'='JKn'")
