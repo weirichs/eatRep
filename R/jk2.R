@@ -1121,7 +1121,7 @@ superSplitter <- function ( group=NULL, group.splits = length(group), group.diff
              group.splits <- unique(group.splits)
              superSplitti <- unlist(lapply(group.splits, FUN = function ( x ) {
                              spl <- combn(names(group),x)
-                             if(class(spl) == "matrix") { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
+                             if("matrix" %in% class(spl)) { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
                              spl <- unlist(lapply(spl, FUN = function ( y ) { paste(as.character(unlist(y)), collapse="________")}))
                              return(spl)}))
              superSplitti <- strsplit(superSplitti, "________")

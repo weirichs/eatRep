@@ -7,6 +7,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
    ### in Listenformat bringen, to do: genestete Imputationen?
       datL <- by ( data = dat2, INDICES = dat2[,allNam[["imp"]]], FUN = function ( imp.i ) { return(imp.i)})
       txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype="JK_TIMSS" , jkzone = allNam[["PSU"]], jkrep = allNam[["repInd"]], cdata=FALSE ))
+      attributes(allNam[["group"]]) <- NULL                                     ### Attribute der Gruppierungsvariablen entfernen, sonst gibt BIFIEsurvey einen Fehler aus
       if ( toCall == "mean") {
            txt  <- capture.output(resM <- BIFIE.univar( BIFIEobj=bo , vars = allNam[["dependent"]], group=allNam[["group"]] ))
            mv   <- c("Nweight", "Ncases", "M", "M_SE", "M_p", "SD", "SD_SE", "SD_p")
