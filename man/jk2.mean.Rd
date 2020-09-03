@@ -250,13 +250,13 @@ means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
 ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
           report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
           
-### Fifth example: compute adjusted means
+### Fifth example: compute adjusted means, also with trend estimation
 ### Note: all covariates must be numeric or 0/1 dichotomous
-rdN1y10[,"mignum"] <- as.numeric(rdN1y10[,"mig"])
-rdN1y10[,"sexnum"] <- car::recode(rdN1y10[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
-means6 <- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), dependent = "score", 
-          na.rm=FALSE, doCheck=TRUE)
+rdN1[,"mignum"] <- as.numeric(rdN1[,"mig"])
+rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
+means6 <- jk2.mean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), dependent = "score",
+          na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore")
 res6   <- report(means6, add = list(domain = "reading"))
 }
 

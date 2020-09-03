@@ -26,7 +26,9 @@ computeTrend <- function(jk2, tv, le, fun) {
         jk2_wide[,"sig_trend"]<- 2*pnorm(abs(jk2_wide[, "est_trend"]/jk2_wide[, "se_trend"]), lower.tail=FALSE)
    ### Effect size for means (only for jk2.mean)
         es      <- character(0)
-        if (  fun == "mean" ) {
+        existSD <- "sd" %in% jk2_bind[,"parameter"]                             ### nur wenn standardabweichungen drin stehen, koennen effektstaerken berechnet werden
+        if(!existSD) {cat("Cannot standard deviations in output. Skip computation of effect sizes.\n")}
+        if (  fun == "mean" && existSD) {
             jk2_wide[, "es_trend"]  <- NA                                       ### not for groupDiffs as no SD is provided by eatRep, split up data frame and rbind later
             jk2_wideS<- jk2_wide[!jk2_wide[, "comparison"] %in% c("crossDiff_of_groupDiff", "groupDiff") | is.na(jk2_wide[, "comparison"]), ]
             stopifnot(all ( table(jk2_wideS[,"group"]) == 2))                   ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen
