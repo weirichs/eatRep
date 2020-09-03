@@ -42,7 +42,7 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             se_type <- match.arg(arg = se_type, choices = c("HC3", "HC0", "HC1", "HC2"))
             if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             if ( is.null ( attr(datL, "modus"))) {
-                  modus <- identifyMode ( name = "mean", type = type, PSU = PSU, repWgt=repWgt )
+                  modus <- identifyMode ( name = "mean", type = recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"), PSU = PSU, repWgt=repWgt )
             }  else  {
                   modus <- attr(datL, "modus")
             }
@@ -157,7 +157,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL ) {
             crossDiffSE <- "old"                                                ### untere Zeile: wrapper! hier wird jk2.table ueber jk2.mean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen; untere Zeilen, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
             if(isFALSE(cross.differences) == FALSE) {cat("To date, only method 'old' is applicable for cross level differences in frequency tables.\n")}
-            modus <- identifyMode ( name = "table", type = type, PSU = PSU, repWgt=repWgt )
+            modus <- identifyMode ( name = "table", type = recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"), PSU = PSU, repWgt=repWgt )
            if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
             chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
@@ -234,7 +234,7 @@ jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
             nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), 
             scale = 1, rscales = 1, mse=TRUE, rho=NULL)  {
-            modus      <- identifyMode ( name = "quantile", type = type, PSU = PSU, repWgt=repWgt )
+            modus      <- identifyMode ( name = "quantile", type = recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"), PSU = PSU, repWgt=repWgt )
             bootMethod <- match.arg ( bootMethod )
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, cross.differences=cross.differences, trend = trend, linkErr = linkErr, dependent = dependent,
@@ -247,7 +247,7 @@ jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"),
             trend = NULL, linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"),
             doCheck = TRUE, na.rm = FALSE, poolMethod = c("mice", "scalar") , useWec = FALSE, engine = c("survey", "BIFIEsurvey"), 
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2")) {
-            modus  <- identifyMode ( name = "glm", type = type, PSU = PSU, repWgt=repWgt )
+            modus  <- identifyMode ( name = "glm", type = recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"), PSU = PSU, repWgt=repWgt )
             poolMethod <- match.arg(poolMethod)
             se_type <- match.arg(arg = se_type, choices = c("HC3", "HC0", "HC1", "HC2"))
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "glm",

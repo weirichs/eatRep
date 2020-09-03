@@ -10,7 +10,7 @@ Summarizes the output of the jk2-functions \code{jk2.mean}, \code{jk2.table},
 
 \usage{
 report(jk2.out, trendDiffs = FALSE, add = list(),
-      exclude = c("Ncases", "NcasesValid", "var"), printGlm = FALSE, round = TRUE,
+      exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE,
       digits = 3, printDeviance = FALSE)
 }
 \arguments{

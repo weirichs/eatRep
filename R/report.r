@@ -1,4 +1,4 @@
-report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE) {
+report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE) {
           if(is.null(jk2.out)) {return(NULL)}
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
           if ( length(grep("glm", as.character(jk2.out[["resT"]][[1]][1,"modus"]))) ==1 ) {
