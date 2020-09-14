@@ -11,8 +11,8 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, cross.differences = FALSE, 
-            crossDiffSE = c("wec", "rep","old"), adjust = NULL, nBoot = 100, 
-            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
+            crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = TRUE,
+            nBoot = 100, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
             se_type = c("HC3", "HC0", "HC1", "HC2"))}
@@ -89,6 +89,10 @@ groups and treat the groups as if they were independent from each other.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of variable(s) for which adjusted means should be computed. Note: to date, only numeric 
 or 0/1 dichotomous variables are allowed. 
+}
+  \item{useEffectLiteR}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: use the \code{lavaan}-wrapper \code{EffectLiteR} to compute adjusted means?
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
