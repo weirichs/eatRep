@@ -857,14 +857,14 @@ funadjustNoEffectLite <- function(d, x, a, w){                                  
        if ( all(dat[,"w"] == 1) )  {                                            ### adjustierte Mittelwerte ungewichtet
             means <- by ( data = dat, INDICES = dat[,"x"], FUN = function ( gr ) {
                      reg <- lm(frml, data = gr)
-                     cof1<- coef(reg)
-                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { mean(gr[,v]) * cof1[[v]]})))
+                     cof1<- coef(reg)                                           ### untere Zeile: innerhalb der Funktion muss mean(dat...) stehen, nicht mean(gr...), sonst kriegt man nur die unadjustieren Mittelwerte
+                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { mean(dat[,v]) * cof1[[v]]})))
                      return(res1)})
        }  else  {
             means <- by ( data = dat, INDICES = dat[,"x"], FUN = function ( gr ) {
                      reg <- lm(frml, data = gr, weights = w)
                      cof1<- coef(reg)
-                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { wtd.mean(gr[,v], weights = gr[,"w"]) * cof1[[v]]})))
+                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { wtd.mean(dat[,v], weights = gr[,"w"]) * cof1[[v]]})))
                      return(res1)})
        }
        ret   <- as.vector(means)
