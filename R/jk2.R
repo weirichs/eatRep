@@ -330,7 +330,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), 
                   if ( groups == "wholeGroup") {stop("If variables for adjustment are defined, argument 'groups' must be not NULL.\n")}
              }
     ### wenn Adjustierung NICHT MIT effectLiteR gemacht werden soll, muss es jackknife sein
-             if ( (isFALSE(useEffectLiteR) && is.null(PSU)) || (isFALSE(useEffectLiteR) && is.null(repWgt)) ) {
+             if ( isFALSE(useEffectLiteR) && is.null(PSU) && is.null(repWgt) ) {
                   cat("Warning: EffectLiteR must be used if no replication method is applied. Set 'useEffectLiteR' to 'TRUE'\n")
                   useEffectLiteR <- TRUE
              }
