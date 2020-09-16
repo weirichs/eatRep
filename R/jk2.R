@@ -864,7 +864,7 @@ funadjustNoEffectLite <- function(d, x, a, w){                                  
             means <- by ( data = dat, INDICES = dat[,"x"], FUN = function ( gr ) {
                      reg <- lm(frml, data = gr, weights = w)
                      cof1<- coef(reg)
-                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { wtd.mean(dat[,v], weights = gr[,"w"]) * cof1[[v]]})))
+                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { wtd.mean(dat[,v], weights = dat[,"w"]) * cof1[[v]]})))
                      return(res1)})
        }
        ret   <- as.vector(means)
