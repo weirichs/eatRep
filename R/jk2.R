@@ -1166,7 +1166,7 @@ superSplitter <- function ( group=NULL, group.splits = length(group), group.diff
              return(superSplitti)}
 
 
-dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance ) {
+dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
     ### ggf. nach Trendgruppen getrennt
             trend <- lapply(names(jk2.out[["resT"]]), FUN = function (tr) {
                      cat(paste("       Trend group: '", tr, "'.\n",sep=""))
@@ -1184,7 +1184,16 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance ) {
                            retNR  <- ret
                            ret    <- data.frame ( lapply(ret, FUN = function ( y ) {if(class(y)=="numeric") {y <- round(y, digits = digits)}; return(y)}), stringsAsFactors = FALSE)
                            groupNamen <- setdiff(colnames(spl), c("group","depVar","modus", "parameter", "coefficient","value", "comparison"))
-                           cat ( paste( "            groups: ", paste( groupNamen, unlist(lapply(spl[1,groupNamen], as.character)), sep=" = ", collapse = "; "),"\n",sep=""))
+                           if ( length(groupNamen)>0) {
+                                cat ( paste( "            groups: ", paste( groupNamen, unlist(lapply(spl[1,groupNamen], as.character)), sep=" = ", collapse = "; "),"\n",sep=""))
+                           }
+                           if ( length(add) >0 ) {
+                                for ( jj in names(add)) {
+                                     lz  <- 18 - nchar(jj)                      ### Anzahl leerzeichen
+                                     if ( lz < 0 ) {lz <- 0}
+                                     cat(paste( paste(rep(" ", times = lz),collapse=""), jj, ": ", add[[jj]], "\n", sep=""))
+                                }
+                           }
                            cat ( paste( "dependent Variable: ", as.character(spl[1,"depVar"]), "\n \n", sep=""))
                            print(ret)
                            r2     <- spl[ spl[,"parameter"] == "R2" ,"value"]

@@ -2,7 +2,7 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
           if(is.null(jk2.out)) {return(NULL)}
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
           if ( length(grep("glm", as.character(jk2.out[["resT"]][[1]][1,"modus"]))) ==1 ) {
-               if ( printGlm == TRUE ) { dG(jk2.out, digits = digits, printDeviance = printDeviance ) }
+               if ( printGlm == TRUE ) { dG(jk2.out, digits = digits, printDeviance = printDeviance, add = add ) }
           }
     ### 1. Input extrahieren: diese Variablen dann spaeter an Einzelfunktionen weitergeben!
           jk2      <- jk2.out[["resT"]]
