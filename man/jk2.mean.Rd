@@ -150,13 +150,13 @@ The sort of standard error sought for cross level differences. Only applies if \
 and \code{crossDiffSE.engine == "lm"}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
 }
   \item{crossDiffSE.engine}{
-Sort of estimator which should be used for using weighted effect coding in cross-level differences. Note: To date,
-only lavaan allows for stochastic group sizes.
+Software implementation used for estimating cross-level differences. Choices are either \code{"lavaan"} (required if
+\code{stochasticGroupSites == "TRUE"}) or R function \code{lm()}. \code{"lavaan"} is the default.
 }
   \item{stochasticGroupSizes}{
 Logical: Assume stochastic group sizes for using weighted effect coding in cross-level differences? Note: To date,
-only lavaan allows for stochastic group sizes. Stochastic group sizes cannot be assumed if any replication method
-(jackknife, BRR) is applied.
+only \code{crossDiffSE.engine = "lavaan"} allows for stochastic group sizes. Stochastic group sizes are not yet
+implemented for any replication method (jackknife, BRR).
 }
 }
 \details{
