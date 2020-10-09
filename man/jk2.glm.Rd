@@ -15,7 +15,8 @@ jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, 
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey"),
         scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
-        se_type = c("HC3", "HC0", "HC1", "HC2") )}
+        se_type = c("HC3", "HC0", "HC1", "HC2"), crossDiffSE.engine= c("lavaan", "lm"),
+        stochasticGroupSizes = FALSE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -135,7 +136,17 @@ Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign
 Logical: Assume heteroscedastic variance for weighted effect coding? Only applies for random samples, i.e. if no replication analyses are executed. 
 }
   \item{se_type}{
-The sort of standard error sought for cross level differences computed with weighted effect coding. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
+The sort of standard error sought for cross level differences. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}
+and \code{crossDiffSE.engine == "lm"}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
+}
+  \item{crossDiffSE.engine}{
+Sort of estimator which should be used for using weighted effect coding in cross-level differences. Note: To date,
+only lavaan allows for stochastic group sizes.
+}
+  \item{stochasticGroupSizes}{
+Logical: Assume stochastic group sizes for using weighted effect coding in cross-level differences? Note: To date,
+only lavaan allows for stochastic group sizes. Stochastic group sizes cannot be assumed if any replication method
+(jackknife, BRR) is applied.
 }
 }
 \details{
