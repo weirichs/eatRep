@@ -16,7 +16,7 @@ jk2.mean (datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL
             na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
             se_type = c("HC3", "HC0", "HC1", "HC2"), crossDiffSE.engine= c("lavaan", "lm"),
-            stochasticGroupSizes = FALSE)}
+            stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -157,6 +157,12 @@ Software implementation used for estimating cross-level differences. Choices are
 Logical: Assume stochastic group sizes for using weighted effect coding in cross-level differences? Note: To date,
 only \code{crossDiffSE.engine = "lavaan"} allows for stochastic group sizes. Stochastic group sizes are not yet
 implemented for any replication method (jackknife, BRR).
+}
+  \item{verbose}{
+Logical: Show analysis information on console?
+}
+  \item{progress}{
+Logical: Show progress bar on console?
 }
 }
 \details{

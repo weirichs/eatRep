@@ -16,7 +16,7 @@ jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL, 
         poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey"),
         scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
         se_type = c("HC3", "HC0", "HC1", "HC2"), crossDiffSE.engine= c("lavaan", "lm"),
-        stochasticGroupSizes = FALSE)}
+        stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -147,6 +147,12 @@ only lavaan allows for stochastic group sizes.
 Logical: Assume stochastic group sizes for using weighted effect coding in cross-level differences? Note: To date,
 only lavaan allows for stochastic group sizes. Stochastic group sizes cannot be assumed if any replication method
 (jackknife, BRR) is applied.
+}
+  \item{verbose}{
+Logical: Show analysis information on console?
+}
+  \item{progress}{
+Logical: Show progress bar on console?
 }
 }
 \details{

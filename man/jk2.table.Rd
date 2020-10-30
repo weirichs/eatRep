@@ -16,7 +16,8 @@ jk2.table(datL, ID, wgt = NULL, type = c("JK2", "JK1", "BRR", "Fay"), PSU = NULL
           nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL,
           linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE,
           expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
-          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL )}
+          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL,
+          verbose = TRUE, progress = TRUE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -159,6 +160,12 @@ See help page of \code{svrepdesign} from the \code{survey} package for further d
 }
   \item{rho}{
 Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+}
+  \item{verbose}{
+Logical: Show analysis information on console?
+}
+  \item{progress}{
+Logical: Show progress bar on console?
 }
 }
 \details{
