@@ -73,16 +73,23 @@
   between one single group (e.g., Belgium) and the total population (which is comprised of several states including 
   Belgium) was estimated as if both groups would have been independent from each other. Then standard errors, 
   however, are biased then. Two new methods are now applicable using the argument \code{crossDiffSE} in 
-  \code{jk2.mean} and provide unbiased standard errors---weighted effect coding (wec) and replication 
+  \code{comp.stats} and provide unbiased standard errors---weighted effect coding (wec) and replication
   methods (rep); see, for example te Grotenhuis et al. (2017). The old method is still available by 
   using \code{crossDiffSE = "old"}. Note that the default method now is weighted effect coding. 
+  
+  \emph{Third important note:} Starting with version 0.13.0, function names have been changed due to
+  inconsistent former denomination: Function \code{jk2.mean} now goes under the name of \code{comp.stats},
+  \code{jk2.table} was  renamed to \code{comp.table}, \code{jk2.quantile} was  renamed to \code{comp.quantile},
+  and \code{jk2.glm} now goes under the name of \code{comp.glm}. The old functions are deprecated and will
+  be removed in further package publications. Renaming was driven by the fact that the corresponding
+  functions now have broader range of methods than only jackknife-2.
 }
 \details{
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.12.1\cr
-Date: \tab 2020-10-30\cr
+Version: \tab 0.12.3\cr
+Date: \tab 2020-11-09\cr
 License: \tab GPL(>=2)
 }
 }
@@ -125,6 +132,9 @@ License: \tab GPL(>=2)
   te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A., & Konig, R. (2017).
   When size matters: advantages of weighted effect coding in observational studies. 
   \emph{International Journal of Public Health.} \bold{62}, 163--167.
-
+  
+  Sachse, K. A. & Haag, N. (2017). Standard errors for national trends in international
+  large-scale assessments in the case of cross-national dierential item functioning. \emph{Applied
+  Measurement in Education, 30}, (2), 102-116. http://dx.doi.org/10.1080/08957347.2017.1283315
 }
 \keyword{ package }

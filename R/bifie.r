@@ -1,4 +1,4 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus){
+doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, useRandomJK1groups, type, nRandomGroups){
       dat.i<- facToChar(dat.i, from = "character", to = "factor")
       dat.g<- import_DF(dat.i, checkVarNames = FALSE)                           ### dies hier geschieht alles, um die Variablen numerisch zu machen, BIFIEsurvey will es so
       dat2 <- extractData(dat.g, convertLabels = "numeric")
@@ -6,7 +6,14 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
       labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["dependent"]]),]
    ### in Listenformat bringen, to do: genestete Imputationen?
       datL <- by ( data = dat2, INDICES = dat2[,allNam[["imp"]]], FUN = function ( imp.i ) { return(imp.i)})
-      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype="JK_TIMSS" , jkzone = allNam[["PSU"]], jkrep = allNam[["repInd"]], cdata=FALSE ))
+      jkt  <- recode(type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
+      if(isTRUE(useRandomJK1groups)) {
+         jkt <- "JK_RANDOM"
+         psu <- NULL
+      }  else  {
+         psu <- allNam[["PSU"]]
+      }
+      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = psu, jkrep = allNam[["repInd"]], cdata=FALSE, ngr = nRandomGroups ))
       attributes(allNam[["group"]]) <- NULL                                     ### Attribute der Gruppierungsvariablen entfernen, sonst gibt BIFIEsurvey einen Fehler aus
       if ( toCall == "mean") {
            txt  <- capture.output(resM <- BIFIE.univar( BIFIEobj=bo , vars = allNam[["dependent"]], group=allNam[["group"]] ))
