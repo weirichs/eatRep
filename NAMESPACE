@@ -12,7 +12,7 @@ importFrom("stats", as.formula, chisq.test, coef, gaussian, glm, median, model.m
 importFrom("utils", capture.output, flush.console)
 importFrom("estimatr", lm_robust)
 importFrom("EffectLiteR", effectLite)
-importFrom("eatTools", crop, existsBackgroundVariables, facToChar, removePattern, tableUnlist, removeNumeric, removeNonNumeric, descr, contr.wec.weighted)
+importFrom("eatTools", crop, existsBackgroundVariables, facToChar, removePattern, tableUnlist, removeNumeric, removeNonNumeric, descr, contr.wec.weighted, halveString)
 importFrom("eatGADS", import_DF, extractData)
 importFrom("janitor", make_clean_names)
 import(lavaan)

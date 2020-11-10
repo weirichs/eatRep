@@ -67,7 +67,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
                               add <- data.frame ( v1=vs, stringsAsFactors = FALSE)
                               colnames(add) <- allNam[["group.differences.by"]]
                            }                                                    ### untere Zeile: "est" und "es" werden mit minus 1 multipliziert, damit sie konsistent zu den survey-Ergebnissen sind
-                           ret  <- data.frame ( group = paste(rg, vs, sep="___"), depVar = allNam[["dependent"]], modus = modus, comparison = "groupDiff", parameter = "mean", coefficient = c("est", "se", "p", "es"), value = c( (-1) * resMd[["stat"]][["coef"]],resMd[["stat"]][["se"]],resMd[["stat"]][["p"]], (-1)*es),add, stringsAsFactors = FALSE)
+                           ret  <- data.frame ( group = paste(rg, vs, sep="___"), depVar = allNam[["dependent"]], modus = paste(modus,"BIFIEsurvey", sep="__"),  comparison = "groupDiff", parameter = "mean", coefficient = c("est", "se", "p", "es"), value = c( (-1) * resMd[["stat"]][["coef"]],resMd[["stat"]][["se"]],resMd[["stat"]][["p"]], (-1)*es),add, stringsAsFactors = FALSE)
                            return(ret)}))
                    return(diffs)}))
       }  else  {
@@ -107,7 +107,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
       resML[,"coefficient"] <- recode(resML[,"coefficient"], "'SE'='se'")
       recs <- paste("'",grep("groupval", colnames(resML), value=TRUE) , "' = '" , allNam[["group"]],"'",sep="", collapse="; ")
       colnames(resML) <- recode(colnames(resML), recs)
-      resML[,"modus"] <- modus
+      resML[,"modus"] <- paste(modus, "BIFIEsurvey", sep="__")
       resML[,"depVar"]<- allNam[["dependent"]]
       resML[,"comparison"] <- NA
       if ( length(allNam[["group"]]) > 1) {
