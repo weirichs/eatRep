@@ -9,6 +9,9 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
       jkt  <- recode(type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
       if(isTRUE(useRandomJK1groups)) {
          jkt <- "JK_RANDOM"
+         if (!is.null(allNam[["PSU"]])) {
+             message("'useRandomJK1groups' was set to 'TRUE'. Cluster variable '",allNam[["PSU"]],"' will be ignored, ",nRandomGroups," random groups will be used.")
+         }
          psu <- NULL
       }  else  {
          psu <- allNam[["PSU"]]
