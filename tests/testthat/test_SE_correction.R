@@ -15,6 +15,8 @@ load("helper_SE_correction_table.RData")
 load("helper_SE_correction_brr.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_others.RData")
 load("helper_SE_correction_others.RData")
+#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_different_modi.RData")
+load("helper_different_modi.RData")
 
 
 test_that("Warnings for not supported crossDiffs", {
@@ -163,4 +165,10 @@ test_that("Table and other functions not affected (protection against implementa
   expect_equal(nrow(old_table), 25)
   expect_equal(length(which(old_table$comparison == "crossDiff")), 10)
   expect_equal(old_table[which(old_table$comparison == "crossDiff"), "group"], c(rep("female.vs.wholeGroup", 5), rep("male.vs.wholeGroup", 5)))
+})
+
+test_that("Modus changed for WEC", {
+  out <- report(different_modi)
+  expect_equal(unique(out[which(out$comparison == "crossDiff" & out$parameter == "mean"), "modus"]), c("JK1.glm"))
+  expect_equal(unique(out[which(out$comparison != "crossDiff" | out$parameter != "mean"), "modus"]), c("JK1.mean__BIFIEsurvey"))
 })

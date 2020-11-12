@@ -7,12 +7,13 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
     ### 1. Input extrahieren: diese Variablen dann spaeter an Einzelfunktionen weitergeben!
           jk2      <- jk2.out[["resT"]]
           tv       <- jk2.out[["allNam"]][["trend"]]
-          cols     <- c("group", "depVar",  "modus", "parameter")
+          cols     <- c("group", "depVar", "modus", "parameter")
           grpv     <- setdiff(setdiff(colnames(jk2[[1]]), cols), c("comparison", "coefficient", "value", tv))
           grp_by   <- jk2.out[["allNam"]][["group.differences.by"]]
           cl_diffs <- jk2.out[["allNam"]][["cross.differences"]]
           funs     <- c("mean", "table", "quantile", "glm")
           fun      <- funs [ which( unlist(lapply(funs, FUN = function ( f ) { length(grep(f, jk2[[1]][1,"modus"]))})) > 0) ]
+          
     ### 2. cross-level diffs bestimmen: ueberschreibt bzw. erweitert das Objekt 'jk2' ... Achtung: sind nur fuer "mean" oder "table" erlaubt
           if ( is.list(cl_diffs) ) {
                jk2 <- lapply(jk2, FUN = function (df) {computeCrossLevel (df, cols=cols, grpv = grpv, fun = fun, cl_diffs = cl_diffs, comp_type = "crossDiff")})
@@ -34,7 +35,6 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
             mult_hierarchy <- any(unlist(lapply(jk2.out$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
             if(mult_hierarchy) warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")
 
-            # browser()
             ## correction durchfuehren
             jk2 <- lapply(jk2, function(jk2_single) {
               seCorrect(SE_correction = jk2.out[["SE_correction"]], jk2 = jk2_single, grpv = grpv)
@@ -157,6 +157,9 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
       }
     }
   }
+  # change modus in reporting output for WEC
+  cross_diff$modus <- unique(SE_correction[[1]][[1]][[1]]$modus)
+  
   ## mehr Fragen
   # _ in Faktorlevels erlaubt?
   # next: trend, groupdiffs checken, ob hier SEs korrekt beruecksichtigt werden
