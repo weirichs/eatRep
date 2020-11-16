@@ -1,14 +1,14 @@
-\name{comp.glm}
-\alias{comp.glm}
+\name{repGlm}
+\alias{repGlm}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK1, JK2 and BRR for linear regression models and trend estimation.}
+\title{Replication methods (JK1, JK2 and BRR) for linear regression models and trend estimation.}
 \description{Compute generalized linear models for complex cluster designs with multiple imputed variables based 
 on the Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, the function combines replication 
 methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
 of the \code{survey} package.
 }
 \usage{
-comp.glm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
+repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
         repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
         group.delimiter = "_", cross.differences = FALSE, trend = NULL,
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
@@ -51,7 +51,7 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 }
   \item{repWgt}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Normally, replicate weights are created by \code{comp.glm} directly from \code{PSU} and \code{repInd} variables. Alternatively,
+Normally, replicate weights are created by \code{repGlm} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
   \item{useRandomJK1groups}{
@@ -83,7 +83,7 @@ Character string which separates the group names in the output frame.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
 Alternatively, if \code{TRUE}, cross-level differences for all pairs of levels are computed. If \code{FALSE}, no cross-level
-differences are computed. (see examples 2a, 3, and 4 in the help file of comp.stats)
+differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{repMean} function)
 }
   \item{trend}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -214,14 +214,14 @@ bt2010read <- bt2010[which(bt2010[,"domain"] == "reading"),]
 
 ### Example 1: Computes linear regression from reading score on gender separately for each
 ### country. Assume no nested structure. 
-mod1 <- comp.glm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
+mod1 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = "country",  formula = score~sex)
 res1 <- report(mod1, printGlm = TRUE)
 
 ### Example 2: Computes log linear regression from pass/fail on ses and gender
 ### separately for each country in a nested structure
 dat  <- lsa[intersect(which(lsa[,"year"] == 2010), which(lsa[,"domain"] == "reading")),]
-mod2 <- comp.glm(datL = dat, ID = "idstud", wgt = "wgt", type = "JK2",  PSU = "jkzone",
+mod2 <- repGlm(datL = dat, ID = "idstud", wgt = "wgt", type = "JK2",  PSU = "jkzone",
         repInd = "jkrep", imp = "imp", nest="nest", groups = "country",
         formula = passReg~sex*ses, family = binomial(link="logit"))
 res2 <- report(mod2, printGlm = TRUE)
@@ -229,7 +229,7 @@ res2 <- report(mod2, printGlm = TRUE)
 ### Example 3: Like example 1, but without any replication methods
 ### trend estimation (without linking error) and nested imputation
 dat  <- lsa[which(lsa[,"domain"] == "reading"),]
-mod3 <- comp.glm(datL = dat, ID = "idstud", wgt = "wgt", imp = "imp", nest = "nest",
+mod3 <- repGlm(datL = dat, ID = "idstud", wgt = "wgt", imp = "imp", nest = "nest",
         groups = "country",  formula = score~sex, trend = "year")
 res3 <- report(mod3, printGlm = TRUE)
 
@@ -238,7 +238,7 @@ res3 <- report(mod3, printGlm = TRUE)
 ### differs from the overall mean (whereas the overall population is a composite of 
 ### all countries). The procedure adapts the weighted effect coding procedures 
 ### described in te Grotenhuis (2017) for multiple imputation and replication methods. 
-mod4 <- comp.glm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
+mod4 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
         PSU = "jkzone", repInd = "jkrep", imp = "imp", formula = score~country, useWec=TRUE)
 res4 <- report(mod4, printGlm = FALSE)
 }}

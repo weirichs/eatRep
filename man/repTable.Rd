@@ -1,5 +1,5 @@
-\name{comp.table}
-\alias{comp.table}
+\name{repTable}
+\alias{repTable}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK1, JK2 and BRR for frequency tables and trend estimation.}
 \description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex
@@ -10,7 +10,7 @@ multiple imputed data and nested imputed data, if necessary. Conceptually, the f
 methods. Technically, this is a wrapper for the \code{svymean()} function of the \code{survey} package.
 }
 \usage{
-comp.table(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
+repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
           repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
           group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
           nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL,
@@ -52,7 +52,7 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 }
   \item{repWgt}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Normally, replicate weights are created by \code{comp.table} directly from \code{PSU} and \code{repInd} variables. Alternatively,
+Normally, replicate weights are created by \code{repTable} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
   \item{useRandomJK1groups}{
@@ -87,7 +87,7 @@ further details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
-differences are computed. (see examples 2a, 3, and 4 in the help file of comp.stats)
+differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{repMean} function)
 }
   \item{crossDiffSE}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -234,7 +234,7 @@ rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
 ### First example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country, using a chi-square test to decide whether the distribution
 ### varies between countries (it's an overall test, i.e. with three groups, df1=8).
-freq.tab1 <- comp.table(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
+freq.tab1 <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
              type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
              group.differences.by = "country", dependent = "comp", chiSquare = TRUE)
 res1      <- report(freq.tab1, add = list ( domain = "reading" ))
@@ -242,9 +242,9 @@ res1      <- report(freq.tab1, add = list ( domain = "reading" ))
 \dontrun{
 ### Second example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country. Now we test whether the frequency of each single category
-### differs between pairs of countries (it's not an overall test ... comp.table now
-### calls comp.stats internally, using dummy variables
-freq.tab2 <- comp.table(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
+### differs between pairs of countries (it's not an overall test ... repTable now
+### calls repMean internally, using dummy variables
+freq.tab2 <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
              type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
              group.differences.by = "country", dependent = "comp", chiSquare = FALSE)
 res2      <- report(freq.tab2, add = list ( domain = "reading" ))
@@ -252,7 +252,7 @@ res2      <- report(freq.tab2, add = list ( domain = "reading" ))
 ### Third example: trend estimation and nested imputation and 'by' loop
 ### (to date, only crossDiffSE = "old" works)
 freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) {
-             comp.table(datL = subdat, ID = "idstud", wgt = "wgt", imp="imp", nest = "nest",
+             repTable(datL = subdat, ID = "idstud", wgt = "wgt", imp="imp", nest = "nest",
                  type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
                  group.differences.by = "country", group.splits = 0:1, cross.differences = TRUE,
                  crossDiffSE = "old", dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = "leComp") })

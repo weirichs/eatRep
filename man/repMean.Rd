@@ -1,7 +1,7 @@
-\name{comp.stats}
-\alias{comp.stats}
+\name{repMean}
+\alias{repMean}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK1, JK2 and BRR for descriptive statistics.}
+\title{Replication methods (JK1, JK2 and BRR) for descriptive statistics.}
 \description{Compute totals, means, variances and standard deviations with standard errors in random or clustered samples.
 Variance estimation in complex cluster designs based on Jackknife (JK1, JK2) or Balanced Repeated Replicates (BRR) procedure.
 Moreover, analyses can be customized for multiple or nested imputed variables, applying the combination rules of Rubin (1987)
@@ -9,7 +9,7 @@ for imputed data and Rubin (2003) for nested imputed data. Conceptually, the fun
 methods and methods for multiple imputed data. Trend estimation as usual in large-scale assessments is supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{survey} package.}
 \usage{
-comp.stats (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
+repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
           repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, cross.differences = FALSE, 
             crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = TRUE,
@@ -52,7 +52,7 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 }
   \item{repWgt}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Normally, replicate weights are created by \code{comp.stats} directly from \code{PSU} and \code{repInd} variables. Alternatively,
+Normally, replicate weights are created by \code{repMean} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
   \item{useRandomJK1groups}{
@@ -231,7 +231,7 @@ rdN1   <- rd[which(rd[,"nest"] == 1),]
 rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
 
 ### mean estimation
-means1 <- comp.stats(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
+means1 <- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
           repInd = "jkrep", imp="imp", groups = "country", dependent = "score",
           na.rm=FALSE, doCheck=TRUE, engine = "BIFIEsurvey")
 ### reporting function: the function does not know which content domain is being considered,
@@ -242,7 +242,7 @@ res1   <- report(means1, add = list(domain = "reading"))
 ### Example 1a: Additionally to example 1, we decide to estimate whether
 ### each country's mean differ significantly from the overall mean as well
 ### as from the individual means of the other contries
-means1a<- comp.stats(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = "country", group.splits = 0:1, group.differences.by = "country",
           cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
 res1a  <- report(means1a, add = list(domain = "reading"))
@@ -252,7 +252,7 @@ print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),which(res1a[,"p
 
 ### Example 2: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.
-means2 <- comp.stats(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+means2 <- repMean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
           dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm")
 res2   <- report(means2,add = list(domain = "reading"))
@@ -262,7 +262,7 @@ res2   <- report(means2,add = list(domain = "reading"))
 ### cross level differences are estimated using 'weighted effect coding'. Use the 'crossDiffSE'
 ### argument to choose alternative methods.) Moreover, we estimate whether each country's sex 
 ### difference differ significantly from the sex difference in the whole population. 
-means2a<- comp.stats(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
           cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
           crossDiffSE.engine= "lm")
@@ -272,7 +272,7 @@ res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 ### and additionally estimating trend: use 'rd' instead of 'rdN1y10'
 ### assume equally weighted cases by omitting 'wgt' argument
 ### ignoring jackknife by omitting 'type', 'PSU' and 'repInd' argument
-means3T<- comp.stats(datL = rd, ID="idstud", imp="imp", nest="nest", groups = c("country", "sex"),
+means3T<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest", groups = c("country", "sex"),
           group.splits = 0:2, group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
           dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore",
           crossDiffSE = "wec", crossDiffSE.engine= "lavaan")
@@ -283,7 +283,7 @@ res3T  <- report(means3T, add = list(domain = "reading"))
 ### trend differences
 ### we use weights but omit jackknife analysis by omitting 'type', 'PSU' and 'repInd' argument
 means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
-          comp.stats(datL = sub.dat, ID="idstud", wgt="wgt", imp="imp", nest="nest",
+          repMean(datL = sub.dat, ID="idstud", wgt="wgt", imp="imp", nest="nest",
                  groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
                  cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
                  trend = "year", linkErr = "leScore", crossDiffSE.engine= "lm") })
@@ -294,7 +294,7 @@ ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
 ### Note: all covariates must be numeric or 0/1 dichotomous
 rdN1[,"mignum"] <- as.numeric(rdN1[,"mig"])
 rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
-means5 <- comp.stats(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
           imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), dependent = "score",
           na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore", crossDiffSE.engine= "lm")
 res5   <- report(means5, add = list(domain = "reading"))
@@ -339,7 +339,7 @@ oecd <- pisaLong[which(pisaLong[,"OECD"] == 1),]
 
 ### analyze data (see also 'https://rstudio-pubs-static.s3.amazonaws.com/442843_a94f5a3cfb0d483aa1a290761b652350.html')
 ### analysis takes approximately 30 minutes on an Intel i5-6500 machine with 32 GB RAM
-means   <- comp.stats( datL                 = oecd,                      # data.frame in the long format
+means   <- repMean( datL                 = oecd,                      # data.frame in the long format
                      ID                   = "CNTSTUID",                # student identifier
                      dependent            = "value",                   # the dependent variable in the data
                      groups               = "CNT",                     # the grouping variable

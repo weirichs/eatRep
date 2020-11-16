@@ -1,14 +1,14 @@
-\name{comp.quantile}
-\alias{comp.quantile}
+\name{repQuantile}
+\alias{repQuantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK1, JK2 and BRR method for quantiles and trend estimation.}
+\title{Replication methods (JK1, JK2 and BRR) for quantiles and trend estimation.}
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
 (e.g. plausible values) based on Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, 
 the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-comp.quantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
+repQuantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, bootMethod = c("wSampling","wQuantiles") ,
@@ -48,7 +48,7 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 }
   \item{repWgt}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Normally, replicate weights are created by \code{comp.quantile} directly from \code{PSU} and \code{repInd} variables. Alternatively,
+Normally, replicate weights are created by \code{repQuantile} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
   \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
@@ -68,7 +68,7 @@ in the whole group or overlying groups. See examples for more details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
-differences are computed. (see examples 2a, 3, and 4 in the help file of comp.stats)
+differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{repMean} function)
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -187,7 +187,7 @@ rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
 
 ### First example: Computes percentile in a nested data structure for reading 
 ### scores conditionally on country and for the whole group 
-perzent   <- comp.quantile(datL = rd, ID = "idstud", wgt = "wgt", type = "JK2",
+perzent   <- repQuantile(datL = rd, ID = "idstud", wgt = "wgt", type = "JK2",
              PSU = "jkzone", repInd = "jkrep", imp = "imp", nest="nest",
              groups = "country", group.splits = c(0:1), dependent = "score", 
              probs = seq(0.1,0.9,0.2) )
@@ -196,7 +196,7 @@ res       <- report(perzent, add = list(domain = "reading"))
 \dontrun{
 ### Second example: Computes percentile for reading scores conditionally on country,
 ### use 100 bootstrap samples, assume no nested structure 
-perzent   <- comp.quantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",
+perzent   <- repQuantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",
              imp = "imp", groups = "country", dependent = "score",
              probs = seq(0.1,0.9,0.2), nBoot = 100 )
 res       <- report(perzent, add = list(domain = "reading"))

@@ -5,25 +5,37 @@
 	Statistical analyses in complex survey designs with multiple imputed data and trend estimation.
 }
 \description{
-  Computes some basic statistic operations (means, standard deviations, frequency tables,
-  percentiles and generalized linear models) in complex survey designs comprising multiple imputed variables
-  and/or a clustered sampling structure which both deserve special procedures at least in estimating standard errors.
+  The package provide functions to computes some basic statistic operations (means, standard deviations,
+  frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple
+  imputed variables and/or a clustered sampling structure which both deserve special procedures at least in
+  estimating standard errors. In large-scale assessments, standard errors are comprised of three components:
+  the measurement error, the sampling error, and (if trend estimation of at least two times of measurement
+  are involved) the linking error.
 
-  For example, computing standard errors for the mean of a multiple imputed variable (e.g. plausible values) involves the
-  formulas provided by Rubin (1987). Computing standard errors for the mean of a nested imputed variable
-  involves the formulas provided by Rubin (2003). Both methods are implemented in the package. The estimation of 
-  \eqn{R^2} and adjusted \eqn{R^2} in linear and generalized linear regression models with multiple imputed data sets is 
-  realized using the methods provided in Harel (2009). 
+  \strong{Measurement error:} In complex surveys or large-scale assessments, measurement errors are taken
+  into account by the mean of multiple imputed varables. The computation of standard errors for the mean
+  of a multiple imputed variable (e.g. plausible values) involves the formulas provided by Rubin (1987).
+  Computing standard errors for the mean of a nested imputed variable involves the formulas provided by
+  Rubin (2003). Both methods are implemented in the package. The estimation of \eqn{R^2} and adjusted
+  \eqn{R^2} in linear and generalized linear regression models with multiple imputed data sets is
+  realized using the methods provided in Harel (2009).
 
-  Moreover, computing standard errors for the mean of a variable which stems from a clustered design may involve
-  replication methods like balanced repeated replicate (BRR), bootstrap or Jackknife methods.
-  See Weststat (2000), Foy, Galia & Li (2008), Rust and Rao (1996), and Wolter (1985) for details. 
-  To date, the Jackknife-1 (JK1), Jackknife-2 (JK2) and the Balanced Repeated Replicates (BRR) procedures are supported.
+  \strong{Sampling error:} Computation of sampling errors of variables which stem from a clustered design may
+  involve replication methods like balanced repeated replicate (BRR), bootstrap or Jackknife methods.
+  See Weststat (2000), Foy, Galia & Li (2008), Rust and Rao (1996), and Wolter (1985) for details. To date,
+  the Jackknife-1 (JK1), Jackknife-2 (JK2) and the Balanced Repeated Replicates (BRR; optionally with Fay's
+  method) procedures are supported.
 
-  The package \code{eatRep} is designed to combine both methods which is necessary if (nested) multiple imputed
-  data are used in clustered designs. Considering the structure is relevant especially for the estimation of
-  standard errors. The estimation of national trends requires a sequential analysis for both measurements
-  and a comparison of estimates between them. 
+  \strong{Linking error:} Lastly, standard errors for trend estimates may involve incorporating
+  linking errors to account for potential differential item functioning or item parameter drift.
+  \code{eatRep} allows to account for linking error when computing standard errors for trend
+  estimates. Standard error estimation is conducted according to the operational practice in
+  PISA, see equation 5 in Sachse & Haag (2017).
+
+  The package \code{eatRep} is designed to combine one or several error types which is necessary,
+  for example, if (nested) multiple imputed data are used in clustered designs. Considering the
+  structure is relevant especially for the estimation of standard errors. The estimation of national
+  trends requires a sequential analysis for both measurements and a comparison of estimates between them.
 
   Technically, \code{eatRep} is a wrapper for the \code{survey} package (Lumley, 2004). Each function in
   \code{eatRep} corresponds to a specific function in \code{survey} which is called repeatedly during the analysis.
@@ -78,9 +90,9 @@
   using \code{crossDiffSE = "old"}. Note that the default method now is weighted effect coding. 
   
   \emph{Third important note:} Starting with version 0.13.0, function names have been changed due to
-  inconsistent former denomination: Function \code{jk2.mean} now goes under the name of \code{comp.stats},
-  \code{jk2.table} was  renamed to \code{comp.table}, \code{jk2.quantile} was  renamed to \code{comp.quantile},
-  and \code{jk2.glm} now goes under the name of \code{comp.glm}. The old functions are deprecated and will
+  inconsistent former denomination: Function \code{jk2.mean} now goes under the name of \code{repMean},
+  \code{jk2.table} was  renamed to \code{repTable}, \code{jk2.quantile} was  renamed to \code{repQuantile},
+  and \code{jk2.glm} now goes under the name of \code{repGlm}. The old functions are deprecated and will
   be removed in further package publications. Renaming was driven by the fact that the corresponding
   functions now have broader range of methods than only jackknife-2.
 }
@@ -88,8 +100,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.12.8\cr
-Date: \tab 2020-11-10\cr
+Version: \tab 0.12.12\cr
+Date: \tab 2020-11-16\cr
 License: \tab GPL(>=2)
 }
 }
@@ -134,7 +146,7 @@ License: \tab GPL(>=2)
   \emph{International Journal of Public Health.} \bold{62}, 163--167.
   
   Sachse, K. A. & Haag, N. (2017). Standard errors for national trends in international
-  large-scale assessments in the case of cross-national dierential item functioning. \emph{Applied
+  large-scale assessments in the case of cross-national differential item functioning. \emph{Applied
   Measurement in Education, 30}, (2), 102-116. http://dx.doi.org/10.1080/08957347.2017.1283315
 }
 \keyword{ package }

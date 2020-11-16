@@ -1,4 +1,4 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, useRandomJK1groups, type, nRandomGroups){
+doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, useRandomJK1groups, type, nRandomGroups, verbose){
       dat.i<- facToChar(dat.i, from = "character", to = "factor")
       dat.g<- import_DF(dat.i, checkVarNames = FALSE)                           ### dies hier geschieht alles, um die Variablen numerisch zu machen, BIFIEsurvey will es so
       dat2 <- extractData(dat.g, convertLabels = "numeric")
@@ -17,6 +17,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
          psu <- allNam[["PSU"]]
       }
       txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = psu, jkrep = allNam[["repInd"]], cdata=FALSE, ngr = nRandomGroups ))
+      if ( isTRUE(verbose)) { print(bo)}
       attributes(allNam[["group"]]) <- NULL                                     ### Attribute der Gruppierungsvariablen entfernen, sonst gibt BIFIEsurvey einen Fehler aus
       if ( toCall == "mean") {
            txt  <- capture.output(resM <- BIFIE.univar( BIFIEobj=bo , vars = allNam[["dependent"]], group=allNam[["group"]] ))
