@@ -2,9 +2,10 @@
 \alias{repMean}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Replication methods (JK1, JK2 and BRR) for descriptive statistics.}
-\description{Compute totals, means, variances and standard deviations with standard errors in random or clustered samples.
-Variance estimation in complex cluster designs based on Jackknife (JK1, JK2) or Balanced Repeated Replicates (BRR) procedure.
-Moreover, analyses can be customized for multiple or nested imputed variables, applying the combination rules of Rubin (1987)
+\description{Compute totals, means, adjusted means, mean differences, variances and standard deviations
+with standard errors in random or clustered or complex samples. Variance estimation in complex cluster
+designs based on Jackknife (JK1, JK2) or Balanced Repeated Replicates (BRR) procedure. Moreover, analyses
+can be customized for multiple or nested imputed variables, applying the combination rules of Rubin (1987)
 for imputed data and Rubin (2003) for nested imputed data. Conceptually, the function combines replication
 methods and methods for multiple imputed data. Trend estimation as usual in large-scale assessments is supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{survey} package.}
@@ -12,7 +13,7 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
           repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, cross.differences = FALSE, 
-            crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = TRUE,
+            crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE,
             nBoot = 100, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
@@ -102,7 +103,14 @@ or 0/1 dichotomous variables are allowed.
 }
   \item{useEffectLiteR}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical: use the \code{lavaan}-wrapper \code{EffectLiteR} to compute adjusted means?
+Logical: use the \code{lavaan}-wrapper \code{EffectLiteR} to compute adjusted means? Alternatively, adjusted means
+are computed by applying a simple linear regression model in each group, using the variables in \code{adjust} as
+independent variables. Afterwards, the coefficients are weighted with the (weighted) means of the independent
+variables. Standard errors for this procedure are received using the delta method by applying an augmented
+variance-covariance matrix which assumes zero covariances between independent variable means and regression
+coefficients. We recommend to set \code{useEffectLiteR = TRUE} if not replication methods are applied. When
+replication methods are used (jackknife-1, jackknife-2, BRR), we recommend to set \code{useEffectLiteR = FALSE}
+to accelerate estimation.
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -295,8 +303,8 @@ ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
 rdN1[,"mignum"] <- as.numeric(rdN1[,"mig"])
 rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
 means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), dependent = "score",
-          na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore", crossDiffSE.engine= "lm")
+          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), useEffectLiteR = FALSE,
+          dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore")
 res5   <- report(means5, add = list(domain = "reading"))
 
 ############################################################################################

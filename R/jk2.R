@@ -35,7 +35,7 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progre
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL,
-            group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = TRUE, nBoot = 100,
+            group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2"),
             crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE) {
             crossDiffSE.engine <- match.arg(crossDiffSE.engine)
@@ -398,13 +398,14 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
              if ( length(groups)>1) {
                   warning("If variables for adjustment are defined, argument 'groups' should be of length 1.")
              }  else  {
-                  if ( groups == "wholeGroup") {stop("If variables for adjustment are defined, argument 'groups' must be not NULL.")}
+                  if ( groups == "wholeGroup" && isTRUE(useEffectLiteR) ) {stop("When using effectLiteR for adjusted means, argument 'groups' must be not NULL. Recommend to set useEffectLiteR = FALSE.")}
              }
-    ### wenn Adjustierung NICHT MIT effectLiteR gemacht werden soll, muss es jackknife sein
-             if ( isFALSE(useEffectLiteR) && is.null(PSU) && is.null(repWgt) ) {
-                  warning("EffectLiteR must be used if no replication method is applied. Argument 'useEffectLiteR' was set to 'TRUE'.")
-                  useEffectLiteR <- TRUE
+    ### wenn es adjustierungsvariablen gibt, koennen vorerst keine cross-level differences bestimmt werden
+             if(is.list(cross.differences) || isTRUE(cross.differences)) {
+                 stop("To date, cross-level differences cannot be computed for adjusted means.")
              }
+    ### wenn es adjustierungsvariablen gibt, darf group splits keine '0' enthalten, wenn effectLiteR benutzt wird
+             if (0 %in% group.splits && isTRUE(useEffectLiteR)) {stop("When using effectLiteR for adjusted means, argument 'groups.splits' must be included the '0' category. Recommend to set useEffectLiteR = FALSE.")}
           }
     ### check: Manche Variablennamen sind in der Ergebnisstruktur fest vergeben und duerfen daher nutzerseitig nicht als namen von Gruppenvariablen vergeben werden
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
@@ -921,7 +922,7 @@ jackknife.adjust.mean <- function (dat.i , allNam, na.rm, group.delimiter, type,
           rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = NA, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
           
-### Hilfsfunktion fuer jackknife.adjust.mean
+### Hilfsfunktion fuer jackknife.adjust.mean: braucht keine Standardfehler, da die mit jackknife bestimmt werden
 funadjustNoEffectLite <- function(d, x, a, w){                                  ### 'd' = dependent; 'x' = grouping; 'a' = adjust, 'w' = weights
        dat <- data.frame ( d, x, a, w, stringsAsFactors = FALSE)                ### was fur ein riesiger bekackter Megascheiss!! Gruppierungsvariable darf nicht 'g' heissen, sonst gibt es eine hundertprozentig unverstaendliche fehlermeldung!
        frml<- as.formula(paste0("d ~ ", paste(setdiff(colnames(dat), c("d", "x", "w")), collapse = " + ")))
@@ -955,14 +956,41 @@ funadjust <- function(d, x, a, w){                                              
        names(ret) <- names(table(x))
        return(ret)}  
        
-conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus) {
-       if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                               ### ohne Gewichte
-            res <- effectLite(y = allNam[["dependent"]], x = allNam[["group"]], z = allNam[["adjust"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
-       }  else  { 
-            st  <- paste("res <- suppressMessages(effectLite(y = allNam[[\"dependent\"]], x = allNam[[\"group\"]], z = allNam[[\"adjust\"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~ ",allNam[["wgt"]],", method=\"sem\"))", sep="")
-            eval(parse( text=st))
+conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, useEffectLiteR) {
+       if(isTRUE(useEffectLiteR)) {                                             ### benutze effectLite
+           if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                           ### ohne Gewichte
+                res <- effectLite(y = allNam[["dependent"]], x = allNam[["group"]], z = allNam[["adjust"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
+           }  else  {
+                st  <- paste("res <- suppressMessages(effectLite(y = allNam[[\"dependent\"]], x = allNam[[\"group\"]], z = allNam[[\"adjust\"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~ ",allNam[["wgt"]],", method=\"sem\"))", sep="")
+                eval(parse( text=st))
+           }
+           vals <- melt(res@results@adjmeans, measure.vars = c("Estimate", "SE"))[,"value"]
+       }  else  {                                                               ### benutze kein effectLite: Standardfehler mit deltamethode
+           means <- do.call("rbind", by ( data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( gr ) {
+                    frml<- paste0(allNam[["dependent"]], " ~ ", paste(allNam[["adjust"]], collapse = " + "))
+                    if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                  ### ohne Gewichte
+                         reg <- lm(as.formula(frml), data = gr)                 ### ungewichtete Regression
+                         x_m <- sapply(dat.i[,allNam[["adjust"]]], mean)        ### ungewichtete Mittelwerte der adjustierungsvariablen
+                    }  else  {                                                  ### untere Zeiel: gewichtete Regression
+                         eval(parse(text = paste0("reg <- lm(as.formula(frml), data = gr, weights = ",allNam[["wgt"]], ")")))
+                         x_m <- unlist(lapply (allNam[["adjust"]], FUN = function (u) { wtd.mean(dat.i[,u], weights = dat.i[,"wgt"])}))
+                    }                                                           ### obere Zeile: gewichtete Mittelwerte der adjustierungsvariablen
+                    cof1<- coef(reg)
+                    adj <- cof1[1] + sum(cof1[-1] * x_m)
+                    pars<- c(cof1, x_m)
+                    mat <- matrix(0, length(cof1) + length(x_m), length(cof1) + length(x_m))
+                    mat[1:length(cof1), 1:length(cof1)] <- vcov(reg)
+                    if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                  ### ungewichtete Varianz
+                         mat[(length(cof1)+1):nrow(mat), (length(cof1)+1):ncol(mat)] <- var(gr[,allNam[["adjust"]]]) / (nrow(gr)-1)
+                    }  else  {                                                  ### gewichtete Varianz
+                         mat[(length(cof1)+1):nrow(mat), (length(cof1)+1):ncol(mat)] <- cov.wt(gr[,allNam[["adjust"]]], wt = gr[,allNam[["wgt"]]], cor = FALSE, center = TRUE)[["cov"]] / (nrow(gr)-1)
+                    }
+                    frm2<- paste0("~x1 + ", paste(paste("x", 2:length(cof1), sep=""), paste("x", (length(cof1)+1):(length(cof1)+length(x_m)), sep=""), collapse=" + ", sep="*"))
+                    se  <- msm::deltamethod(as.formula(frm2), pars, mat)
+                    return(data.frame ( mw = adj, se = se, stringsAsFactors = FALSE))}))
+           vals  <- melt(means, measure.vars = c("mw", "se"))[,"value"]
        }
-       rs   <- data.frame ( group = rep(names(table(dat.i[,allNam[["group"]]])) , 2), depVar = allNam[["dependent"]], modus = NA, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(res@results@adjmeans)), value = melt(res@results@adjmeans, measure.vars = c("Estimate", "SE"))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+       rs   <- data.frame ( group = rep(names(table(dat.i[,allNam[["group"]]])) , 2), depVar = allNam[["dependent"]], modus = modus, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = length(vals)/2), value = vals, rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
        return(rs)}
 
 jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, modus, scale, rscales, mse, rho) {
@@ -1379,7 +1407,7 @@ if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
                  if (is.null(allNam[["adjust"]])) {
                      ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus)
                  }  else  {
-                     ana.i <- conv.adjust.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus)
+                     ana.i <- conv.adjust.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, modus=modus, useEffectLiteR=useEffectLiteR)
                  }    
             }
         }
