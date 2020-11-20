@@ -68,7 +68,7 @@ in the whole group or overlying groups. See examples for more details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
-differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{repMean} function)
+differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{\link{repMean}} function)
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -118,17 +118,17 @@ analysis to prevent subsequent functions from crashing.
 Which package should be used for estimation?
 }
   \item{scale}{
-scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package
 }
   \item{rscales}{
-scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package
 }
   \item{mse}{
 Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
-See help page of \code{svrepdesign} from the \code{survey} package for further details.
+See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{rho}{
-Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+Shrinkage factor for weights in Fay's method. See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{verbose}{
 Logical: Show analysis information on console?
@@ -141,7 +141,7 @@ Logical: Show progress bar on console?
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables according to JK2 or BRR procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in
+The function afterwards serves as a wrapper for \code{\link[survey]{svyquantile}} called by \code{\link[survey]{svyby}} implemented in
 the \code{survey} package. The results of the several analyses are then pooled according to Rubins rule, which
 is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }

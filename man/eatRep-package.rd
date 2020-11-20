@@ -90,9 +90,9 @@
   using \code{crossDiffSE = "old"}. Note that the default method now is weighted effect coding. 
   
   \emph{Third important note:} Starting with version 0.13.0, function names have been changed due to
-  inconsistent former denomination: Function \code{jk2.mean} now goes under the name of \code{repMean},
-  \code{jk2.table} was  renamed to \code{repTable}, \code{jk2.quantile} was  renamed to \code{repQuantile},
-  and \code{jk2.glm} now goes under the name of \code{repGlm}. The old functions are deprecated and will
+  inconsistent former denomination: Function \code{jk2.mean} now goes under the name of \code{\link{repMean}},
+  \code{jk2.table} was  renamed to \code{\link{repTable}}, \code{jk2.quantile} was  renamed to \code{\link{repQuantile}},
+  and \code{jk2.glm} now goes under the name of \code{\link{repGlm}}. The old functions are deprecated and will
   be removed in further package publications. Renaming was driven by the fact that the corresponding
   functions now have broader range of methods than only jackknife-2.
 }

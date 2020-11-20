@@ -4,7 +4,7 @@
 \title{Replication methods (JK1, JK2 and BRR) for linear regression models and trend estimation.}
 \description{Compute generalized linear models for complex cluster designs with multiple imputed variables based 
 on the Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, the function combines replication 
-methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
+methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{\link[survey]{svyglm}} function
 of the \code{survey} package.
 }
 \usage{
@@ -135,17 +135,17 @@ scaling constant for variance, for details, see help page of \code{svrepdesign} 
 }
   \item{mse}{
 Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
-See help page of \code{svrepdesign} from the \code{survey} package for further details.
+See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{rho}{
-Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+Shrinkage factor for weights in Fay's method. See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{hetero}{
 Logical: Assume heteroscedastic variance for weighted effect coding? Only applies for random samples, i.e. if no replication analyses are executed. 
 }
   \item{se_type}{
 The sort of standard error sought for cross level differences. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}
-and \code{crossDiffSE.engine == "lm"}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
+and \code{crossDiffSE.engine == "lm"}. See the help page of \code{\link[estimatr]{lm_robust}} from the \code{estimatr} package for further details.
 }
   \item{crossDiffSE.engine}{
 Sort of estimator which should be used for using weighted effect coding in cross-level differences. Note: To date,
@@ -167,7 +167,7 @@ Logical: Show progress bar on console?
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on \code{PSU} and \code{repInd} variables according to JK2 or 
 BRR procedure. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{survey} package.
+The function afterwards serves as a wrapper for \code{\link[survey]{svyglm}} implemented in the \code{survey} package.
 The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested 
 imputations if the \code{nest} argument implies a nested structure.
 }

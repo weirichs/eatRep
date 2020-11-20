@@ -7,7 +7,7 @@ cluster designs. Estimation of standard errors optionally takes the clustered st
 variables into account. To date, Jackknife-1 (JK1), Jackknife-2 (JK2) and Balanced repeated replicate (BRR) methods are 
 implemented to account for clustered designs. Procedures of Rubin (1987) and Rubin (2003) are implemented to account for 
 multiple imputed data and nested imputed data, if necessary. Conceptually, the function combines replication and imputation 
-methods. Technically, this is a wrapper for the \code{svymean()} function of the \code{survey} package.
+methods. Technically, this is a wrapper for the \code{\link[survey]{svymean}} function of the \code{survey} package.
 }
 \usage{
 repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
@@ -157,17 +157,17 @@ force the function either to call mean or table.
 Which package should be used for estimation?
 }
   \item{scale}{
-scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package
 }
   \item{rscales}{
-scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package
 }
   \item{mse}{
 Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
-See help page of \code{svrepdesign} from the \code{survey} package for further details.
+See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{rho}{
-Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+Shrinkage factor for weights in Fay's method. See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{verbose}{
 Logical: Show analysis information on console?
@@ -180,7 +180,7 @@ Logical: Show progress bar on console?
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in the \code{survey} package.
+The function afterwards serves as a wrapper for \code{\link[survey]{svymean}} called by \code{\link[survey]{svyby}} implemented in the \code{survey} package.
 Relative frequencies of the categories of the dependent variable are computed by the means of the dichotomous indicators
 (e.g. dummy variables) of each category. The results of the several analyses are then pooled according to Rubin's rule,
 which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.

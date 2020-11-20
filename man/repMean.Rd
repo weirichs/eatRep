@@ -8,7 +8,7 @@ designs based on Jackknife (JK1, JK2) or Balanced Repeated Replicates (BRR) proc
 can be customized for multiple or nested imputed variables, applying the combination rules of Rubin (1987)
 for imputed data and Rubin (2003) for nested imputed data. Conceptually, the function combines replication
 methods and methods for multiple imputed data. Trend estimation as usual in large-scale assessments is supported as well.
-Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{survey} package.}
+Technically, this is a wrapper for the \code{\link[survey]{svymean}} and \code{\link[survey]{svyvar}} functions of the \code{survey} package.}
 \usage{
 repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
           repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
@@ -147,28 +147,28 @@ analysis to prevent subsequent functions from crashing.
 Which package should be used for estimation?
 }
   \item{scale}{
-scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package
 }
   \item{rscales}{
-scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package
+scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package
 }
   \item{mse}{
 Logical: If \code{TRUE}, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
-See help page of \code{svrepdesign} from the \code{survey} package for further details.
+See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{rho}{
-Shrinkage factor for weights in Fay's method. See help page of \code{svrepdesign} from the \code{survey} package for further details. 
+Shrinkage factor for weights in Fay's method. See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{hetero}{
 Logical: Assume heteroscedastic variance for weighted effect coding?
 }
   \item{se_type}{
 The sort of standard error sought for cross level differences. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}
-and \code{crossDiffSE.engine == "lm"}. See the help page of \code{lm_robust} from the \code{estimatr} package for further details.
+and \code{crossDiffSE.engine == "lm"}. See the help page of \code{\link[estimatr]{lm_robust}} from the \code{estimatr} package for further details.
 }
   \item{crossDiffSE.engine}{
 Software implementation used for estimating cross-level differences. Choices are either \code{"lavaan"} (required if
-\code{stochasticGroupSites == "TRUE"}) or R function \code{lm()}. \code{"lavaan"} is the default.
+\code{stochasticGroupSites == "TRUE"}) or R function \code{\link[stats]{lm}}. \code{"lavaan"} is the default.
 }
   \item{stochasticGroupSizes}{
 Logical: Assume stochastic group sizes for using weighted effect coding in cross-level differences? Note: To date,
@@ -186,7 +186,7 @@ Logical: Show progress bar on console?
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables (if defined) according to JK2 or BRR procedure
 as implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in
+The function afterwards serves as a wrapper for \code{\link[survey]{svymean}} called by \code{\link[survey]{svyby}} implemented in
 the \sQuote{survey} package. The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
