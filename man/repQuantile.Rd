@@ -8,12 +8,14 @@ the function combines replication methods and methods for multiple imputed data.
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-repQuantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
-            repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
-            probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, bootMethod = c("wSampling","wQuantiles") ,
-            doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL,
-            verbose = TRUE, progress = TRUE)}
+repQuantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
+            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
+            groups = NULL, group.splits = length(groups), cross.differences = FALSE,
+            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
+            probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL,
+            bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE,
+            engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
+            rho=NULL, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{

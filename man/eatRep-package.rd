@@ -5,8 +5,8 @@
 	Statistical analyses in complex survey designs with multiple imputed data and trend estimation.
 }
 \description{
-  The package provide functions to computes some basic statistic operations (means, standard deviations,
-  frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple
+  The package provide functions to computes some basic statistic operations---(adjusted) means, standard deviations,
+  frequency tables, percentiles and generalized linear models---in complex survey designs comprising multiple
   imputed variables and/or a clustered sampling structure which both deserve special procedures at least in
   estimating standard errors. In large-scale assessments, standard errors are comprised of three components:
   the measurement error, the sampling error, and (if trend estimation of at least two times of measurement
@@ -68,19 +68,7 @@
   We then have four loops in a nested structure. Hence, the corresponding analyses may take considerably 
   computational effort. 
  
-  \emph{Important note:} The internal structure of the the \code{eatRep} functions varied substantially between 
-  versions 0.5.0 and 0.6.0. Up to version 0.5.0, the data has to be provided in the wide format (each line in 
-  the data represents one individual person, whereas multiple observations of the same person---i.e.,
-  imputations and/or nested imputations occur as additional columns). Beginning with version 0.6.0, 
-  \code{eatRep} functions need the long format (each line in the data represents one single observation of
-  one single person---i.e., for 5 imputations in 3 nests, \eqn{3*5=15} lines per person should be provided). 
-  This distinction practically means that version 0.5.0 allows to analyze data where, for example, the number 
-  of imputations is different between independent and dependent variables, albeit the second one is \emph{not} 
-  nested within the first one. This case is conceptually questionable and it is not clear how to imply the 
-  pooling rules. Hence, this is no longer supported in version 0.6.0 and higher. The number of imputations 
-  have to be equal or a nested structure must be guaranteed. 
-  
-  \emph{Another important note:} Starting with version 0.10.0, several methods for the standard error estimation 
+  \emph{Another important note:} Starting with version 0.10.0, several methods for the standard error estimation
   of cross level differences are implemented. Prior to version 0.10.0, the standard error for the difference
   between one single group (e.g., Belgium) and the total population (which is comprised of several states including 
   Belgium) was estimated as if both groups would have been independent from each other. Then standard errors, 
@@ -100,13 +88,14 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.12.13\cr
-Date: \tab 2020-11-20\cr
+Version: \tab 0.13.0\cr
+Date: \tab 2020-12-03\cr
 License: \tab GPL(>=2)
 }
 }
 \author{
-    Authors: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>, Benjamin Becker <b.becker@iqb.hu-berlin.de>
+    Authors: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>, Martin Hecht <martin.hecht@hu-berlin.de>,
+    Benjamin Becker <b.becker@iqb.hu-berlin.de>
 }
 \references{
   Allison, P. D. (2002). Missing data. Newbury Park, CA: Sage.

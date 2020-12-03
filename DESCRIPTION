@@ -1,18 +1,22 @@
 Package: eatRep
 Type: Package
 Title: Educational Assessment Tools for Replication Methods
-Version: 0.12.13
+Version: 0.13.0
 Depends: R (>= 3.5.0), survey, BIFIEsurvey, progress, lavaan (>= 0.6-7)
 Imports: Hmisc, fmsb, mice (>= 2.46), boot, car, reshape2, plyr, combinat, miceadds, tidyr, EffectLiteR, estimatr, eatTools (>= 0.3.0), eatGADS, janitor, msm
-Date: 2020-11-20
-Author: Sebastian Weirich, Martin Hecht, Benjamin Becker
-Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
-Description: Compute descriptives and regression models for complex survey designs with multiple imputed data
+Date: 2020-12-03
+Authors@R: c(
+    person("Sebastian", "Weirich", email = "sebastian.weirich@iqb.hu-berlin.de", role = c("aut", "cre")),
+    person("Martin", "Hecht", role = c("aut")),
+    person("Benjamin", "Becker", role = c("aut")))
+Description: The package provide functions to computes some basic statistic operations (means, standard deviations,
+  frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple
+  imputed variables and/or a clustered sampling structure which both deserve special procedures at least in
+  estimating standard errors. See the package documentation for a more detailed description along with references.
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
 NeedsCompilation: no
 Packaged: 2018-11-30 21:53:58 UTC; Sebastian Weirich
-Remotes: beckerbenj/eatGADS
-Suggests: 
+Suggests:
     testthat

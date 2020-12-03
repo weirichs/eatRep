@@ -8,15 +8,17 @@ methods and methods for multiple imputed data. Technically, this is a wrapper fo
 of the \code{survey} package.
 }
 \usage{
-repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
-        repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
+repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
+        repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100,
+        nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
         group.delimiter = "_", cross.differences = FALSE, trend = NULL,
         linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
-        poolMethod = c("mice", "scalar"), useWec = FALSE, engine = c("survey", "BIFIEsurvey"),
-        scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, 
-        se_type = c("HC3", "HC0", "HC1", "HC2"), crossDiffSE.engine= c("lavaan", "lm"),
-        stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
+        poolMethod = c("mice", "scalar"), useWec = FALSE,
+        engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
+        rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2"),
+        crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE,
+        verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{

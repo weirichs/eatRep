@@ -10,14 +10,16 @@ multiple imputed data and nested imputed data, if necessary. Conceptually, the f
 methods. Technically, this is a wrapper for the \code{\link[survey]{svymean}} function of the \code{survey} package.
 }
 \usage{
-repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL,
-          repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-          group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
-          nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL,
-          linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE,
+repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
+          repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100,
+          nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
+          group.differences.by = NULL, cross.differences = FALSE,
+          crossDiffSE = c("wec", "rep","old"), nBoot = 100, chiSquare = FALSE,
+          correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL,
+          dependent, separate.missing.indicator = FALSE, na.rm=FALSE,
           expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
-          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL,
-          verbose = TRUE, progress = TRUE )}
+          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
+          rho=NULL, verbose = TRUE, progress = TRUE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
