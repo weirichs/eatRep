@@ -40,6 +40,15 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE) {
             crossDiffSE.engine <- match.arg(crossDiffSE.engine)
             cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "rep","old"))
+    ### wenn adjustiert wird, koennen cross.level differenzen nur mit methode 'old' bestimmt werden
+            if (!is.null(adjust)) {
+                if(is.list(cross.differences) || isTRUE(cross.differences)) {
+                     if ( cdse != "old") {
+                         warning("To date, for adjusted means, cross-level differences can only be computed with method 'old'. Set 'crossDiffSE' to 'old'.")
+                         cdse <- "old"
+                     }
+                }
+            }
             type<- recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
             se_type <- match.arg(arg = se_type, choices = c("HC3", "HC0", "HC1", "HC2"))
             datL<- checkIsDataFrame ( datL)
@@ -318,7 +327,13 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
            }  else {
              independent <- NULL
           }
-          if(is.null(groups))  {groups <- "wholeGroup"; datL[,"wholeGroup"] <- "wholePop"}
+          if(is.null(groups))  {                                                ### defaults setzen, wenn gruppierungsvariable NULL war
+             groups <- "wholeGroup"
+             datL[,"wholeGroup"] <- "wholePop"
+             groupWasNULL <- TRUE
+          }  else  {
+             groupWasNULL <- FALSE
+          }
           allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = dependent, independent=independent, adjust=adjust)
           allNam<- lapply(allVar, FUN=function(ii) {existsBackgroundVariables(dat = datL, variable=ii)})
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
@@ -404,17 +419,10 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
           if(!is.null(allNam[["adjust"]])) {
              chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
     ### wenn es adjustierungsvariablen gibt, darf groups nicht NULL gewesen sein, also nicht "wholeGroup" sein ... es darf aber (zumindest zunaechst einmal) nur eine Gruppierungsvariable geben
-             if ( length(groups)>1) {
-                  warning("If variables for adjustment are defined, argument 'groups' should be of length 1.")
-             }  else  {
-                  if ( groups == "wholeGroup" && isTRUE(useEffectLiteR) ) {stop("When using effectLiteR for adjusted means, argument 'groups' must be not NULL. Recommend to set useEffectLiteR = FALSE.")}
-             }
-    ### wenn es adjustierungsvariablen gibt, koennen vorerst keine cross-level differences bestimmt werden
-             if(is.list(cross.differences) || isTRUE(cross.differences)) {
-                 stop("To date, cross-level differences cannot be computed for adjusted means.")
-             }
-    ### wenn es adjustierungsvariablen gibt, darf group splits keine '0' enthalten, wenn effectLiteR benutzt wird
-             if (0 %in% group.splits && isTRUE(useEffectLiteR)) {stop("When using effectLiteR for adjusted means, argument 'groups.splits' must not include the '0' category. Recommend to set useEffectLiteR = FALSE.")}
+             if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
+             if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
+    ### wenn es adjustierungsvariablen gibt, koennen cross-level differences vorerst nur mit methode 'old' bestimmt werden
+    ### dieser check findet in der Funktion repMean statt
           }
     ### check: Manche Variablennamen sind in der Ergebnisstruktur fest vergeben und duerfen daher nutzerseitig nicht als namen von Gruppenvariablen vergeben werden
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
@@ -495,6 +503,10 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
                               gdb <- attr(toAppl[[y]], "group.differences.by")
                               if ( is.null(gdb)) {gdb <- NA}
                               res <-  data.frame ( analysis.number = y, hierarchy.level = length(toAppl[[y]]), groups.divided.by = paste(toAppl[[y]], collapse=" + "), group.differences.by = gdb)
+    ### Achtung!! adjustiert werden kann nicht fuer die oberste Hierarchieebene (hierarchy level 0) ... fuer analysen auf dieser Ebene wird adjust zu NULL
+                              if ( !is.null(allNam[["adjust"]])) {
+                                  res[,"adjust"] <- recode(res[,"hierarchy.level"], "0='FALSE'; else = 'TRUE'")
+                              }
                               return(res)}))
                        if(verbose){cat("\n \n"); print(ret)}
                   }
@@ -580,10 +592,16 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
                          rm(repW)
                      }  else  { repA <- NULL}
                   }
-    ### innere Schleife (= fuer jede Trendgruppe separat): splitten nach super splitter
+    ### innere Schleife (= fuer jede Hierachieebene separat): splitten nach super splitter
                   allRes<- do.call("rbind.fill", lapply( names(toAppl), FUN = function ( gr ) {
                       if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") }
-                      if( nchar(gr) == 0 ){ datL[,"dummyGroup"] <- "wholeGroup" ; allNam[["group"]] <- "dummyGroup" } else {allNam[["group"]] <- toAppl[[gr]] }
+                      if( nchar(gr) == 0 ){
+                          datL[,"dummyGroup"] <- "wholeGroup"
+                          allNam[["group"]] <- "dummyGroup"
+                          allNam[["adjust"]] <- NULL                            ### auf der obersten Hierarchieebene findet keine Adjustierung statt
+                      } else {
+                          allNam[["group"]] <- toAppl[[gr]]
+                      }
     ### check: Missings duerfen nur in abhaengiger Variable auftreten!          ### obere Zeile: problematisch!! "allNam" wird hier in jedem Schleifendurchlauf ueberschrieben -- nicht so superschoen!
                       noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
                       miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
@@ -916,7 +934,7 @@ jackknife.adjust.mean <- function (dat.i , allNam, na.rm, group.delimiter, type,
                strng<- paste("ret <- withReplicates(des, quote(eatRep:::funadjustNoEffectLite(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
           }
           eval(parse(text=strng))
-          rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = NA, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
           
 ### Hilfsfunktion fuer jackknife.adjust.mean: braucht keine Standardfehler, da die mit jackknife bestimmt werden

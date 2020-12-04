@@ -237,11 +237,12 @@ res3 <- report(mod3, printGlm = TRUE)
 
 \dontrun{
 ### Example 4: weighted effect coding to estimate whether a specific country's mean
-### differs from the overall mean (whereas the overall population is a composite of 
-### all countries). The procedure adapts the weighted effect coding procedures 
-### described in te Grotenhuis (2017) for multiple imputation and replication methods. 
+### differs from the overall mean (whereas the overall population is a composite of
+### all countries). The procedure adapts the weighted effect coding procedures
+### described in te Grotenhuis (2017) for multiple imputation and replication methods.
 mod4 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
         PSU = "jkzone", repInd = "jkrep", imp = "imp", formula = score~country, useWec=TRUE)
 res4 <- report(mod4, printGlm = FALSE)
 }}
+
 

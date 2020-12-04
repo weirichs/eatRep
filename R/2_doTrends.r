@@ -2,7 +2,7 @@ computeTrend <- function(jk2, tv, le, fun) {
         jk2_all <- rbind(jk2[[1]], jk2[[2]])                                    ### bind yearwise results
         jk2_bind<- jk2_all
    ### checks: die selben Zeilen in beiden Jahren?? (fuer GLMs insbesondere testen!)
-        if(length(unique(jk2[[1]]$group)) != length(unique(jk2[[2]]$group)) || sort(unique(jk2[[1]]$group)) != sort(unique(jk2[[2]]$group))) {
+        if(length(unique(jk2[[1]]$group)) != length(unique(jk2[[2]]$group)) || suppressWarnings(!all(sort(unique(jk2[[1]]$group)) == sort(unique(jk2[[2]]$group))))) {
             uneven1 <- setdiff(unique(jk2[[1]]$group), unique(jk2[[2]]$group))
             uneven2 <- setdiff(unique(jk2[[2]]$group), unique(jk2[[1]]$group))
             if(length(uneven1) > 0) {cat("Categories", uneven1, "are missing in year", jk2[[2]][1, tv] ,". \n")}
@@ -27,17 +27,21 @@ computeTrend <- function(jk2, tv, le, fun) {
    ### Effect size for means (only for jk2.mean)
         es      <- character(0)
         existSD <- "sd" %in% jk2_bind[,"parameter"]                             ### nur wenn standardabweichungen drin stehen, koennen effektstaerken berechnet werden
-        if(fun == "mean" && !existSD) {cat("Cannot find standard deviations in output. Skip computation of effect sizes.\n")}
+        if(fun == "mean" && !existSD) {message("Cannot find standard deviations in output. Skip computation of effect sizes.")}
         if (  fun == "mean" && existSD) {
             jk2_wide[, "es_trend"]  <- NA                                       ### not for groupDiffs as no SD is provided by eatRep, split up data frame and rbind later
             jk2_wideS<- jk2_wide[!jk2_wide[, "comparison"] %in% c("crossDiff_of_groupDiff", "groupDiff") | is.na(jk2_wide[, "comparison"]), ]
-            stopifnot(all ( table(jk2_wideS[,"group"]) == 2))                   ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen
-            jk2_wideS<- jk2_wideS[with(jk2_wideS, order(parameter, group)),]    ### sortieren nach "group" und "parameter"; siehe Mail an Benjamin, 11.06.2019
-            pooledSD <- sqrt(0.5 * (jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",lev[1], sep="")]^2 +
-                             jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",lev[2], sep="")]^2))
-            jk2_wideS[jk2_wideS[, "parameter"] == "mean", "es_trend"]  <- jk2_wideS[jk2_wideS[, "parameter"] == "mean", "est_trend"] / pooledSD
-            es       <- "es_trend"                                              ### add es to reshaping!
-            jk2_wide <- unique(rbind(jk2_wide, jk2_wideS))
+            tabs     <- table(jk2_wideS[,c("parameter", "group")])
+            if ( !all ( tabs == 1) ) {                                          ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen ... sonst Effektstaerkebestimmug ueberspringen
+                 message("Cannot find standard deviations of following groups: \n",print_and_capture(tabs, 5),"\nSkip computation of effect sizes.")
+            }  else  {
+                 jk2_wideS<- jk2_wideS[with(jk2_wideS, order(parameter, group)),]## sortieren nach "group" und "parameter"; siehe Mail an Benjamin, 11.06.2019
+                 pooledSD <- sqrt(0.5 * (jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",lev[1], sep="")]^2 +
+                                  jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",lev[2], sep="")]^2))
+                 jk2_wideS[jk2_wideS[, "parameter"] == "mean", "es_trend"]  <- jk2_wideS[jk2_wideS[, "parameter"] == "mean", "est_trend"] / pooledSD
+                 es       <- "es_trend"                                         ### add es to reshaping!
+                 jk2_wide <- unique(rbind(jk2_wide, jk2_wideS))
+            }
         }
         # reshape back to standard format
         jk2_add <- melt ( jk2_wide, measure.vars = c(paste("est_",lev[1], sep=""),
