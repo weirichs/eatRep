@@ -220,7 +220,7 @@ te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A.,
 When size matters: advantages of weighted effect coding in observational studies. \emph{International Journal of Public Health.} \bold{62}, 163--167.
 
 Sachse, K. A. & Haag, N. (2017). Standard errors for national trends in international
-large-scale assessments in the case of cross-national dierential item functioning. \emph{Applied
+large-scale assessments in the case of cross-national differential item functioning. \emph{Applied
 Measurement in Education, 30}, (2), 102-116. http://dx.doi.org/10.1080/08957347.2017.1283315
 }
 \author{
