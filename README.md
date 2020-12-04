@@ -11,13 +11,20 @@ eatRep (Educational Assessment Tools for Replication Methods) provides functions
 devtools::install_github("weirichs/eatRep")
 ```
 
-## Usage
+## View package documentation
 
 ```
 library(eatRep)
 ### View package documentation
 package?eatRep
+```
 
+## Exemplary analysis
+
+The following example illustrates the computation of mean educational outcomes of three fictitious countries. Data stem from a large-scale assessment where reading competencies were assessed using dichotomous items (true/false). As the outcome is considered to be latent, plausible values were drawn for each examinee. Plausible values can be considered as multiple imputations of the inherently unobserved latent outcome. The within-person variance of plausible values is used to determine the measurement error. During sampling, classes were drawn instead of individuals. As the sample is clustered then, computation of sampling error involves replication methods. 
+
+```
+library(eatRep)
 ### compute group means for multiple imputed data in a clustered structure
 ### from a large-scale assessment survey
 data(lsa)

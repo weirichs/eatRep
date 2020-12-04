@@ -103,15 +103,14 @@ Variable name or column number of variable(s) for which adjusted means should be
 or 0/1 dichotomous variables are allowed. 
 }
   \item{useEffectLiteR}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Logical: use the \code{lavaan}-wrapper \code{EffectLiteR} to compute adjusted means? Alternatively, adjusted means
 are computed by applying a simple linear regression model in each group, using the variables in \code{adjust} as
 independent variables. Afterwards, the coefficients are weighted with the (weighted) means of the independent
 variables. Standard errors for this procedure are received using the delta method by applying an augmented
 variance-covariance matrix which assumes zero covariances between independent variable means and regression
-coefficients. We recommend to set \code{useEffectLiteR = TRUE} if not replication methods are applied. When
-replication methods are used (jackknife-1, jackknife-2, BRR), we recommend to set \code{useEffectLiteR = FALSE}
-to accelerate estimation.
+coefficients. We recommend to set \code{useEffectLiteR = TRUE} if no replication methods are applied. When
+replication methods are used (jackknife-1, jackknife-2, BRR), we recommend to set \code{useEffectLiteR = FALSE},
+because otherwise the estimation is very slow.
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
