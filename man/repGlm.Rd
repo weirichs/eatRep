@@ -12,7 +12,7 @@ repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU =
         repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100,
         nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
         group.delimiter = "_", cross.differences = FALSE, trend = NULL,
-        linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
+        linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE,
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE,
         engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
@@ -221,11 +221,12 @@ mod1 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
 res1 <- report(mod1, printGlm = TRUE)
 
 ### Example 2: Computes log linear regression from pass/fail on ses and gender
-### separately for each country in a nested structure
+### separately for each country in a nested structure. Assuming equally weighted cases
+### by omitting "wgt" argument
 dat  <- lsa[intersect(which(lsa[,"year"] == 2010), which(lsa[,"domain"] == "reading")),]
-mod2 <- repGlm(datL = dat, ID = "idstud", wgt = "wgt", type = "JK2",  PSU = "jkzone",
+mod2 <- repGlm(datL = dat, ID = "idstud", type = "JK2",  PSU = "jkzone",
         repInd = "jkrep", imp = "imp", nest="nest", groups = "country",
-        formula = passReg~sex*ses, family = binomial(link="logit"))
+        formula = passReg~sex*ses, family = quasibinomial(link="logit"))
 res2 <- report(mod2, printGlm = TRUE)
 
 ### Example 3: Like example 1, but without any replication methods
@@ -237,12 +238,11 @@ res3 <- report(mod3, printGlm = TRUE)
 
 \dontrun{
 ### Example 4: weighted effect coding to estimate whether a specific country's mean
-### differs from the overall mean (whereas the overall population is a composite of
-### all countries). The procedure adapts the weighted effect coding procedures
-### described in te Grotenhuis (2017) for multiple imputation and replication methods.
+### differs from the overall mean (whereas the overall population is a composite of 
+### all countries). The procedure adapts the weighted effect coding procedures 
+### described in te Grotenhuis (2017) for multiple imputation and replication methods. 
 mod4 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
         PSU = "jkzone", repInd = "jkrep", imp = "imp", formula = score~country, useWec=TRUE)
 res4 <- report(mod4, printGlm = FALSE)
 }}
-
 
