@@ -9,10 +9,10 @@ of the \code{survey} package.
 }
 \usage{
 repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
-        repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100,
-        nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-        group.delimiter = "_", cross.differences = FALSE, trend = NULL,
-        linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE,
+        repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+        group.splits = length(groups), group.delimiter = "_",
+        cross.differences = FALSE, trend = NULL, linkErr = NULL, formula,
+        family=gaussian, forceSingularityTreatment = FALSE,
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE,
         engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
@@ -55,14 +55,6 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 %%     ~~Describe \code{sig.dif.bound} here~~
 Normally, replicate weights are created by \code{repGlm} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
-}
-  \item{useRandomJK1groups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Logical: use random groups for JK1 analysis? Note: random groups works only for \code{engine = "BIFIEsurvey"}.
-}
-  \item{nRandomGroups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Number of randomly created groups for \code{type = "JK1"} and \code{useRandomJK1groups == TRUE} when \code{engine == "BIFIEsurvey"}
 }
 \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.
 }
@@ -236,7 +228,7 @@ mod3 <- repGlm(datL = dat, ID = "idstud", wgt = "wgt", imp = "imp", nest = "nest
         groups = "country",  formula = score~sex, trend = "year")
 res3 <- report(mod3, printGlm = TRUE)
 
-\dontrun{
+\donttest{
 ### Example 4: weighted effect coding to estimate whether a specific country's mean
 ### differs from the overall mean (whereas the overall population is a composite of 
 ### all countries). The procedure adapts the weighted effect coding procedures 

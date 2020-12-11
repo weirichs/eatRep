@@ -11,7 +11,7 @@ methods and methods for multiple imputed data. Trend estimation as usual in larg
 Technically, this is a wrapper for the \code{\link[survey]{svymean}} and \code{\link[survey]{svyvar}} functions of the \code{survey} package.}
 \usage{
 repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
-         repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100,
+         repInd = NULL, repWgt = NULL,
          nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
          group.differences.by = NULL, cross.differences = FALSE,
          crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE,
@@ -56,14 +56,6 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 %%     ~~Describe \code{sig.dif.bound} here~~
 Normally, replicate weights are created by \code{repMean} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
-}
-  \item{useRandomJK1groups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Logical: use random groups for JK1 analysis? Note: random groups works only for \code{engine = "BIFIEsurvey"}.
-}
-  \item{nRandomGroups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Number of randomly created groups for \code{type = "JK1"} and \code{useRandomJK1groups == TRUE} when \code{engine == "BIFIEsurvey"}
 }
 \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.
 }
@@ -246,7 +238,7 @@ means1 <- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "j
 ### so the user may add new columns in the output using the 'add' argument
 res1   <- report(means1, add = list(domain = "reading"))
 
-\dontrun{
+\donttest{
 ### Example 1a: Additionally to example 1, we decide to estimate whether
 ### each country's mean differ significantly from the overall mean as well
 ### as from the individual means of the other contries

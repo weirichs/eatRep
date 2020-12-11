@@ -11,13 +11,12 @@ methods. Technically, this is a wrapper for the \code{\link[survey]{svymean}} fu
 }
 \usage{
 repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
-          repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100,
-          nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-          group.differences.by = NULL, cross.differences = FALSE,
-          crossDiffSE = c("wec", "rep","old"), nBoot = 100, chiSquare = FALSE,
-          correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL,
-          dependent, separate.missing.indicator = FALSE, na.rm=FALSE,
-          expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
+          repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+          group.splits = length(groups), group.differences.by = NULL,
+          cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
+          nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_",
+          trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE,
+          na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
           engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
           rho=NULL, verbose = TRUE, progress = TRUE )}
 %- maybe also 'usage' for other objects documented here.
@@ -56,14 +55,6 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 %%     ~~Describe \code{sig.dif.bound} here~~
 Normally, replicate weights are created by \code{repTable} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
-}
-  \item{useRandomJK1groups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Logical: use random groups for JK1 analysis? Note: random groups works only for \code{engine = "BIFIEsurvey"}.
-}
-  \item{nRandomGroups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Number of randomly created groups for \code{type = "JK1"} and \code{useRandomJK1groups == TRUE} when \code{engine == "BIFIEsurvey"}
 }
   \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.
 }
@@ -241,7 +232,7 @@ freq.tab1 <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
              group.differences.by = "country", dependent = "comp", chiSquare = TRUE)
 res1      <- report(freq.tab1, add = list ( domain = "reading" ))
 
-\dontrun{
+\donttest{
 ### Second example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country. Now we test whether the frequency of each single category
 ### differs between pairs of countries (it's not an overall test ... repTable now

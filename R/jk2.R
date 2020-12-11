@@ -1,3 +1,20 @@
+### generateRandomJk1Zones (datSel, "IDSTUD", 100)
+generateRandomJk1Zones <- function (datL, unit, nZones, name = "randomCluster") {
+       if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
+       stopifnot(length(unit)==1)
+       allVar<- list(ID = unit)
+       allNam<- existsBackgroundVariables(dat = datL, variable=unlist(allVar))
+       if ( "randomCluster" %in% colnames(datL)) {stop("Name '",name,"' already exists in data. Please choose an alternative name.")}
+       if ( nZones >= length(unique(datL[,allNam])) ) { stop("Number of zones must not exceed number of units.")}
+       if ( nZones >= length(unique(datL[,allNam])) / 5 ) {warning("Number of zones (",nZones,") is large compared to the number of distinct units (",length(unique(datL[,allNam])),").")}
+       reps  <- length(unique(datL[,allNam])) / nZones
+       zones <- rep(1:nZones, times = ceiling(reps))
+       zones <- data.frame ( ID = sample(unique(datL[,allNam]), size = length(unique(datL[,allNam])), replace=FALSE), zone = zones[1:length(unique(datL[,allNam]))], stringsAsFactors = FALSE)
+       colnames(zones)[2] <- name
+       mdat  <- merge(datL, zones, by.x = allNam, by.y = "ID", all = TRUE)
+       return(mdat)}
+
+
 generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progress, verbose )   {
                        if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) }
                        if(type  == "JK1" ) { if(!is.null(repInd))  {
@@ -34,7 +51,7 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progre
                        return(ret) }
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
-repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL,
+repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
             group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2"),
             crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE) {
@@ -60,7 +77,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "mean",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by,
                    cross.differences = cross.differences, adjust=adjust, useEffectLiteR = useEffectLiteR, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine,
-                   scale = scale, rscales = rscales, mse=mse, rho=rho, crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups, nRandomGroups=nRandomGroups)
+                   scale = scale, rscales = rscales, mse=mse, rho=rho, crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress)
             if ( isFALSE(ret[["allNam"]][["cross.differences"]])) {return(ret)}
             if ( (is.list(cross.differences) || cross.differences == TRUE) && cdse == "old" ) {
                  ret[["SE_correction"]] <- list(NULL)
@@ -154,11 +171,11 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ne, imp=im, trend = trend,
                                                   formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = "survey",
                                                   scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type , crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes,
-                                                  verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups, nRandomGroups=nRandomGroups)
+                                                  verbose=verbose, progress=progress)
                                 }  else  {                                      ### hier beginnt methode 'rep'
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot,
                                           nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine="survey", modus=modus,scale = scale,
-                                          rscales = rscales, mse=mse, rho=rho, reihenfolge = ret[["allNam"]][["group"]], verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups, nRandomGroups=nRandomGroups)
+                                          rscales = rscales, mse=mse, rho=rho, reihenfolge = ret[["allNam"]][["group"]], verbose=verbose, progress=progress)
                                 }
                                 b[["vgl"]]      <- vgl
                                 b[["focGrp"]]   <- grp                          ### Fokus- und Referenzgruppe in Ergebnisoutput eintragen,
@@ -182,7 +199,7 @@ checkIsDataFrame <- function ( d ) {
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
-            PSU = NULL, repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
+            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE ) {
             crossDiffSE <- "old"                                                ### untere Zeile: wrapper! hier wird repTable ueber repMean aufgerufen; fuer eine kategorielle Variable sind die Haeufigkeiten die Mittelwerte der Indikatoren der Faktorstufen; untere Zeilen, Achtung!! hier muessen immer zwei '&'-Zeichen gesetzt werden!!
@@ -198,8 +215,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                  ret <- repMean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], repWgt = repWgt,
                         nest = chk1[["nest"]], imp = chk1[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                         crossDiffSE = crossDiffSE, nBoot = nBoot, group.delimiter =group.delimiter, trend = chk1[["trend"]], linkErr = chk1[["linkErr"]], dependent = chk1[["dependent"]],
-                        na.rm=na.rm,doCheck = doCheck, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups,
-                        nRandomGroups=nRandomGroups)
+                        na.rm=na.rm,doCheck = doCheck, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress)
                  return(ret)
             }  else  {
                  if ( !is.null(group.differences.by) && isFALSE(chiSquare)) {
@@ -207,7 +223,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                            trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                            expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, onlyCheck= TRUE, modus = modus, engine=engine, scale = scale, rscales = rscales,
-                           mse=mse, rho=rho, verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups, nRandomGroups=nRandomGroups)
+                           mse=mse, rho=rho, verbose=verbose, progress=progress)
     ### missing handling muss vorneweg geschehen
                     isNa<- which ( is.na ( datL[, chk[["dependent"]] ] ))
                     if ( length ( isNa ) > 0 ) {
@@ -237,8 +253,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            res <- repMean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt,
                                              nest = chk[["nest"]], imp = chk[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                                              crossDiffSE = crossDiffSE, nBoot = nBoot, group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,
-                                             doCheck = doCheck, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups,
-                                             nRandomGroups=nRandomGroups)
+                                             doCheck = doCheck, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress)
                            return(res) } )
     ### Output zusammenfassen: kein Trend ... dann ist "resT" eine Liste mit nur einem Element, das ein data.frame ist
                     if ( length(ret[[1]][["resT"]]) == 1) {
@@ -259,7 +274,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                            trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                            expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, modus=modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho,
-                           verbose=verbose, progress=progress, useRandomJK1groups=useRandomJK1groups, nRandomGroups=nRandomGroups)
+                           verbose=verbose, progress=progress)
                  }
                  return(ret)}}
 
@@ -280,7 +295,7 @@ repQuantile<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf
 repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
-            PSU = NULL, repInd = NULL, repWgt = NULL, useRandomJK1groups = FALSE, nRandomGroups = 100, nest=NULL, imp=NULL, groups = NULL,
+            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
             group.splits = length(groups), group.delimiter = "_", cross.differences = FALSE, trend = NULL, linkErr = NULL, formula,
             family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
             poolMethod = c("mice", "scalar") , useWec = FALSE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL,
@@ -296,8 +311,7 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                    formula=formula, family=family, forceSingularityTreatment=forceSingularityTreatment, glmTransformation = glmTransformation,
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus=modus, poolMethod=poolMethod, useWec=useWec, engine=engine,
                    scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type, crossDiffSE.engine=crossDiffSE.engine,
-                   stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, useRandomJK1groups = useRandomJK1groups,
-                   nRandomGroups=nRandomGroups)}
+                   stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress)}
 
 
 ### Funktion ist nicht user-level, sondern wird von repMean, repTable, repQuantile, repGlm mit entsprechenden Argumenten aufgerufen
@@ -306,7 +320,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, useEffectLiteR = TRUE, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine, 
-          scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, useRandomJK1groups = FALSE, nRandomGroups) {
+          scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress) {
           if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           i     <- 0                                                            ### wenn wec genutzt werden soll, geht das nur ueber den Hotfix, der auch fuer Singularitaet verwendet wird
@@ -339,46 +353,14 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
     ### Konsistenz der JK-Argumente pruefen
 if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
-          if ( type == "JK2") {
+          if ( type %in% c("JK1", "JK2")) {
                if ( is.null(repWgt)) {
-                   if (is.null(PSU) || is.null(repInd)) {
-                       stop("For type = '",type,"', 'PSU' and 'repInd' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
+                   if (is.null(PSU) ) {
+                       stop("For type = '",type,"', 'PSU' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
                    }
-               }
-          }
-          if ( type == "JK1") {
-               if ( is.null(repWgt)) {
-                   if (is.null(PSU) && isFALSE(useRandomJK1groups)) {
-                       stop("For type = '",type,"', cluster variable 'PSU' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL) and if no random groups should be used.")
+                   if (type == "JK2" && is.null(repInd) ) {
+                       stop("For type = '",type,"', 'repInd' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
                    }
-               }
-          }
-          if ( type == "JK1" && isTRUE(useRandomJK1groups)) {
-               quot <- length(unique(datL[,allNam[["ID"]]])) / nRandomGroups
-               if ( quot < 1 ) {
-                   stop("Number of chosen random jackknife-1 groups (",nRandomGroups,") exceeds number of examinees in data (",length(unique(datL[,allNam[["ID"]]])),").")
-               }
-               if ( quot < 10 ) {
-                   warning("Number of chosen random jackknife-1 groups (",nRandomGroups,") is large in relation to the number of examinees in data (",length(unique(datL[,allNam[["ID"]]])),").")
-               }
-               if(engine == "survey" && toCall %in% c("mean", "table")) {
-                  message("JK1 with random groups does not work for engine = 'survey'. Set engine to 'BIFIEsurvey' for call '",toCall,"'.")
-                  engine <- "BIFIEsurvey"
-               }
-               if(engine == "BIFIEsurvey" && toCall == "glm") {
-                  message("JK1 with random groups does not work for engine = 'BIFIEsurvey' and call '",toCall,"'. Set engine to 'survey' and create ",nRandomGroups," random groups.")
-                  engine <- "survey"
-               }
-               if(engine == "survey" && toCall == "glm") {
-                  if (!is.null(allNam[["PSU"]])) {
-                      message("PSU variable '", allNam[["PSU"]], "' for type = '",type,"' will be ignored as 'useRandomJK1groups' was set to ",useRandomJK1groups,".")
-                  }
-                  allNam[["PSU"]] <- "jkzone"
-                  stopifnot(length(which(unlist(allNam) == "jkzone")) == 1)
-                  datL[,"jkzone"] <- NULL                                       ### Falls Varable im datensatz urspruenglch drin war, loeschen,
-                  grps <- rep ( 1:nRandomGroups, times = ceiling(quot))         ### damit nicht unten durch das mergen eine Variable 'jkzone.x' und 'jkzone.y' entsteht
-                  datx <- data.frame(idstud = unique(datL[,allNam[["ID"]]]), jkzone = sample(grps, size = length(unique(datL[,allNam[["ID"]]])), replace = FALSE), stringsAsFactors = FALSE)
-                  datL <- merge(datL, datx, by.x = allNam[["ID"]], by.y = "idstud", all = TRUE)
                }
           }
     ### Bloeder hotfix: wenn wec, wird ja die Gruppierungsvariable zur UV in regression ... wenn aus den Levels der Gruppierungsvariablen die '_' entfernt werden, muss das ja auch fuer die UV geschehen, sofern es sich um eine Regression fuer WEC handelt
@@ -422,7 +404,11 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
              if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
              if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
     ### wenn es adjustierungsvariablen gibt, koennen cross-level differences vorerst nur mit methode 'old' bestimmt werden
-    ### dieser check findet in der Funktion repMean statt
+    ### dieser check findet in der Funktion repMean statt ... aber: wenn es adjustierungsvariablen gibt, kann nicht BIFIEsurvey benutzt werden
+             if ( engine == "BIFIEsurvey") {
+                  message("Engine 'BIFIEsurvey' currently does not work for adjusted means. Set 'engine' to 'survey'.")
+                  engine <- "survey"
+             }
           }
     ### check: Manche Variablennamen sind in der Ergebnisstruktur fest vergeben und duerfen daher nutzerseitig nicht als namen von Gruppenvariablen vergeben werden
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
@@ -477,8 +463,8 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
     ### repliziere Analyse zweimal, d.h. fuer beide Trendgruppen ... erstmal single core ... Funktion ruft sich 2x selber auf
                   resT<- by ( data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) {
                          if(verbose) {cat(paste("\nTrend group: '",subdat[1,allNam[["trend"]] ], "'\n",sep=""))}
-                         do    <- paste ( "foo <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='subdat'; 'group.differences.by'='group.differences.by'"), sep =" = ", collapse = ", "), ")",sep="")
-                         eval(parse(text=do))
+                         do    <- paste ( "eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='subdat'; 'group.differences.by'='group.differences.by'"), sep =" = ", collapse = ", "), ")",sep="")
+                         foo   <- eval(parse(text=do))
                          foo[["resT"]][["noTrend"]][,allNam[["trend"]]] <- subdat[1,allNam[["trend"]] ]
                          out1  <- foo[["resT"]][["noTrend"]]
                          out2  <- foo[["allNam"]]
@@ -657,11 +643,11 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="X") {browser()}
                              nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation,
                              toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho,
                              reihenfolge=reihenfolge, hetero=hetero, se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine,
-                             stochasticGroupSizes=stochasticGroupSizes, progress=progress))
+                             stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct))
                       }  else  {                                                ### hier muesste es jetzt ggf. nach BIFIEsurvey uebergeben werden
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                              separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs, formula=formula, glmTransformation=glmTransformation,
-                             toCall=toCall, modus=modus, useRandomJK1groups = useRandomJK1groups, type=type, nRandomGroups=nRandomGroups, verbose=verbose))
+                             toCall=toCall, modus=modus, type=type, verbose=verbose))
                       }
                       if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
                       return(anaA)}))
@@ -858,7 +844,7 @@ jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA
                                         tbl       <- svychisq(formula = formel, design = designSel, statistic = "Chisq")
                                         scumm     <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
                                         group     <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
-                                        dif.iii   <- data.frame(group = group, parameter = "chiSquareTest", coefficient = c("chi2","df","pValue"), value = c(tbl[["statistic"]],tbl[["parameter"]],tbl[["p.value"]]) , stringsAsFactors = FALSE )
+                                        dif.iii   <- data.frame(group = group, parameter = "chiSquareTest", modus = paste(modus,"survey", sep="__"), coefficient = c("chi2","df","pValue"), value = c(tbl[["statistic"]],tbl[["parameter"]],tbl[["p.value"]]) , stringsAsFactors = FALSE )
                                         return(dif.iii)                         ### siehe http://www.vassarstats.net/dist2.html
                       } ))                                                      ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
                       difs[,"comparison"] <- "groupDiff"
@@ -929,11 +915,11 @@ jackknife.adjust.mean <- function (dat.i , allNam, na.rm, group.delimiter, type,
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], allNam[["adjust"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE, rho=rho)
           if ( useEffectLiteR ) {
-               strng<- paste("ret <- withReplicates(des, quote(eatRep:::funadjust(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+               strng<- paste("withReplicates(des, quote(eatRep:::funadjust(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
           }  else  {
-               strng<- paste("ret <- withReplicates(des, quote(eatRep:::funadjustNoEffectLite(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+               strng<- paste("withReplicates(des, quote(eatRep:::funadjustNoEffectLite(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
           }
-          eval(parse(text=strng))
+          ret  <- eval(parse(text=strng))
           rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
           
@@ -976,8 +962,8 @@ conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, use
            if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                           ### ohne Gewichte
                 res <- effectLite(y = allNam[["dependent"]], x = allNam[["group"]], z = allNam[["adjust"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
            }  else  {
-                st  <- paste("res <- suppressMessages(effectLite(y = allNam[[\"dependent\"]], x = allNam[[\"group\"]], z = allNam[[\"adjust\"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~ ",allNam[["wgt"]],", method=\"sem\"))", sep="")
-                eval(parse( text=st))
+                st  <- paste("suppressMessages(effectLite(y = allNam[[\"dependent\"]], x = allNam[[\"group\"]], z = allNam[[\"adjust\"]], data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~ ",allNam[["wgt"]],", method=\"sem\"))", sep="")
+                res <- eval(parse( text=st))
            }
            vals <- melt(res@results@adjmeans, measure.vars = c("Estimate", "SE"))[,"value"]
        }  else  {                                                               ### benutze kein effectLite: Standardfehler mit deltamethode
@@ -987,7 +973,7 @@ conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, use
                          reg <- lm(as.formula(frml), data = gr)                 ### ungewichtete Regression
                          x_m <- sapply(dat.i[,allNam[["adjust"]]], mean)        ### ungewichtete Mittelwerte der adjustierungsvariablen
                     }  else  {                                                  ### untere Zeiel: gewichtete Regression
-                         eval(parse(text = paste0("reg <- lm(as.formula(frml), data = gr, weights = ",allNam[["wgt"]], ")")))
+                         reg <- eval(parse(text = paste0("lm(as.formula(frml), data = gr, weights = ",allNam[["wgt"]], ")")))
                          x_m <- unlist(lapply (allNam[["adjust"]], FUN = function (u) { wtd.mean(dat.i[,u], weights = dat.i[,"wgt"])}))
                     }                                                           ### obere Zeile: gewichtete Mittelwerte der adjustierungsvariablen
                     cof1<- coef(reg)
@@ -1016,8 +1002,8 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], "N_weighted", "N_weightedValid")], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    ### svyby wird dreimal aufgerufen ...
-                  do   <- paste(" res <- svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
-                  suppressWarnings(eval(parse(text=do)))                        ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
+                  do   <- paste("svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
+                  res  <- suppressWarnings(eval(parse(text=do)))                ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
                   resL <- melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
                   stopifnot(length(table(resL[,"coefficient"])) == 2)
                   resL[,"coefficient"] <- recode(resL[,"coefficient"], "'se'='se'; else ='est'")
@@ -1113,8 +1099,8 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           typeS<- recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
-          strng<- paste("ret <- withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
-          eval(parse(text=strng))
+          strng<- paste("withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
+          ret  <- eval(parse(text=strng))
           rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
 
@@ -1154,7 +1140,7 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                             if ( allNam[["wgt"]] == "wgtOne") {
                                  glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family)
                             }  else  {
-                                 eval(parse(text = paste("glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family, weights = ",allNam[["wgt"]],")",sep="")))
+                                 glm.ii <- test <- eval(parse(text = paste("glm(formula = formula, data = sub.dat, family = glm.family, weights = ",allNam[["wgt"]],")",sep="")))
                             }
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
                             if(!is.null(repA)) {
@@ -1197,15 +1183,15 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                    formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
                                    if ( isFALSE(useWec) ) {
                                        warning("Unidentified bug with Nagelkerkes r^2 in singularity treatment. No r^2 is computed.")
-                                       if ( glmTransformation == "none" )  {string <- paste("resRoh <- data.frame( withReplicates(design, quote(eatRep:::getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
-                                       if ( glmTransformation == "sdY" )   {string <- paste("resRoh <- data.frame( withReplicates(design, quote(eatRep:::getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
-                                       eval ( parse ( text = string ) )
+                                       if ( glmTransformation == "none" )  {string <- paste("data.frame( withReplicates(design, quote(eatRep:::getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
+                                       if ( glmTransformation == "sdY" )   {string <- paste("data.frame( withReplicates(design, quote(eatRep:::getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
+                                       resRoh <- eval ( parse ( text = string ) )
                                    }  else  {                                   ### untere Zeile: Kontraste fuer jedes replicate separat bestimmen
                                        if ( crossDiffSE.engine == "lavaan") {
                                             if(!is.null(repA) ) {               ### mit lavaan und mit replikationsanalyse
                                                 design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                strng  <- paste("ret <- withReplicates(design1, quote(eatRep:::funadjustLavaanWec(",allNam[["dependent"]],",",allNam[["group"]],",",allNam[["independent"]],", .weights)))",sep="")
-                                                eval(parse(text=strng))
+                                                strng  <- paste("withReplicates(design1, quote(eatRep:::funadjustLavaanWec(",allNam[["dependent"]],",",allNam[["group"]],",",allNam[["independent"]],", .weights)))",sep="")
+                                                ret    <- eval(parse(text=strng))
                                                 resRoh <- data.frame ( ret, stringsAsFactors=FALSE)
                                                 rownames(resRoh) <- paste0(allNam[["independent"]], rownames(resRoh))
                                             }  else  {                          ### mit lavaan, aber ohne ohne Replikationsanalysen
@@ -1218,12 +1204,12 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                             if(!is.null(repA) ) {
                                                 design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
     ### fuer Replikationsanalysen werden die Standardfehler nicht gebraucht, sondern ueber jackknife bestimmt. Man braucht nur die Koeffizienten. Das heisst, hierfuer kann die konventionelle lm() Funktion benutzt werden
-                                                string1<- paste("resRoh1 <- data.frame( withReplicates(design1, quote(eatRep:::getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
-                                                eval ( parse ( text = string1 ) )
+                                                string1<- paste("data.frame( withReplicates(design1, quote(eatRep:::getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
+                                                resRoh1<- eval ( parse ( text = string1 ) )
                                                 contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
                                                 design2<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                string2<- paste("resRoh2 <- data.frame( withReplicates(design2, quote(eatRep:::getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
-                                                eval ( parse ( text = string2 ) )
+                                                string2<- paste("data.frame( withReplicates(design2, quote(eatRep:::getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
+                                                resRoh2<- eval ( parse ( text = string2 ) )
                                                 resRoh <- rbind(resRoh1, resRoh2)[which(!duplicated(c(row.names(resRoh1), row.names(resRoh2)))),]
                                             }  else  {
                                                 if (is.null(allNam[["wgt"]])) {
@@ -1236,8 +1222,8 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                                     if (isFALSE(hetero)) {
                                                         res1 <- lm(as.formula(formelNew), data = dat.i, weights = dat.i[,allNam[["wgt"]]])
                                                     }  else  {
-                                                        str1   <- paste0("res1 <- lm_robust(as.formula(formelNew), data = dat.i, weights = ",allNam[["wgt"]],", se_type = \"",se_type,"\")")
-                                                        eval(parse(text=str1))
+                                                        str1   <- paste0("lm_robust(as.formula(formelNew), data = dat.i, weights = ",allNam[["wgt"]],", se_type = \"",se_type,"\")")
+                                                        res1   <- eval(parse(text=str1))
                                                     }
                                                 }
                                                 contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
@@ -1251,8 +1237,8 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                                     if (isFALSE(hetero)) {
                                                         res2 <- lm(as.formula(formelNew), data = dat.i, weights = dat.i[,allNam[["wgt"]]])
                                                     }  else  {
-                                                        str2   <- paste0("res2 <- lm_robust(as.formula(formelNew), data = dat.i, weights = ",allNam[["wgt"]],", se_type = \"",se_type,"\")")
-                                                        eval(parse(text=str2))
+                                                        str2   <- paste0("lm_robust(as.formula(formelNew), data = dat.i, weights = ",allNam[["wgt"]],", se_type = \"",se_type,"\")")
+                                                        res2   <- eval(parse(text=str2))
                                                     }
                                                 }
                                                 resRoh <- data.frame (theta = c(res1[["coefficients"]],res2[["coefficients"]], res1[["r.squared"]], length(res1[["fitted.values"]])), SE = c(res1[["std.error"]],res2[["std.error"]], NA, NA), stringsAsFactors = FALSE)
@@ -1408,7 +1394,8 @@ clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
 ### definiert die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) fuer Funktion 'eatRep'
 chooseFunction <- function (datI, allNam, na.rm, group.delimiter,type, repA, modus, separate.missing.indicator ,
                   expected.values, probs,nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall,
-                  doJK, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR, crossDiffSE.engine, stochasticGroupSizes) {
+                  doJK, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR, crossDiffSE.engine,
+                  stochasticGroupSizes, correct) {
 if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         pb$tick(); flush.console()
         if( toCall == "mean" ) {                                                ### hier wird an die meanfunktion uebergeben
@@ -1531,7 +1518,7 @@ checkNests <- function (x, allNam, toAppl, gr) {
 
 doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type, repA, modus, separate.missing.indicator, expected.values,
                     probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, toCall, poolMethod, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR,
-                    crossDiffSE.engine, stochasticGroupSizes, progress ) {
+                    crossDiffSE.engine, stochasticGroupSizes, progress, correct ) {
 if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
         if(isTRUE(datL1[1,"isClear"])) {                                        ### nur fuer isClear==TRUE werden Analysen gemacht
             nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
@@ -1553,7 +1540,8 @@ if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
                            type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs,
                            nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, pb=pb,
                            toCall=toCall, doJK=doJK, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge=reihenfolge, hetero=hetero,
-                           se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes)
+                           se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes,
+                           correct=correct)
                    glms <- lapply(anaI, FUN = function ( x ) { x[["glms"]]})
                    nams <- lapply(anaI, FUN = function ( x ) { x[["nams"]]})
                    grps <- lapply(anaI, FUN = function ( x ) { x[["grps"]]})

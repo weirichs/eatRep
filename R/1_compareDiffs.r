@@ -51,7 +51,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                 }
                                 vgl     <- expand.grid(high_lvl, low_lvl)
     ### loop over comparison to be made!
-                                grp <- do.call("rbind", alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {
+                                grp <- do.call("rbind", plyr::alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {
                                        redDF_2 <- redDF_1[which(redDF_1[,"group"] %in% single_comp),]
     ### sort corresponding to order in cross.diff object (first number, second number), then that way the difference is calc
                                        redDF_2 <- redDF_2[c(which(redDF_2[, "sum"] == comp_vec[1]), which(redDF_2[, "sum"] == comp_vec[2])), ]
@@ -85,7 +85,8 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
     #if(df$group[1] == "female") browser()
     df <- df[order(df$sum, decreasing = FALSE), ]                                ### Direction of crossDiff: Higher vs Lower (eg country vs all)
     mea <- diff(df[which(df[,"coefficient"] == "est"),"value"])                 ### compute mean difference
-    if ( !"se" %in% df[, "coefficient"]) {
+    if ( length(mea) ==0 || is.na(mea)) {return(NULL)}
+	if ( !"se" %in% df[, "coefficient"]) {
          cat(paste0( "   Warning: No standard error for parameter '",unique(df[,"parameter"]),"'. Cannot compute standard errors and p value for difference between '",df[1,"group"],"' and '",df[2,"group"],"'.\n"))
          se <- pval <- NA
     }  else  {
@@ -94,8 +95,10 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
     }
     es  <- NA
     if (  fun == "mean" && df[1,"parameter"] == "mean" && nrow(df_sd)>0) {
-      sd_wide <- dcast(df_sd[which(df_sd[,"coefficient"] == "est"),], group~parameter, value.var = "value")
-      es  <- mea / sqrt(0.5*sum(sd_wide[,"sd"]^2))
+      sd_wide <- reshape2::dcast(df_sd[which(df_sd[,"coefficient"] == "est"),], group~parameter, value.var = "value")
+   ### achtung: wenn cross-differences fuer adjusted means gemacht werden, gibt es manchmal keine Standardabweichung fuer Gruppenmittelwerte
+   ### sd_wide hat dann nur eine Zeile. wenn das so ist, kann keine effektstaerke berechnet werden   
+      if ( nrow(sd_wide) > 1) { es  <- mea / sqrt(0.5*sum(sd_wide[,"sd"]^2)) }
     }
     if(nrow(df) == 2 ) {                                                        ### uebler Hotfix: ohne Jackknife gibt es keine Se fuer SDs
        ret <- rbind (df, df)                                                    ### 'df' hat dann nur 2 statt 4 Zeilen

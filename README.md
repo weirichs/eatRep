@@ -1,4 +1,9 @@
 # eatRep
+ 
+<!-- badges: start --> 
+[![Travis build status](https://travis-ci.com/weirichs/eatRep.svg?branch=master)](https://travis-ci.com/weirichs/eatRep) 
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/weirichs/eatRep?branch=master&svg=true)](https://ci.appveyor.com/project/weirichs/eatRep) 
+<!-- badges: end --> 
 
 ## Overview 
 

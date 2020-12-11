@@ -195,7 +195,7 @@ perzent   <- repQuantile(datL = rd, ID = "idstud", wgt = "wgt", type = "JK2",
              probs = seq(0.1,0.9,0.2) )
 res       <- report(perzent, add = list(domain = "reading"))
 
-\dontrun{
+\donttest{
 ### Second example: Computes percentile for reading scores conditionally on country,
 ### use 100 bootstrap samples, assume no nested structure 
 perzent   <- repQuantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",

@@ -1,4 +1,4 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, useRandomJK1groups, type, nRandomGroups, verbose){
+doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, type, verbose){
       dat.i<- facToChar(dat.i, from = "character", to = "factor")
       dat.g<- import_DF(dat.i, checkVarNames = FALSE)                           ### dies hier geschieht alles, um die Variablen numerisch zu machen, BIFIEsurvey will es so
       dat2 <- extractData(dat.g, convertLabels = "numeric")
@@ -7,16 +7,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
    ### in Listenformat bringen, to do: genestete Imputationen?
       datL <- by ( data = dat2, INDICES = dat2[,allNam[["imp"]]], FUN = function ( imp.i ) { return(imp.i)})
       jkt  <- recode(type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
-      if(isTRUE(useRandomJK1groups)) {
-         jkt <- "JK_RANDOM"
-         if (!is.null(allNam[["PSU"]])) {
-             message("'useRandomJK1groups' was set to 'TRUE'. Cluster variable '",allNam[["PSU"]],"' will be ignored, ",nRandomGroups," random groups will be used.")
-         }
-         psu <- NULL
-      }  else  {
-         psu <- allNam[["PSU"]]
-      }
-      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = psu, jkrep = allNam[["repInd"]], cdata=FALSE, ngr = nRandomGroups ))
+      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = allNam[["PSU"]], jkrep = allNam[["repInd"]], cdata=FALSE))
       if ( isTRUE(verbose)) { cat("\n"); print(bo)}
       attributes(allNam[["group"]]) <- NULL                                     ### Attribute der Gruppierungsvariablen entfernen, sonst gibt BIFIEsurvey einen Fehler aus
       if ( toCall == "mean") {
@@ -39,7 +30,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
            grp  <- do.call("rbind", by(data=liste, INDICES = liste[,res], FUN = function ( x ) {
                    comb <- data.frame ( combn(x=x[,"dp"], m=2), stringsAsFactors = FALSE)
                    diffs<- do.call("rbind", lapply(comb, FUN = function ( y ) { ### 'dp' = statistics for derived parameters,siehe BIFIE-Hilfeseite von BIFIE.by
-                           eval(parse(text=paste("dp <- list ( \"groupDiff\" =~ 0 + I(",y[1],"-",y[2],"))")))
+                           dp   <- eval(parse(text=paste("list ( \"groupDiff\" =~ 0 + I(",y[1],"-",y[2],"))")))
                            resMd<- BIFIE.derivedParameters( resM, derived.parameters=dp )                 
    ### Achtung: falls 'group.differences.by' definiert, wird bereits auf der innersten Ebene, also quasi jetzt, begonnen, das wieder in die Ergebnisstruktur zurueckzupressen (ist, glaube ich, einfacher ... haha)
                            if ( length ( res ) == 1) {                          ### oh mann, das wird jetzt alles richtig bitter!
