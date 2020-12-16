@@ -802,10 +802,9 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.m
                                       chisq  <- chisq.test(tbl, correct = correct)
                                       scumm  <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
                                       group  <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
-                                      dif.iii<- data.frame(group = group, parameter = "chiSquareTest", coefficient = c("chi2","df","pValue"), value = c(chisq[["statistic"]],chisq[["parameter"]],chisq[["p.value"]]) , stringsAsFactors = FALSE )
+                                      dif.iii<- data.frame(group = group, parameter = "chiSquareTest", comparison = "groupDiff", modus=modus, coefficient = c("chi2","df","pValue"), value = c(chisq[["statistic"]],chisq[["parameter"]],chisq[["p.value"]]) , stringsAsFactors = FALSE )
                                       return(dif.iii)}))                        ### siehe http://www.vassarstats.net/dist2.html
-                      difs[,"comparison"] <- "groupDiff"                        ### und http://onlinestatbook.com/2/tests_of_means/difference_means.html
-                   }
+                   }                                                            ### und http://onlinestatbook.com/2/tests_of_means/difference_means.html
                    ret        <- melt(table.cast, measure.vars = c("Mean", "std.err"), na.rm=TRUE)
                    ret[,"coefficient"] <- recode(ret[,"variable"], "'Mean'='est'; 'std.err'='se'")
                    ret        <- data.frame ( group = apply(ret[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = modus, comparison = NA, ret[,c("coefficient", "parameter")], value = ret[,"value"], ret[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
@@ -915,16 +914,16 @@ jackknife.adjust.mean <- function (dat.i , allNam, na.rm, group.delimiter, type,
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], allNam[["adjust"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE, rho=rho)
           if ( useEffectLiteR ) {
-               strng<- paste("withReplicates(des, quote(eatRep:::funadjust(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+               strng<- paste("withReplicates(des, quote(funAdjustEL(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
           }  else  {
-               strng<- paste("withReplicates(des, quote(eatRep:::funadjustNoEffectLite(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+               strng<- paste("withReplicates(des, quote(funAdjust(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
           }
           ret  <- eval(parse(text=strng))
           rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
           
 ### Hilfsfunktion fuer jackknife.adjust.mean: braucht keine Standardfehler, da die mit jackknife bestimmt werden
-funadjustNoEffectLite <- function(d, x, a, w){                                  ### 'd' = dependent; 'x' = grouping; 'a' = adjust, 'w' = weights
+funAdjust <- function(d, x, a, w){                                              ### 'd' = dependent; 'x' = grouping; 'a' = adjust, 'w' = weights
        dat <- data.frame ( d, x, a, w, stringsAsFactors = FALSE)                ### was fur ein riesiger bekackter Megascheiss!! Gruppierungsvariable darf nicht 'g' heissen, sonst gibt es eine hundertprozentig unverstaendliche fehlermeldung!
        frml<- as.formula(paste0("d ~ ", paste(setdiff(colnames(dat), c("d", "x", "w")), collapse = " + ")))
        if ( all(dat[,"w"] == 1) )  {                                            ### adjustierte Mittelwerte ungewichtet
@@ -946,7 +945,7 @@ funadjustNoEffectLite <- function(d, x, a, w){                                  
 
 
 ### Hilfsfunktion fuer jackknife.adjust.mean
-funadjust <- function(d, x, a, w){                                              ### 'd' = dependent; 'x' = grouping; 'a' = adjust, 'w' = weights
+funAdjustEL <- function(d, x, a, w){                                            ### 'd' = dependent; 'x' = grouping; 'a' = adjust, 'w' = weights
        dat <- data.frame ( d, x, a, w, stringsAsFactors = FALSE)                ### was fur ein riesiger bekackter Megascheiss!! Gruppierungsvariable darf nicht 'g' heissen, sonst gibt es eine hundertprozentig unverstaendliche fehlermeldung!
        if ( all(dat[,"w"] == 1) )  {                                            ### adjustierte Mittelwerte ungewichtet
             res <- effectLite(y = "d", x = "x", z = setdiff(colnames(dat), c("d", "x", "w")), data = dat, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
@@ -987,7 +986,7 @@ conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, use
                          mat[(length(cof1)+1):nrow(mat), (length(cof1)+1):ncol(mat)] <- cov.wt(gr[,allNam[["adjust"]]], wt = gr[,allNam[["wgt"]]], cor = FALSE, center = TRUE)[["cov"]] / (nrow(gr)-1)
                     }
                     frm2<- paste0("~x1 + ", paste(paste("x", 2:length(cof1), sep=""), paste("x", (length(cof1)+1):(length(cof1)+length(x_m)), sep=""), collapse=" + ", sep="*"))
-                    se  <- msm::deltamethod(as.formula(frm2), pars, mat)
+                    se  <- deltamethod(as.formula(frm2), pars, mat)
                     return(data.frame ( mw = adj, se = se, stringsAsFactors = FALSE))}))
            vals  <- melt(means, measure.vars = c("mw", "se"))[,"value"]
        }
@@ -1099,14 +1098,14 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="Z") {browser()}
           typeS<- recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
-          strng<- paste("withReplicates(des, quote(eatRep:::fun(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
+          strng<- paste("withReplicates(des, quote(groupVersusTotalMean(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
           ret  <- eval(parse(text=strng))
           rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
 
 
 ### Hilfsfunktion fuer jackknife.cov und conv.cov
-fun <- function(d, g, w){                                                       ### 'd' = dependent; 'g' = grouping; 'w' = weights
+groupVersusTotalMean <- function(d, g, w){                                      ### 'd' = dependent; 'g' = grouping; 'w' = weights
        dat <- data.frame ( d, g, w, stringsAsFactors = FALSE)
        if ( all(dat[,"w"] == 1) )  { 
            ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { mean(y[,"d"])})
@@ -1119,7 +1118,7 @@ fun <- function(d, g, w){                                                       
        return(ret)}
 
 conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp, reihenfolge){
-          covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { fun(x[i,allNam[["dependent"]]], x[i,allNam[["group"]]], x[i,allNam[["wgt"]]])})
+          covs<- boot(data=dat.i, R = nBoot, statistic = function ( x, i) { groupVersusTotalMean(x[i,allNam[["dependent"]]], x[i,allNam[["group"]]], x[i,allNam[["wgt"]]])})
           mns <- colMeans(covs$t)
           ses <- sapply(as.data.frame(covs$t), FUN = sd)                        
           rs  <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
@@ -1183,14 +1182,14 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                    formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
                                    if ( isFALSE(useWec) ) {
                                        warning("Unidentified bug with Nagelkerkes r^2 in singularity treatment. No r^2 is computed.")
-                                       if ( glmTransformation == "none" )  {string <- paste("data.frame( withReplicates(design, quote(eatRep:::getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
-                                       if ( glmTransformation == "sdY" )   {string <- paste("data.frame( withReplicates(design, quote(eatRep:::getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
+                                       if ( glmTransformation == "none" )  {string <- paste("data.frame( withReplicates(design, quote(getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
+                                       if ( glmTransformation == "sdY" )   {string <- paste("data.frame( withReplicates(design, quote(getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
                                        resRoh <- eval ( parse ( text = string ) )
                                    }  else  {                                   ### untere Zeile: Kontraste fuer jedes replicate separat bestimmen
                                        if ( crossDiffSE.engine == "lavaan") {
                                             if(!is.null(repA) ) {               ### mit lavaan und mit replikationsanalyse
                                                 design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                strng  <- paste("withReplicates(design1, quote(eatRep:::funadjustLavaanWec(",allNam[["dependent"]],",",allNam[["group"]],",",allNam[["independent"]],", .weights)))",sep="")
+                                                strng  <- paste("withReplicates(design1, quote(funadjustLavaanWec(",allNam[["dependent"]],",",allNam[["group"]],",",allNam[["independent"]],", .weights)))",sep="")
                                                 ret    <- eval(parse(text=strng))
                                                 resRoh <- data.frame ( ret, stringsAsFactors=FALSE)
                                                 rownames(resRoh) <- paste0(allNam[["independent"]], rownames(resRoh))
@@ -1204,11 +1203,11 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                             if(!is.null(repA) ) {
                                                 design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
     ### fuer Replikationsanalysen werden die Standardfehler nicht gebraucht, sondern ueber jackknife bestimmt. Man braucht nur die Koeffizienten. Das heisst, hierfuer kann die konventionelle lm() Funktion benutzt werden
-                                                string1<- paste("data.frame( withReplicates(design1, quote(eatRep:::getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
+                                                string1<- paste("data.frame( withReplicates(design1, quote(getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
                                                 resRoh1<- eval ( parse ( text = string1 ) )
                                                 contrasts(dat.i[,as.character(formula)[3]]) <- contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
                                                 design2<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                string2<- paste("data.frame( withReplicates(design2, quote(eatRep:::getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
+                                                string2<- paste("data.frame( withReplicates(design2, quote(getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
                                                 resRoh2<- eval ( parse ( text = string2 ) )
                                                 resRoh <- rbind(resRoh1, resRoh2)[which(!duplicated(c(row.names(resRoh1), row.names(resRoh2)))),]
                                             }  else  {
