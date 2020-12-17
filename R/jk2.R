@@ -479,7 +479,6 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="O") {browser()}
               }  else {
     ### obere Zeile: Ende der inneren Schleife (= Ende des Selbstaufrufs wegen trend) ... das untere wird nun fuer jeden Aufruf abgearbeitet
                   if( length( setdiff ( allNam[["group.differences.by"]],allNam[["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
-                  if(toCall == "glm") {.GlobalEnv$glm.family <- family}         ### Hotfix!
     ### Anzahl der Analysen aufgrund mehrerer Hierarchieebenen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
                   toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
                   if(verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))}
@@ -643,7 +642,7 @@ if(substr(as.character(datL[1,allNam[["ID"]]]),1,1 ) =="X") {browser()}
                              nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation,
                              toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho,
                              reihenfolge=reihenfolge, hetero=hetero, se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine,
-                             stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct))
+                             stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family))
                       }  else  {                                                ### hier muesste es jetzt ggf. nach BIFIEsurvey uebergeben werden
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                              separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs, formula=formula, glmTransformation=glmTransformation,
@@ -1125,21 +1124,14 @@ conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp, reih
           return(rs)}
           
 ### Hilfsfunktion fuer repGlm()
-jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA, modus, useWec, scale, rscales, mse, rho, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes) {
+jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA, modus, useWec, scale, rscales, mse, rho, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, family) {
 if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
-                 if ( class(glm.family) == "function" ) {
-                      link <- strsplit(capture.output(str(glm.family)), split="\"")[[1]][2]
-                      fam  <- recode(link, "'identity'='gaussian'; 'logit'='binomial'; 'probit'='binomial'")
-                 }  else  {
-                      link <- glm.family$link
-                      fam  <- glm.family$family
-                 }
                  sub.ana <- by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function (sub.dat) {
                             nam    <- sub.dat[1,allNam[["group"]],drop=FALSE]
                             if ( allNam[["wgt"]] == "wgtOne") {
-                                 glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family)
+                                 glm.ii <- test <- glm(formula = formula, data = sub.dat, family = family)
                             }  else  {
-                                 glm.ii <- test <- eval(parse(text = paste("glm(formula = formula, data = sub.dat, family = glm.family, weights = ",allNam[["wgt"]],")",sep="")))
+                                 glm.ii <- test <- eval(parse(text = paste("glm(formula = formula, data = sub.dat, family = family, weights = ",allNam[["wgt"]],")",sep="")))
                             }
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
                             if(!is.null(repA)) {
@@ -1148,15 +1140,15 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                 design     <- svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                                 if(length(singular) == 0 & isFALSE(forceSingularityTreatment) ) {
     ### hier koennen die Warnungen unterdrueckt werden, denn sie werden ja bereits oben ausgegeben (hier nur fuer jedes replicate separat)
-                                   glm.ii  <- suppressWarnings(svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family))
+                                   glm.ii  <- suppressWarnings(svyglm(formula = formula, design = design, return.replicates = FALSE, family = family))
                                 }
                             }
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
                             r.nagelkerke   <- NagelkerkeR2(glm.ii)
                             summaryGlm     <- summary(glm.ii)
     ### AIC, deviance etc. nur auslesen, wenn linkfunktion NICHT 'identity'
-                            if( class(glm.family) == "family" ) {
-                                if (  length(grep("binomial", crop(capture.output(glm.family)))) > 0 ) {
+                            if( class(family) == "family" ) {
+                                if (  length(grep("binomial", crop(capture.output(family)))) > 0 ) {
                                       res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel", "deviance", "null.deviance", "AIC", "df.residual", "df.null"),
                                                 coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),rep("est", 7)),
                                                 value=c(r.squared[["N"]],r.squared[["N.valid"]],glm.ii$coefficient,NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]], test$deviance, test$null.deviance, test$aic, test$df.residual, test$df.null),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
@@ -1181,6 +1173,13 @@ if(substr(as.character(dat.i[1,allNam[["ID"]]]),1,1 ) =="J") {browser()}
                                    stopifnot(length(as.character(formula)) == 3 )
                                    formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
                                    if ( isFALSE(useWec) ) {
+                                       if ( class(family) == "function" ) {
+                                            link <- strsplit(capture.output(str(family)), split="\"")[[1]][2]
+                                            fam  <- recode(link, "'identity'='gaussian'; 'logit'='binomial'; 'probit'='binomial'")
+                                       }  else  {
+                                            link <- family$link
+                                            fam  <- family$family
+                                       }
                                        warning("Unidentified bug with Nagelkerkes r^2 in singularity treatment. No r^2 is computed.")
                                        if ( glmTransformation == "none" )  {string <- paste("data.frame( withReplicates(design, quote(getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
                                        if ( glmTransformation == "sdY" )   {string <- paste("data.frame( withReplicates(design, quote(getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
@@ -1394,7 +1393,7 @@ clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
 chooseFunction <- function (datI, allNam, na.rm, group.delimiter,type, repA, modus, separate.missing.indicator ,
                   expected.values, probs,nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall,
                   doJK, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR, crossDiffSE.engine,
-                  stochasticGroupSizes, correct) {
+                  stochasticGroupSizes, correct, family) {
 if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         pb$tick(); flush.console()
         if( toCall == "mean" ) {                                                ### hier wird an die meanfunktion uebergeben
@@ -1437,7 +1436,7 @@ if(substr(as.character(datI[1,allNam[["ID"]]]),1,1 ) =="W") {browser()}
         glms <- grps <- nams <- NULL
         if( toCall == "glm" ) {
             doChek<- checkRegression ( dat = datI, allNam=allNam, useWec=useWec)### initiate checks specifically for regression models
-            ana.i <- jackknife.glm ( dat.i = datI , allNam=allNam, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus, useWec=useWec, scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type, crossDiffSE.engine=crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes)
+            ana.i <- jackknife.glm ( dat.i = datI , allNam=allNam, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, modus=modus, useWec=useWec, scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type, crossDiffSE.engine=crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes, family=family)
             glms  <- ana.i[["ori.glm"]]
             grps  <- ana.i[["nams"]]
             nams  <- lapply(grps, FUN = function ( x ) { paste(as.character(unlist(x)), collapse=group.delimiter)})
@@ -1517,7 +1516,7 @@ checkNests <- function (x, allNam, toAppl, gr) {
 
 doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type, repA, modus, separate.missing.indicator, expected.values,
                     probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, toCall, poolMethod, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR,
-                    crossDiffSE.engine, stochasticGroupSizes, progress, correct ) {
+                    crossDiffSE.engine, stochasticGroupSizes, progress, correct, family ) {
 if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
         if(isTRUE(datL1[1,"isClear"])) {                                        ### nur fuer isClear==TRUE werden Analysen gemacht
             nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
@@ -1540,7 +1539,7 @@ if(substr(as.character(datL1[1,allNam[["ID"]]]),1,1 ) =="B") {browser()}
                            nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, pb=pb,
                            toCall=toCall, doJK=doJK, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge=reihenfolge, hetero=hetero,
                            se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes,
-                           correct=correct)
+                           correct=correct, family=family)
                    glms <- lapply(anaI, FUN = function ( x ) { x[["glms"]]})
                    nams <- lapply(anaI, FUN = function ( x ) { x[["nams"]]})
                    grps <- lapply(anaI, FUN = function ( x ) { x[["grps"]]})

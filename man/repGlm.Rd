@@ -209,7 +209,8 @@ bt2010read <- bt2010[which(bt2010[,"domain"] == "reading"),]
 ### Example 1: Computes linear regression from reading score on gender separately for each
 ### country. Assume no nested structure. 
 mod1 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
-        PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = "country",  formula = score~sex)
+        PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = "country",
+        formula = score~sex, family ="gaussian")
 res1 <- report(mod1, printGlm = TRUE)
 
 ### Example 2: Computes log linear regression from pass/fail on ses and gender
