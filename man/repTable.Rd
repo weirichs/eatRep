@@ -248,7 +248,8 @@ freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
              repTable(datL = subdat, ID = "idstud", wgt = "wgt", imp="imp", nest = "nest",
                  type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
                  group.differences.by = "country", group.splits = 0:1, cross.differences = TRUE,
-                 crossDiffSE = "old", dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = "leComp") })
+                 crossDiffSE = "old", dependent = "comp", chiSquare = FALSE, trend = "year",
+                 linkErr = "leComp") })
 res3      <- do.call("rbind", lapply(names(freq.tab3), FUN = function (domain) {
              report(freq.tab3[[domain]], trendDiffs = TRUE, add = list ( domain = domain ))}))
 }}

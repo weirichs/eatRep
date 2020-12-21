@@ -13,7 +13,7 @@
   are involved) the linking error.
 
   \strong{Measurement error:} In complex surveys or large-scale assessments, measurement errors are taken
-  into account by the mean of multiple imputed varables. The computation of standard errors for the mean
+  into account by the mean of multiple imputed variables. The computation of standard errors for the mean
   of a multiple imputed variable (e.g. plausible values) involves the formulas provided by Rubin (1987).
   Computing standard errors for the mean of a nested imputed variable involves the formulas provided by
   Rubin (2003). Both methods are implemented in the package. The estimation of \eqn{R^2} and adjusted
@@ -88,8 +88,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.13.3\cr
-Date: \tab 2020-12-17\cr
+Version: \tab 0.13.4\cr
+Date: \tab 2020-12-21\cr
 License: \tab GPL(>=2)
 }
 }
@@ -123,7 +123,7 @@ License: \tab GPL(>=2)
 	Satorra, A., & Bentler, P. M. (1994). Corrections to test statistics
 		and standard errors in covariance structure analysis.
 
-  Thomas, D. R. & Rao, JNK (1990): Small-sample comparison of level and power for simple goodnessof-
+  Thomas, D. R. & Rao, JNK (1990): Small-sample comparison of level and power for simple goodness-of-
   fit statistics under cluster sampling. JASA 82:630-636
 
   Westat (2000). \emph{WesVar.} Rockville, MD: Westat.

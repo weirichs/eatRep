@@ -242,13 +242,15 @@ res1   <- report(means1, add = list(domain = "reading"))
 ### Example 1a: Additionally to example 1, we decide to estimate whether
 ### each country's mean differ significantly from the overall mean as well
 ### as from the individual means of the other contries
-means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-          imp="imp", groups = "country", group.splits = 0:1, group.differences.by = "country",
-          cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
+means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
+          repInd = "jkrep", imp="imp", groups = "country", group.splits = 0:1,
+          group.differences.by = "country", cross.differences = TRUE,
+          dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
 res1a  <- report(means1a, add = list(domain = "reading"))
 
 ### See that the means of 'LandA' and 'LandB' significantly differ from the overall mean.
-print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),which(res1a[,"parameter"] == "mean")),], digits = 3)
+print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),
+      which(res1a[,"parameter"] == "mean")),], digits = 3)
 
 ### Example 2: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.
@@ -257,25 +259,27 @@ means2 <- repMean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", rep
           dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm")
 res2   <- report(means2,add = list(domain = "reading"))
 
-### Example 2a: Additionally to example 2, we decide to estimate whether
-### each country's mean differ significantly from the overall mean. (Note: by default, such 
-### cross level differences are estimated using 'weighted effect coding'. Use the 'crossDiffSE'
-### argument to choose alternative methods.) Moreover, we estimate whether each country's sex 
-### difference differ significantly from the sex difference in the whole population. 
-means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-          imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
-          cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
-          crossDiffSE.engine= "lm")
+### Example 2a: Additionally to example 2, we decide to estimate whether each
+### country's mean differ significantly from the overall mean. (Note: by default,
+### such cross level differences are estimated using 'weighted effect coding'. Use
+### the 'crossDiffSE' argument to choose alternative methods.) Moreover, we estimate
+### whether each country's sex difference differ significantly from the sex difference
+### in the whole population.
+means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
+          repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2,
+          group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
+          dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm")
 res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 
 ### Third example: like example 2a, but using nested imputations of dependent variable,
 ### and additionally estimating trend: use 'rd' instead of 'rdN1y10'
 ### assume equally weighted cases by omitting 'wgt' argument
 ### ignoring jackknife by omitting 'type', 'PSU' and 'repInd' argument
-means3T<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest", groups = c("country", "sex"),
-          group.splits = 0:2, group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
-          dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore",
-          crossDiffSE = "wec", crossDiffSE.engine= "lavaan")
+means3T<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest",
+          groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
+          cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE,
+          doCheck=TRUE, trend = "year", linkErr = "leScore", crossDiffSE = "wec",
+          crossDiffSE.engine= "lavaan")
 res3T  <- report(means3T, add = list(domain = "reading"))
           
 ### Fourth example: using a loop do analyse 'reading' and 'listening' comprehension
@@ -285,17 +289,20 @@ res3T  <- report(means3T, add = list(domain = "reading"))
 means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
           repMean(datL = sub.dat, ID="idstud", wgt="wgt", imp="imp", nest="nest",
                  groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
-                 cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
-                 trend = "year", linkErr = "leScore", crossDiffSE.engine= "lm") })
+                 cross.differences = list(c(0,1), c(0,2)), dependent = "score",
+                 na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore",
+                 crossDiffSE.engine= "lm") })
 ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
           report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
           
 ### Fifth example: compute adjusted means, also with trend estimation
 ### Note: all covariates must be numeric or 0/1 dichotomous
 rdN1[,"mignum"] <- as.numeric(rdN1[,"mig"])
-rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
-means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), useEffectLiteR = FALSE,
+rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE,
+                   as.factor=FALSE)
+means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
+          repInd = "jkrep", imp="imp", groups = "country",
+          adjust = c("sexnum", "ses", "mignum"), useEffectLiteR = FALSE,
           dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore")
 res5   <- report(means5, add = list(domain = "reading"))
 }}

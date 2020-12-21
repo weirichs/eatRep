@@ -10,11 +10,11 @@ Summarizes the output of the jk2-functions \code{\link{repMean}},\code{\link{rep
 
 \usage{
 report(jk2.out, trendDiffs = FALSE, add = list(),
-      exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE,
-      digits = 3, printDeviance = FALSE)
+      exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE,
+      round = TRUE, digits = 3, printDeviance = FALSE)
 }
 \arguments{
-  \item{jk2.out}{ output of on eof the four rep-functions. }
+  \item{jk2.out}{output of on of the four \code{eatRep}-functions. }
   \item{trendDiffs}{Logical: compute differences of trends? }
   \item{add}{Optional: additional columns for output. See examples of the jk2-functions}
   \item{exclude}{Which parameters should be excluded from reporting?}
@@ -23,7 +23,8 @@ report(jk2.out, trendDiffs = FALSE, add = list(),
   \item{digits}{How many digits should be used for rounding?}
   \item{printDeviance}{Only relevant for \code{\link{repGlm}} and if \code{printGlm} is TRUE.
   Should the deviance information printed additionally? Note: To print deviance information,
-  the argument \code{poolMethod} of the \code{\link{repGlm}} function must be set to \code{"scalar"}. }
+  the argument \code{poolMethod} of the \code{\link{repGlm}} function must be set
+  to \code{"scalar"}. }
 }
 
 \author{

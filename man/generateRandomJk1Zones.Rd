@@ -1,7 +1,7 @@
 \name{generateRandomJk1Zones}
 \alias{generateRandomJk1Zones}
 
-\title{Generates random jackknife-1 zones based on samplig units in the data set.}
+\title{Generates random jackknife-1 zones based on sampling units in the data set.}
 
 \description{
 Function adds randomly generated jackknife-1 zones to the data.
@@ -11,7 +11,7 @@ Function adds randomly generated jackknife-1 zones to the data.
 generateRandomJk1Zones (datL, unit, nZones, name = "randomCluster")
 }
 \arguments{
-  \item{datL}{Data frame containig at least the primary sampling unit variable}
+  \item{datL}{Data frame containing at least the primary sampling unit variable}
   \item{unit}{Variable name or column number of the primary sampling unit (i.e.
   student or class identifier}
   \item{nZones}{integer: number of jackknife zones. Note: The umber of jackknife
