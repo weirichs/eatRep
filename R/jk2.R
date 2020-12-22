@@ -390,6 +390,10 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                   message("Engine 'BIFIEsurvey' currently does not work for adjusted means. Set 'engine' to 'survey'.")
                   engine <- "survey"
              }
+             if (!is.null(group.differences.by)) {
+                  message("Computation of group differences using 'group.differences.by' currently does not work for adjusted means.")
+                  allNam[["group.differences.by"]] <- NULL
+             }
           }
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
           naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g")
