@@ -13,42 +13,6 @@ generateRandomJk1Zones <- function (datL, unit, nZones, name = "randomCluster") 
        mdat  <- merge(datL, zones, by.x = allNam, by.y = "ID", all = TRUE)
        return(mdat)}
 
-
-generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progress, verbose )   {
-                       if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) }
-                       if(type  == "JK1" ) { if(!is.null(repInd))  {
-                          cat("'repInd' is ignored for 'type = JK1'.\n")
-                          repInd <- NULL
-                       }  }
-                       allVars     <- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd)
-                       all.Names   <- lapply(allVars, FUN=function(ii) {existsBackgroundVariables(dat = dat, variable=ii)})
-                       dat.i       <- dat[,unlist(all.Names)]
-                       if(type %in% c("JK2", "BRR")) { if( !all( names(table(dat.i[,all.Names[["repInd"]]])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for repInd variable.\n")} }
-                       zonen       <- names(table(as.character(dat.i[,all.Names[["PSU"]]]) ) )
-                       if ( verbose) { cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))}
-                       if ( progress && nrow(dat)>2500 & length(zonen) > 50 ) { 
-                            pb     <- progress_bar$new( format = "  replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 60, show_after = 0.01)
-                       }
-                       missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
-                       if(!all(missings == 0)) {
-                           mis.vars <- paste(names(missings)[which(missings != 0)], collapse = ", ")
-                           stop(paste("Found missing value(s) in variable(s) ", mis.vars,".\n",sep=""))
-                       }                                                        
-                       reps <- data.frame ( lapply(zonen , FUN = function(ii) { 
-                               if ( progress && nrow(dat)>2500 & length(zonen) > 50 ) { pb$tick() }
-                               rep.ii <- dat.i[,all.Names[["wgt"]]]             
-                               if(type == "JK2")  { rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] <- ifelse(dat.i[ dat.i[,all.Names[["PSU"]]] == ii ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] ) }
-                               if(type == "BRR")  { rep.ii <- ifelse(dat.i[ ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii ) }
-                               if(type == "JK1")  {
-                                  rep.ii[ which ( dat.i[,all.Names[["PSU"]]] == ii) ] <- 0
-                                  rep.ii[ which ( dat.i[,all.Names[["PSU"]]] != ii) ] <- rep.ii[ which ( dat.i[,all.Names[["PSU"]]] != ii) ] *  ( sum(dat.i[,all.Names[["wgt"]]]) / sum (rep.ii))
-                               }
-                               return(rep.ii) }), stringsAsFactors = FALSE)
-                       colnames(reps) <- paste(all.Names[["wgt"]], 1:ncol(reps), sep="_")
-                       ret            <- data.frame(dat.i[,all.Names[["ID"]],drop=FALSE], reps, stringsAsFactors = FALSE)
-                       attr(ret, "n.replicates") <- length(zonen)
-                       return(ret) }
-
 repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
             group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2"),
@@ -356,54 +320,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           }  else  {
              auchUV <- NULL
           }
-          if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
-             chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
-                 for ( gg in c(allNam[["group"]], auchUV) ) {                   ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
-                       if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
-                           message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
-                           if ( class ( datL[,gg] ) == "factor") {
-                               levNew <- gsub("\\.|_", "", levels(datL[,gg]))
-                               datL[,gg] <- factor(gsub("\\.|_", "", datL[,gg]), levels = levNew)
-                           }  else  {
-                               datL[,gg] <- gsub("\\.|_", "", datL[,gg])
-                           }
-                       }
-                 }      
-          }   
-          if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
-             for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
-                 if (class ( datL[,gg] ) == "factor") {                         
-                     if ( any(table(datL[,gg]) == 0)) {
-                          lev <- names(which(table(datL[,gg]) !=0))
-                          nlv <- names(which(table(datL[,gg]) ==0))
-                          message( "Delete level(s) '", paste(nlv, collapse="', '"), "' of grouping or independent variable '",gg,"' without any observations.")
-                          datL[,gg] <- factor(as.character(datL[,gg]), levels =lev)
-                     }
-                 }
-             }
-          }
-          if(!is.null(allNam[["adjust"]])) {
-             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
-             if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
-             if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
-             if ( engine == "BIFIEsurvey") {
-                  message("Engine 'BIFIEsurvey' currently does not work for adjusted means. Set 'engine' to 'survey'.")
-                  engine <- "survey"
-             }
-             if (!is.null(group.differences.by)) {
-                  message("Computation of group differences using 'group.differences.by' currently does not work for adjusted means.")
-                  allNam[["group.differences.by"]] <- NULL
-             }
-          }
-          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g")
-          naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")
-          naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
-          if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
-          naInd1<- which ( allNam[["independent"]] %in% naInd )
-          if(length(naInd1)>0)  {stop(paste0("Following name(s) of independent variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["independent"]][naInd1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
-          na2   <- which ( unlist(allNam) %in% na )
-          if(length(na2)>0)  {stop(paste0("Following variable name(s) in data set are forbidden due to danger of confusion with result structure:\n     '", paste(unlist(allNam)[na2], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
+          datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
+          allNam<- checkForAdjustment (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL)
+          foo   <- checkNameConvention( allNam = allNam)
           if (isTRUE(useWec) ) {
               if ( length(independent) != 1 ) {stop("Only one independent (grouping) variable is allowed for weighted effect coding.\n")}
               if ( !class(datL[,independent]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
@@ -412,20 +331,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
               message("Method 'mice' is not available for nested imputation. Switch to method 'scalar'.")
               poolMethod <- "scalar"
           }
-          if (engine == "BIFIEsurvey") {
-              if (!is.null(allNam[["nest"]]) ) {
-                  message("Engine 'BIFIEsurvey' currently does not work for nested imputation. Set 'engine' to 'survey'.")
-                  engine <- "survey"
-              }
-              if ( length(unlist(lapply(c("glm", "quantile"), FUN = function ( y ) {unlist(lapply(c(modus, toCall), FUN = function (w) { grep(y, w)}))}))) > 0 ) {
-                  message("Engine 'BIFIEsurvey' currently does not work for regression models and quantiles. Set 'engine' to 'survey'.")
-                  engine <- "survey"
-              }
-              if ( !type %in% c("JK2", "JK1", "NONE") ) {
-                  message("Engine 'BIFIEsurvey' currently only works for jackknife 1 and jackknife 2. Set 'engine' to 'survey' due to type = '",type,"'.")
-                  engine <- "survey"
-              }
-          }
+          engine<- checkEngine (engine = engine, allNam=allNam, modus=modus, toCall = toCall, type=type)
           if ( isTRUE(onlyCheck) ) {
               ret <- allNam
           }  else  {
@@ -466,56 +372,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                               return(res)}))
                        if(verbose){cat("\n \n"); print(ret)}
                   }
-                  if ( !is.list(cross.differences)) {
-                       if ( !is.logical (cross.differences)) {
-                            message("Argument 'cross.differences' must be either logical or a list. Set 'cross.differences' to FALSE.")
-                            cross.differences <- FALSE
-                       }
-                       if ( isTRUE(cross.differences)) {
-                            if ( "wholeGroup" %in% allNam[["group"]] ) {
-                                  message("No groups defined. Set 'cross.differences' to FALSE.")
-                                  cross.differences <- FALSE
-                            }  else  {
-                                  if ( length(group.splits)==1) {
-                                        message("Argument 'group.splits' was set to 1. No cross-level differences can be computed. Set 'cross.differences' to FALSE.")
-                                        cross.differences <- FALSE
-                                  }  else  {
-                                        cross.differences <- combn(x=group.splits,m=2, simplify = FALSE)
-                                  }
-                            }
-                       }
-                  }  else  {                                                    
-                       if(!all(unlist(lapply(cross.differences, length)) == 2)) {stop("Each element in 'cross.differences' must be a vector of length 2.\n")}
-                       if(!all(unlist(lapply(cross.differences, class)) %in% c("integer","numeric"))) {stop("Each element in 'cross.differences' must be a numerical vector.\n")}
-                       if(!all(unlist(lapply(cross.differences, FUN = function ( x ) { length(unique(x))})) ==2 ) ) {stop("Each element in 'cross.differences' must be a vector of 2 different numbers.\n")}
-                       vals <- unique(unlist(cross.differences))
-                       if(!all(vals %in% group.splits)) {stop("All numerical values in 'cross.differences' must be included in 'group.splits'.\n")}
-                       cross.differences <- lapply( cross.differences, sort )
-                       if ( length(cross.differences) != length(unique(cross.differences)) ) {
-                            message("Some comparisons in 'cross.differences' are identical. Duplicated comparisons will be removed.")
-                            cross.differences <- unique(cross.differences)
-                       }
-                  }
-                  allNam[["cross.differences"]] <- cross.differences
-                  if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
-                  if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else {
-                      stopifnot(length(allNam[["wgt"]]) == 1 )
-                      if ( !class(datL[,allNam[["wgt"]]]) %in% c("numeric", "integer") ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",class(datL[,allNam[["wgt"]]]),"' has to be numeric.\n",sep="")) }
-                      isMis <- which(is.na(datL[,allNam[["wgt"]]]))
-                      isZero<- which ( datL[,allNam[["wgt"]]] == 0 )
-                      if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
-                      if(length(isZero)>0) { warning( "Found ",length(isZero)," zero weights in the weight variable '",allNam[["wgt"]],"'.") }
-                  }
-                  if(!is.null(allNam[["nest"]]))  {
-                      stopifnot(length(allNam[["nest"]]) == 1 )
-                      datL[,allNam[["nest"]]] <- as.character(datL[,allNam[["nest"]]])
-                      if(verbose){cat(paste("\nAssume nested structure with ", length(table(datL[,allNam[["nest"]]]))," nests and ",length(table(datL[,allNam[["imp"]]]))," imputations in each nest. This will result in ",length(table(datL[,allNam[["nest"]]]))," x ",length(table(datL[,allNam[["imp"]]]))," = ",length(table(datL[,allNam[["nest"]]]))*length(table(datL[,allNam[["imp"]]]))," imputation replicates.\n",sep=""))}
-                  }  else  { if(verbose){cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}}
-                  datL[,"isClear"] <- TRUE
-                  if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
-                  if(!is.null(allNam[["group"]])) {                             
-                      for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) }
-                  }
+                  allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=allNam, group.splits=group.splits)
+                  fooX  <- createLoopStructure(datL = datL, allNam = allNam, verbose=verbose)
+                  datL  <- fooX[["datL"]]; allNam <- fooX[["allNam"]]           
                   if(!is.null(allNam[["cross.differences"]])) {
                       if(length(allNam[["group"]])>1) {
                          lev <- unlist(lapply(allNam[["group"]], FUN = function ( v ) { unique(as.character(datL[,v]))}))
@@ -527,21 +386,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                          stop(paste0("Dependent variable '",allNam[["dependent"]],"' has to be of class 'integer' or 'numeric'.\n"))
                      }
                   }
-                  if(!is.null(repWgt) ) {
-                     if ( !is.null(allNam[["PSU"]]) | !is.null(allNam[["repInd"]]) ) {
-                         warning("Arguments 'PSU' and 'repInd' are expected to be NULL if replicate weights are already defined (via 'repWgt').\n    'PSU' and 'repInd' will be ignored.")
-                     }
-                  }
-                  if(!is.null(allNam[["repWgt"]]))  {
-                     repA <- data.frame ( datL[,allNam[["ID"]], drop=FALSE], datL[,allNam[["repWgt"]] ])
-                     repA <- repA[!duplicated(repA[,allNam[["ID"]]]),]
-                  }  else  {
-                     if(!is.null(allNam[["PSU"]]) && engine=="survey" )  {
-                         repW <- datL[!duplicated(datL[,allNam[["ID"]]]),]
-                         repA <- generate.replicates(dat = repW, ID = allNam[["ID"]], wgt = allNam[["wgt"]], PSU = allNam[["PSU"]], repInd = allNam[["repInd"]], type=type , progress=progress, verbose=verbose)
-                         rm(repW)
-                     }  else  { repA <- NULL}
-                  }
+                  repA  <- assignReplicates ( repWgt=repWgt, allNam=allNam, datL = datL, engine = engine, type=type , progress=progress, verbose=verbose)
                   allRes<- do.call("rbind.fill", lapply( names(toAppl), FUN = function ( gr ) {
                       if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") }
                       if( nchar(gr) == 0 ){
@@ -554,44 +399,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                       noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
                       miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
                       if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
-                      if(isTRUE(doCheck)) {                                     
-                         if ( length( toAppl[[gr]] ) > 1) {                     
-                              crsTab <- table(datL[,toAppl[[gr]]])
-                              if ( length(which(crsTab < 10 )) > 0 ) {
-                                   warning("Small number of observations in some combinations of grouping variables:\n   Recommend to remove these group(s).\n", print_and_capture(crsTab, 3) )
-                              }
-                         }
-                         impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE)
-                         laenge<- which(sapply(impNes, length) == 0)
-                         if ( length(laenge ) > 0 ) {
-                              warning(length(laenge), " combination(s) of groups without any observations. Analysis most probably will crash.")
-                         }
-                         impNes<- table(impNes[setdiff (1:length(impNes), laenge)])
-                         if(length(impNes) != 1 ) {warning("Number of imputations differ across nests and/or groups!\n", print_and_capture(impNes, 3))}
-                         if(!is.null(allNam[["PSU"]]))  {
-                             psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}, simplify = FALSE) )
-                             if(length(psuNes) != 1 ) {warning("Number of PSUs differ across nests!\n", print_and_capture(psuNes, 3))}
-                         }
-                         impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = checkNests, allNam=allNam, toAppl=toAppl, gr=gr, simplify = FALSE)
-                         impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x[["ret"]], FUN = length)) })) )
-                         if ( !all ( sapply(impNes, FUN = function ( x ) { length(table(x)) } ) == 1) ) { warning("Number of units in at least one group differs across imputations!")}
-                         datL  <- do.call("rbind", by(data = datL, INDICES = datL[,c( allNam[["group"]], allNam[["nest"]], allNam[["imp"]])], FUN = checkData, allNam=allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm))
-                         ok    <- table(datL[,"isClear"])
-                         if(length(ok) > 1 ) { message( ok[which(names(ok)=="FALSE")] , " of ", nrow(datL), " cases removed from analysis due to inconsistent data.") }
-                      }
-                      if(toCall=="table") {
-                         misInd <- which(is.na(datL[,allNam[["dependent"]]]))
-                         if(isTRUE(separate.missing.indicator)) {
-                            if(length(misInd)>0) { datL[misInd,allNam[["dependent"]]] <- "<NA>"}
-                         }  else {
-                            if(length(misInd)>0) {
-                               warning("No seperate missing categorie was chosen. ", length(misInd), " missings were found anyhow for ",allNam[["dependent"]],". Missings will be detected from the data.")
-                               if(length(misInd) == nrow(datL)) {stop()}
-                               datL <- datL[-misInd,]
-                            }
-                         }
-                         expected.values <- sort(unique(c(expected.values, names(table(datL[,allNam[["dependent"]]])))))
-                      }
+                      datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
+                      fooY  <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
+                      datL  <- fooY[["datL"]]; expected.values <- fooY[["expected.values"]]
                       if ( engine=="survey" || isFALSE(doJK)) {
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                              type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs,
@@ -1479,3 +1289,229 @@ doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type,
 
 print_and_capture <- function(x, einrueckung = 0) {
  paste(capture.output(print(x)), collapse = paste("\n", paste(rep(" ", einrueckung),collapse=""),  collapse="") ) }
+
+
+checkEngine <- function ( engine , allNam, modus, toCall, type) {
+          if (engine == "BIFIEsurvey") {
+              if (!is.null(allNam[["nest"]]) ) {
+                  message("Engine 'BIFIEsurvey' currently does not work for nested imputation. Set 'engine' to 'survey'.")
+                  engine <- "survey"
+              }
+              if ( length(unlist(lapply(c("glm", "quantile"), FUN = function ( y ) {unlist(lapply(c(modus, toCall), FUN = function (w) { grep(y, w)}))}))) > 0 ) {
+                  message("Engine 'BIFIEsurvey' currently does not work for regression models and quantiles. Set 'engine' to 'survey'.")
+                  engine <- "survey"
+              }
+              if ( !type %in% c("JK2", "JK1", "NONE") ) {
+                  message("Engine 'BIFIEsurvey' currently only works for jackknife 1 and jackknife 2. Set 'engine' to 'survey' due to type = '",type,"'.")
+                  engine <- "survey"
+              }
+              if ( !is.null(allNam[["adjust"]])) {
+                   message("Engine 'BIFIEsurvey' currently does not work for adjusted means. Set 'engine' to 'survey'.")
+                   engine <- "survey"
+              }
+          }
+          return(engine)}
+
+checkGroupVars <- function ( datL, allNam, auchUV) {
+          if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
+             chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
+                 for ( gg in c(allNam[["group"]], auchUV) ) {                   ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
+                       if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
+                           message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
+                           if ( class ( datL[,gg] ) == "factor") {
+                               levNew <- gsub("\\.|_", "", levels(datL[,gg]))
+                               datL[,gg] <- factor(gsub("\\.|_", "", datL[,gg]), levels = levNew)
+                           }  else  {
+                               datL[,gg] <- gsub("\\.|_", "", datL[,gg])
+                           }
+                       }
+                 }
+          }
+          if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
+             for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
+                 if (class ( datL[,gg] ) == "factor") {                         
+                     if ( any(table(datL[,gg]) == 0)) {
+                          lev <- names(which(table(datL[,gg]) !=0))
+                          nlv <- names(which(table(datL[,gg]) ==0))
+                          message( "Delete level(s) '", paste(nlv, collapse="', '"), "' of grouping or independent variable '",gg,"' without any observations.")
+                          datL[,gg] <- factor(as.character(datL[,gg]), levels =lev)
+                     }
+                 }
+             }
+          }
+          return(datL)}
+          
+checkForAdjustment <- function(datL, allNam, groupWasNULL) {
+          if(!is.null(allNam[["adjust"]])) {
+             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
+             if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
+             if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
+             if (!is.null(allNam[["group.differences.by"]])) {
+                  message("Computation of group differences using 'group.differences.by' currently does not work for adjusted means.")
+                  allNam[["group.differences.by"]] <- NULL
+             }
+          }
+          return(allNam)}
+          
+checkNameConvention <- function( allNam) {
+          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g")
+          naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")
+          naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
+          if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
+          naInd1<- which ( allNam[["independent"]] %in% naInd )
+          if(length(naInd1)>0)  {stop(paste0("Following name(s) of independent variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["independent"]][naInd1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
+          na2   <- which ( unlist(allNam) %in% na )
+          if(length(na2)>0)  {stop(paste0("Following variable name(s) in data set are forbidden due to danger of confusion with result structure:\n     '", paste(unlist(allNam)[na2], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))} }
+
+setCrossDifferences <- function (cross.differences, allNam, group.splits) {
+          if ( !is.list(cross.differences)) {
+               if ( !is.logical (cross.differences)) {
+                    message("Argument 'cross.differences' must be either logical or a list. Set 'cross.differences' to FALSE.")
+                    cross.differences <- FALSE
+               }
+               if ( isTRUE(cross.differences)) {
+                    if ( "wholeGroup" %in% allNam[["group"]] ) {
+                          message("No groups defined. Set 'cross.differences' to FALSE.")
+                          cross.differences <- FALSE
+                    }  else  {
+                          if ( length(group.splits)==1) {
+                                message("Argument 'group.splits' was set to 1. No cross-level differences can be computed. Set 'cross.differences' to FALSE.")
+                                cross.differences <- FALSE
+                          }  else  {
+                                cross.differences <- combn(x=group.splits,m=2, simplify = FALSE)
+                          }
+                    }
+               }
+          }  else  {                                                            
+               if(!all(unlist(lapply(cross.differences, length)) == 2)) {stop("Each element in 'cross.differences' must be a vector of length 2.\n")}
+               if(!all(unlist(lapply(cross.differences, class)) %in% c("integer","numeric"))) {stop("Each element in 'cross.differences' must be a numerical vector.\n")}
+               if(!all(unlist(lapply(cross.differences, FUN = function ( x ) { length(unique(x))})) ==2 ) ) {stop("Each element in 'cross.differences' must be a vector of 2 different numbers.\n")}
+               vals <- unique(unlist(cross.differences))
+               if(!all(vals %in% group.splits)) {stop("All numerical values in 'cross.differences' must be included in 'group.splits'.\n")}
+               cross.differences <- lapply( cross.differences, sort )
+               if ( length(cross.differences) != length(unique(cross.differences)) ) {
+                   message("Some comparisons in 'cross.differences' are identical. Duplicated comparisons will be removed.")
+                    cross.differences <- unique(cross.differences)
+               }
+          }
+          allNam[["cross.differences"]] <- cross.differences
+          return(allNam)}
+          
+createLoopStructure <- function(datL, allNam, verbose) {
+          if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
+          if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else {
+              stopifnot(length(allNam[["wgt"]]) == 1 )
+              if ( !class(datL[,allNam[["wgt"]]]) %in% c("numeric", "integer") ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",class(datL[,allNam[["wgt"]]]),"' has to be numeric.\n",sep="")) }
+              isMis <- which(is.na(datL[,allNam[["wgt"]]]))
+              isZero<- which ( datL[,allNam[["wgt"]]] == 0 )
+              if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
+              if(length(isZero)>0) { warning( "Found ",length(isZero)," zero weights in the weight variable '",allNam[["wgt"]],"'.") }
+          }
+          if(!is.null(allNam[["nest"]]))  {
+              stopifnot(length(allNam[["nest"]]) == 1 )
+              datL[,allNam[["nest"]]] <- as.character(datL[,allNam[["nest"]]])
+              if(verbose){cat(paste("\nAssume nested structure with ", length(table(datL[,allNam[["nest"]]]))," nests and ",length(table(datL[,allNam[["imp"]]]))," imputations in each nest. This will result in ",length(table(datL[,allNam[["nest"]]]))," x ",length(table(datL[,allNam[["imp"]]]))," = ",length(table(datL[,allNam[["nest"]]]))*length(table(datL[,allNam[["imp"]]]))," imputation replicates.\n",sep=""))}
+          }  else  { if(verbose){cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}}
+          datL[,"isClear"] <- TRUE
+          if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
+          if(!is.null(allNam[["group"]])) {                             
+              for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) }
+          }
+          return(list(datL = datL, allNam = allNam))}
+
+assignReplicates <- function ( repWgt, allNam, datL, engine, type , progress, verbose) {
+          if(!is.null(repWgt) ) {
+              if ( !is.null(allNam[["PSU"]]) | !is.null(allNam[["repInd"]]) ) {
+                    warning("Arguments 'PSU' and 'repInd' are expected to be NULL if replicate weights are already defined (via 'repWgt').\n    'PSU' and 'repInd' will be ignored.")
+              }
+          }
+          if(!is.null(allNam[["repWgt"]]))  {
+              repA <- data.frame ( datL[,allNam[["ID"]], drop=FALSE], datL[,allNam[["repWgt"]] ])
+              repA <- repA[!duplicated(repA[,allNam[["ID"]]]),]
+          }  else  {
+              if(!is.null(allNam[["PSU"]]) && engine=="survey" )  {
+                  repW <- datL[!duplicated(datL[,allNam[["ID"]]]),]
+                  repA <- generate.replicates(dat = repW, ID = allNam[["ID"]], wgt = allNam[["wgt"]], PSU = allNam[["PSU"]], repInd = allNam[["repInd"]], type=type , progress=progress, verbose=verbose)
+              }  else  { repA <- NULL}
+          }
+          return(repA)}
+
+generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progress, verbose )   {
+          if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) }
+          if(type  == "JK1" ) { if(!is.null(repInd))  {
+             cat("'repInd' is ignored for 'type = JK1'.\n")
+             repInd <- NULL
+          }  }
+          allVars     <- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd)
+          all.Names   <- lapply(allVars, FUN=function(ii) {existsBackgroundVariables(dat = dat, variable=ii)})
+          dat.i       <- dat[,unlist(all.Names)]
+          if(type %in% c("JK2", "BRR")) { if( !all( names(table(dat.i[,all.Names[["repInd"]]])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for repInd variable.\n")} }
+          zonen       <- names(table(as.character(dat.i[,all.Names[["PSU"]]]) ) )
+          if ( verbose) { cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))}
+          if ( progress && nrow(dat)>2500 & length(zonen) > 50 ) {              
+               pb     <- progress_bar$new( format = "  replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 60, show_after = 0.01)
+          }
+          missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
+          if(!all(missings == 0)) {
+              mis.vars <- paste(names(missings)[which(missings != 0)], collapse = ", ")
+              stop(paste("Found missing value(s) in variable(s) ", mis.vars,".\n",sep=""))
+          }                                                                     
+          reps <- data.frame ( lapply(zonen , FUN = function(ii) {              
+                  if ( progress && nrow(dat)>2500 & length(zonen) > 50 ) { pb$tick() }
+                  rep.ii <- dat.i[,all.Names[["wgt"]]]                          
+                  if(type == "JK2")  { rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] <- ifelse(dat.i[ dat.i[,all.Names[["PSU"]]] == ii ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] ) }
+                  if(type == "BRR")  { rep.ii <- ifelse(dat.i[ ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii ) }
+                  if(type == "JK1")  {
+                     rep.ii[ which ( dat.i[,all.Names[["PSU"]]] == ii) ] <- 0
+                     rep.ii[ which ( dat.i[,all.Names[["PSU"]]] != ii) ] <- rep.ii[ which ( dat.i[,all.Names[["PSU"]]] != ii) ] *  ( sum(dat.i[,all.Names[["wgt"]]]) / sum (rep.ii))
+                  }
+                  return(rep.ii) }), stringsAsFactors = FALSE)
+          colnames(reps) <- paste(all.Names[["wgt"]], 1:ncol(reps), sep="_")
+          ret            <- data.frame(dat.i[,all.Names[["ID"]],drop=FALSE], reps, stringsAsFactors = FALSE)
+          attr(ret, "n.replicates") <- length(zonen)
+          return(ret) }
+
+checkImpNest <- function (datL, doCheck, toAppl, gr, allNam, toCall, separate.missing.indicator, na.rm) {
+          if(isTRUE(doCheck)) {                                     
+             if ( length( toAppl[[gr]] ) > 1) {                     
+                  crsTab <- table(datL[,toAppl[[gr]]])
+                  if ( length(which(crsTab < 10 )) > 0 ) {
+                       warning("Small number of observations in some combinations of grouping variables:\n   Recommend to remove these group(s).\n", print_and_capture(crsTab, 3) )
+                  }
+             }
+             impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE)
+             laenge<- which(sapply(impNes, length) == 0)
+             if ( length(laenge ) > 0 ) {
+                  warning(length(laenge), " combination(s) of groups without any observations. Analysis most probably will crash.")
+             }
+             impNes<- table(impNes[setdiff (1:length(impNes), laenge)])
+             if(length(impNes) != 1 ) {warning("Number of imputations differ across nests and/or groups!\n", print_and_capture(impNes, 3))}
+             if(!is.null(allNam[["PSU"]]))  {
+                  psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}, simplify = FALSE) )
+                  if(length(psuNes) != 1 ) {warning("Number of PSUs differ across nests!\n", print_and_capture(psuNes, 3))}
+             }
+             impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = checkNests, allNam=allNam, toAppl=toAppl, gr=gr, simplify = FALSE)
+             impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x[["ret"]], FUN = length)) })) )
+             if ( !all ( sapply(impNes, FUN = function ( x ) { length(table(x)) } ) == 1) ) { warning("Number of units in at least one group differs across imputations!")}
+             datL  <- do.call("rbind", by(data = datL, INDICES = datL[,c( allNam[["group"]], allNam[["nest"]], allNam[["imp"]])], FUN = checkData, allNam=allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm))
+             ok    <- table(datL[,"isClear"])
+             if(length(ok) > 1 ) { message( ok[which(names(ok)=="FALSE")] , " of ", nrow(datL), " cases removed from analysis due to inconsistent data.") }
+          }
+          return(datL)}
+
+prepExpecVal <- function (toCall, expected.values, separate.missing.indicator, allNam, datL) {
+          if(toCall=="table") {
+             misInd <- which(is.na(datL[,allNam[["dependent"]]]))
+             if(isTRUE(separate.missing.indicator)) {
+                if(length(misInd)>0) { datL[misInd,allNam[["dependent"]]] <- "<NA>"}
+             }  else {
+                if(length(misInd)>0) {
+                   warning("No seperate missing categorie was chosen. ", length(misInd), " missings were found anyhow for ",allNam[["dependent"]],". Missings will be detected from the data.")
+                   if(length(misInd) == nrow(datL)) {stop()}
+                   datL <- datL[-misInd,]
+                }
+             }
+             expected.values <- sort(unique(c(expected.values, names(table(datL[,allNam[["dependent"]]])))))
+          }
+          return(list(datL=datL, expected.values=expected.values))}
