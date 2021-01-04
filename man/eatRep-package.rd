@@ -22,7 +22,7 @@
 
   \strong{Sampling error:} Computation of sampling errors of variables which stem from a clustered design may
   involve replication methods like balanced repeated replicate (BRR), bootstrap or Jackknife methods.
-  See Weststat (2000), Foy, Galia & Li (2008), Rust and Rao (1996), and Wolter (1985) for details. To date,
+  See Westat (2000), Foy, Galia & Li (2008), Rust and Rao (1996), and Wolter (1985) for details. To date,
   the Jackknife-1 (JK1), Jackknife-2 (JK2) and the Balanced Repeated Replicates (BRR; optionally with Fay's
   method) procedures are supported.
 
@@ -89,7 +89,7 @@
 Package: \tab eatRep\cr
 Type: \tab Package\cr
 Version: \tab 0.13.4\cr
-Date: \tab 2020-12-21\cr
+Date: \tab 2021-01-04\cr
 License: \tab GPL(>=2)
 }
 }
