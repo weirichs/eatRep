@@ -176,6 +176,7 @@ If groups were specified, further columns which are denoted by the group names a
 Sebastian Weirich
 }
 \examples{
+\donttest{
 data(lsa)
 ### Example 1: only means, SD and variances for each country
 ### We only consider domain 'reading'
@@ -195,7 +196,6 @@ perzent   <- repQuantile(datL = rd, ID = "idstud", wgt = "wgt", type = "JK2",
              probs = seq(0.1,0.9,0.2) )
 res       <- report(perzent, add = list(domain = "reading"))
 
-\donttest{
 ### Second example: Computes percentile for reading scores conditionally on country,
 ### use 100 bootstrap samples, assume no nested structure 
 perzent   <- repQuantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",

@@ -213,6 +213,7 @@ mod1 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
         formula = score~sex, family ="gaussian")
 res1 <- report(mod1, printGlm = TRUE)
 
+\donttest{
 ### Example 2: Computes log linear regression from pass/fail on ses and gender
 ### separately for each country in a nested structure. Assuming equally weighted cases
 ### by omitting "wgt" argument
@@ -229,7 +230,6 @@ mod3 <- repGlm(datL = dat, ID = "idstud", wgt = "wgt", imp = "imp", nest = "nest
         groups = "country",  formula = score~sex, trend = "year")
 res3 <- report(mod3, printGlm = TRUE)
 
-\donttest{
 ### Example 4: weighted effect coding to estimate whether a specific country's mean
 ### differs from the overall mean (whereas the overall population is a composite of 
 ### all countries). The procedure adapts the weighted effect coding procedures 
