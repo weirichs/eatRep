@@ -1,5 +1,6 @@
 \name{repMean}
 \alias{repMean}
+\alias{jk2.mean}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Replication methods (JK1, JK2 and BRR) for descriptive statistics.}
 \description{Compute totals, means, adjusted means, mean differences, variances and standard deviations

@@ -33,6 +33,6 @@ funadjustLavaanWec (d, x, i, w)
 \item{glmRes}{results object of the \code{glm} function}
 }
 \value{
-data frame with estimates and standard errors, used for further
+data frame with two columns: estimates and standard errors, both only used for further
 processing in \code{eatRep}.
 }

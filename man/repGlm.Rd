@@ -1,5 +1,6 @@
 \name{repGlm}
 \alias{repGlm}
+\alias{jk2.glm}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Replication methods (JK1, JK2 and BRR) for linear regression models and trend estimation.}
 \description{Compute generalized linear models for complex cluster designs with multiple imputed variables based 
@@ -158,19 +159,13 @@ Logical: Show progress bar on console?
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
-Function first creates replicate weights based on \code{PSU} and \code{repInd} variables according to JK2 or 
+Function first creates replicate weights based on \code{PSU} and \code{repInd} variables according to JK2 or
 BRR procedure. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{\link[survey]{svyglm}} implemented in the \code{survey} package.
 The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested 
 imputations if the \code{nest} argument implies a nested structure.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
 A list of data frames in the long format. The output can be summarized using the \code{report} function.
 The first element of the list is a list with either one (no trend analyses) or two (trend analyses)
 data frames with at least six columns each. For each subpopulation denoted by the \code{groups}

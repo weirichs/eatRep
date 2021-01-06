@@ -1,5 +1,6 @@
 \name{repQuantile}
 \alias{repQuantile}
+\alias{jk2.quantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Replication methods (JK1, JK2 and BRR) for quantiles and trend estimation.}
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables

@@ -1,20 +1,21 @@
 \name{report}
 \alias{report}
 
-\title{Reporting function for all jk2-functions.}
+\title{Reporting function for \code{\link{repMean}},\code{\link{repTable}},
+\code{\link{repQuantile}}, and \code{\link{repGlm}} }
 
 \description{
-Summarizes the output of the jk2-functions \code{\link{repMean}},\code{\link{repTable}},
+Summarizes the output of the four main functions \code{\link{repMean}},\code{\link{repTable}},
 \code{\link{repQuantile}}, and \code{\link{repGlm}}.
 }
 
 \usage{
-report(jk2.out, trendDiffs = FALSE, add = list(),
+report(repFunOut, trendDiffs = FALSE, add = list(),
       exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE,
       round = TRUE, digits = 3, printDeviance = FALSE)
 }
 \arguments{
-  \item{jk2.out}{output of on of the four \code{eatRep}-functions. }
+  \item{repFunOut}{output of on of the four \code{eatRep}-functions. }
   \item{trendDiffs}{Logical: compute differences of trends? }
   \item{add}{Optional: additional columns for output. See examples of the jk2-functions}
   \item{exclude}{Which parameters should be excluded from reporting?}
@@ -26,7 +27,27 @@ report(jk2.out, trendDiffs = FALSE, add = list(),
   the argument \code{poolMethod} of the \code{\link{repGlm}} function must be set
   to \code{"scalar"}. }
 }
-
+\value{
+A data frame with at least nine columns.
+\item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the
+whole sample were requested, the value of \sQuote{group} is \sQuote{wholeGroup}.}
+\item{depVar}{Denotes the name of the dependent variable in the analysis. }
+\item{modus}{Denotes the mode of the analysis. For example, if a JK2 regression analysis was
+conducted, \sQuote{modus} takes the value \sQuote{JK2.glm}. If a mean analysis without any replicates
+was conducted, \sQuote{modus} takes the value \sQuote{CONV.mean}.}
+\item{comparison}{Denotes whether group mean comparisons or cross-level comparisons were conducted.
+Without any comparisons, \sQuote{comparison} takes the value \sQuote{NA} }
+\item{parameter}{Denotes the parameter of the corresponding analysis. If regression analysis was applied,
+the regression parameter is given. Amongst others, the \sQuote{parameter} column takes the values
+\sQuote{(Intercept)} and \sQuote{gendermale} if \sQuote{gender} was the independent variable, for instance.
+If mean analysis was applied, the \sQuote{parameter} column takes the values \sQuote{mean}, \sQuote{sd},
+\sQuote{var}, or \sQuote{Nvalid}. See the examples of \code{\link{repMean}},\code{\link{repTable}},
+\code{\link{repQuantile}}, or \code{\link{repGlm}} for further details. }
+\item{depVar}{Denotes the name of the dependent variable (only if \code{\link{repGlm}} was called before) }
+\item{est}{Denotes the estimate of the corresponding analysis.}
+\item{se}{Denotes the standard error of the corresponding estimate.}
+\item{p}{Denotes the p value of the estimate.}
+}
 \author{
 Benjamin Becker, Sebastian Weirich
 }

@@ -1,5 +1,6 @@
 \name{repTable}
 \alias{repTable}
+\alias{jk2.table}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK1, JK2 and BRR for frequency tables and trend estimation.}
 \description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex

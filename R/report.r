@@ -1,14 +1,14 @@
-report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE) {
-          if(is.null(jk2.out)) {return(NULL)}
-          if ( length(grep("glm", as.character(jk2.out[["resT"]][[1]][1,"modus"]))) ==1 ) {
-               if ( printGlm == TRUE ) { dG(jk2.out, digits = digits, printDeviance = printDeviance, add = add ) }
+report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE) {
+          if(is.null(repFunOut)) {return(NULL)}
+          if ( length(grep("glm", as.character(repFunOut[["resT"]][[1]][1,"modus"]))) ==1 ) {
+               if ( printGlm == TRUE ) { dG(repFunOut, digits = digits, printDeviance = printDeviance, add = add ) }
           }
-          jk2      <- jk2.out[["resT"]]
-          tv       <- jk2.out[["allNam"]][["trend"]]
+          jk2      <- repFunOut[["resT"]]
+          tv       <- repFunOut[["allNam"]][["trend"]]
           cols     <- c("group", "depVar", "modus", "parameter")
           grpv     <- setdiff(setdiff(colnames(jk2[[1]]), cols), c("comparison", "coefficient", "value", tv))
-          grp_by   <- jk2.out[["allNam"]][["group.differences.by"]]
-          cl_diffs <- jk2.out[["allNam"]][["cross.differences"]]
+          grp_by   <- repFunOut[["allNam"]][["group.differences.by"]]
+          cl_diffs <- repFunOut[["allNam"]][["cross.differences"]]
           funs     <- c("mean", "table", "quantile", "glm")
           fun      <- funs [ which( unlist(lapply(funs, FUN = function ( f ) { length(grep(f, jk2[[1]][1,"modus"]))})) > 0) ]
           
@@ -23,19 +23,19 @@ report <- function ( jk2.out, trendDiffs = FALSE, add=list(), exclude = c("Ncase
                       }
                       return(df)})
           }
-          if(!is.null(jk2.out[["SE_correction"]]) && !is.null(jk2.out[["SE_correction"]][[1]])) {
+          if(!is.null(repFunOut[["SE_correction"]]) && !is.null(repFunOut[["SE_correction"]][[1]])) {
             if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
               warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
             }
-            mult_hierarchy <- any(unlist(lapply(jk2.out$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
+            mult_hierarchy <- any(unlist(lapply(repFunOut$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
             if(mult_hierarchy) warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")
 
             jk2 <- lapply(jk2, function(jk2_single) {
-              seCorrect(SE_correction = jk2.out[["SE_correction"]], jk2 = jk2_single, grpv = grpv)
+              seCorrect(SE_correction = repFunOut[["SE_correction"]], jk2 = jk2_single, grpv = grpv)
             })
           }
           if ( !is.null(tv) ) {
-               jk2 <- computeTrend(jk2 = jk2, le = jk2.out[["le"]], tv = tv, fun = fun)
+               jk2 <- computeTrend(jk2 = jk2, le = repFunOut[["le"]], tv = tv, fun = fun)
           } else {
                jk2 <- jk2[[1]]
           }
