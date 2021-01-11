@@ -1,8 +1,10 @@
 # eatRep
  
 <!-- badges: start --> 
+[![CRAN status](https://www.r-pkg.org/badges/version/eatRep)](https://CRAN.R-project.org/package=eatRep)
 [![Travis build status](https://travis-ci.org/weirichs/eatRep.svg?branch=master)](https://travis-ci.org/weirichs/eatRep) 
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/weirichs/eatRep?branch=master&svg=true)](https://ci.appveyor.com/project/weirichs/eatRep) 
+[![](http://cranlogs.r-pkg.org/badges/grand-total/eatRep?color=blue)](https://cran.r-project.org/package=eatRep)
 <!-- badges: end --> 
 
 ## Overview 
@@ -11,14 +13,14 @@ eatRep (Educational Assessment Tools for Replication Methods) provides functions
 
 ## Installation
 
-```
+```R
 # Install eatRep from GitHub via
 devtools::install_github("weirichs/eatRep")
 ```
 
 ## View package documentation
 
-```
+```R
 library(eatRep)
 ### View package documentation
 package?eatRep
@@ -28,7 +30,7 @@ package?eatRep
 
 The following example illustrates the computation of mean educational outcomes of three fictitious countries. Data stem from a large-scale assessment where reading competencies were assessed using dichotomous items (true/false). As the outcome is considered to be latent, plausible values were drawn for each examinee. Plausible values can be considered as multiple imputations of the inherently unobserved latent outcome. The within-person variance of plausible values is used to determine the measurement error. During sampling, classes were drawn instead of individuals. As the sample is clustered then, computation of sampling error involves replication methods. 
 
-```
+```R
 library(eatRep)
 ### compute group means for multiple imputed data in a clustered structure
 ### from a large-scale assessment survey
