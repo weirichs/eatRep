@@ -306,5 +306,68 @@ means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzo
           adjust = c("sexnum", "ses", "mignum"), useEffectLiteR = FALSE,
           dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore")
 res5   <- report(means5, add = list(domain = "reading"))
-}}
 
+\dontrun{
+############################################################################################
+#    Example 6: R code for running the PISA 2015 science example to compare group means    #
+#                    with the total mean using weighted effect coding                      #
+############################################################################################
+
+# Warning: large PISA data set requires at least 16 GB free working memory (RAM):
+
+### define necessary directories (note: writing permissions required)
+folder <- tempdir()
+
+### download PISA 2015 zipped student questionnaire data (420 MB) to a folder with writing permissions
+download.file(url = "https://webfs.oecd.org/pisa/PUF_SPSS_COMBINED_CMB_STU_QQQ.zip",
+         destfile = file.path(folder, "pisa2015.zip"))
+
+### unzip PISA 2015 student questionnaire data (1.5 GB) to temporary folder
+zip::unzip(zipfile = file.path(folder, "pisa2015.zip"), files= "CY6_MS_CMB_STU_QQQ.sav", exdir=folder)
+
+### read data
+pisa <- foreign::read.spss(file.path (folder, "CY6_MS_CMB_STU_QQQ.sav"), to.data.frame=TRUE,
+        use.value.labels = FALSE, use.missings = TRUE)
+
+# dependent variables
+measure.vars <- paste0("PV", 1:10, "SCIE")
+
+### choose desired variables and reshape into the long format
+#              'CNTSTUID' = individual student identifier
+#                   'CNT' = country identifier
+#                 'SENWT' = senate weight (assume a population of 5000 in each country)
+#              'W_FSTUWT' = final student weight
+#                  'OECD' = dummy variable indicating which country is part of the OECD
+#   'W_FSTURWT' (1 to 80) = balanced repeated replicate weights
+# 'PV1SCIE' to 'PV10SCIE' = 10 plausible values of (latent) science performance
+pisaLong <- reshape2::melt(pisa, id.vars = c("CNTSTUID", "CNT", "SENWT", "W_FSTUWT", "OECD", paste0("W_FSTURWT", 1:80)),
+                           measure.vars = measure.vars, value.name = "value", variable.name="imp", na.rm=TRUE)
+
+### choose OECD countries
+oecd <- pisaLong[which(pisaLong[,"OECD"] == 1),]
+
+### analyze data (see also 'https://rstudio-pubs-static.s3.amazonaws.com/442843_a94f5a3cfb0d483aa1a290761b652350.html')
+### analysis takes approximately 30 minutes on an Intel i5-6500 machine with 32 GB RAM
+means   <- repMean( datL                 = oecd,                      # data.frame in the long format
+                     ID                   = "CNTSTUID",                # student identifier
+                     dependent            = "value",                   # the dependent variable in the data
+                     groups               = "CNT",                     # the grouping variable
+                     wgt                  = "SENWT",                   # (optional) weighting variable. We use senate weights (assume a population of 5000 in each country)
+                     type                 = "Fay",                     # type of replication method. Corresponding to the PISA sampling method, we use "Fay"
+                     rho                  = 0.5,                       # shrinkage factor for weights in Fay's method
+                     scale                = NULL,                      # scaling constant for variance, set to NULL according to PISA's sampling method
+                     rscales              = NULL,                      # scaling constant for variance, set to NULL according to PISA's sampling method
+                     repWgt               = paste0("W_FSTURWT", 1:80), # the replicate weights, provided by the OECD
+                     imp                  = "imp",                     # the imputation variable
+                     mse                  = FALSE,                     # if TRUE, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
+                     group.splits         = 0:1,                       # defining the 'levels' for which means should be computed. 0:1 implies that means for the whole sample (level 0) as well as for groups (level 1) are computed
+                     cross.differences    = TRUE,                      # defines whether (and which) cross level mean differences should be computed. TRUE means that all cross level mean differences are computed
+                     crossDiffSE          = "wec",                     # method for standard errors of mean differences
+                     crossDiffSE.engine   = "lm",                      # software implementation for standard errors of mean differences
+                     hetero               = TRUE,                      # assume heteroscedastic group variances
+                     stochasticGroupSizes = FALSE                      # assume fixed group sizes
+                   )
+
+### call a reporting function to generate user-friendly output
+results <- report(means, exclude = c("Ncases", "NcasesValid", "var", "sd"))
+}}}
