@@ -49,7 +49,7 @@
   For each imputed data set in each measurement, i.e. in the inner loop, the \code{eatRep} function first creates 
   replicate weights based on the primary sampling unit (PSU) variable and the replication indicator variable. In 
   the jackknife procedure, the first one is often referred to as \dQuote{jackknife zone}, whereas the second one 
-  is often referred to as \dQuote{jackknife replicate}. The number of distinct units in the PSU variable define 
+  is often referred to as \dQuote{jackknife replicate}. The number of distinct units in the PSU variable defines
   the number of replications which are necessary due to the clustered structure. A design object is created and 
   the appropriate \code{survey} function is called. The process is repeated for each imputed dataset and the 
   results of the analyses are pooled. The pooling procedure varies in relation to the type of variable to be 
@@ -120,8 +120,16 @@ License: \tab GPL(>=2)
   Rust, K., & Rao, JNK. (1996): Variance estimation for complex surveys using 
   replication techniques. \emph{Statistical Methods in Medical Research} \bold{5}, 283--310.
 
+  Sachse, K. A. & Haag, N. (2017). Standard errors for national trends in international
+  large-scale assessments in the case of cross-national differential item functioning. \emph{Applied
+  Measurement in Education, 30}, (2), 102-116. http://dx.doi.org/10.1080/08957347.2017.1283315
+
 	Satorra, A., & Bentler, P. M. (1994). Corrections to test statistics
 		and standard errors in covariance structure analysis.
+
+  te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A., & Konig, R. (2017).
+  When size matters: advantages of weighted effect coding in observational studies.
+  \emph{International Journal of Public Health.} \bold{62}, 163--167.
 
   Thomas, D. R. & Rao, JNK (1990): Small-sample comparison of level and power for simple goodness-of-
   fit statistics under cluster sampling. JASA 82:630-636
@@ -129,13 +137,5 @@ License: \tab GPL(>=2)
   Westat (2000). \emph{WesVar.} Rockville, MD: Westat.
 
   Wolter, K. M. (1985). \emph{Introduction to variance estimation.} New York: Springer.
-  
-  te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A., & Konig, R. (2017).
-  When size matters: advantages of weighted effect coding in observational studies. 
-  \emph{International Journal of Public Health.} \bold{62}, 163--167.
-  
-  Sachse, K. A. & Haag, N. (2017). Standard errors for national trends in international
-  large-scale assessments in the case of cross-national differential item functioning. \emph{Applied
-  Measurement in Education, 30}, (2), 102-116. http://dx.doi.org/10.1080/08957347.2017.1283315
 }
 \keyword{ package }

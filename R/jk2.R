@@ -370,8 +370,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                                   res[,"adjust"] <- recode(res[,"hierarchy.level"], "0='FALSE'; else = 'TRUE'")
                               }
                               return(res)}))
-                       if(verbose){cat("\n \n"); print(ret)}
-                  }
+                       if(verbose){cat("\n \n"); print(ret, row.names=FALSE)}
+                  }  else  {ret <- NULL}
                   allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=allNam, group.splits=group.splits)
                   fooX  <- createLoopStructure(datL = datL, allNam = allNam, verbose=verbose)
                   datL  <- fooX[["datL"]]; allNam <- fooX[["allNam"]]           
@@ -388,8 +388,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                   }
                   repA  <- assignReplicates ( repWgt=repWgt, allNam=allNam, datL = datL, engine = engine, type=type , progress=progress, verbose=verbose)
                   allRes<- do.call("rbind.fill", lapply( names(toAppl), FUN = function ( gr ) {
+                      str1  <- createInfoString (ai = ret, toCall=toCall, gr=gr, toAppl=toAppl)
                       if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") }
-                      if( nchar(gr) == 0 ){
+                      if( nchar(gr) == 0 ){                                     
                           datL[,"dummyGroup"] <- "wholeGroup"
                           allNam[["group"]] <- "dummyGroup"
                           allNam[["adjust"]] <- NULL                            
@@ -408,7 +409,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                              nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation,
                              toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho,
                              reihenfolge=reihenfolge, hetero=hetero, se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine,
-                             stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family))
+                             stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family, str1=str1))
                       }  else  {                                                
                       anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                              separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs, formula=formula, glmTransformation=glmTransformation,
@@ -640,7 +641,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
                                                                  ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = ".vs."))
                                                                  colnames(ret) <- gg
                                                                  return(ret)}))
-                                                    dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "mean", coefficient = c("est","se"), value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
+                                                    dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "mean", coefficient = c("est","se"), modus=modus, value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
                                                     stopifnot(nrow(dif.iii)==2, nrow(vgl.iii) == 2)
                                                     dummy2    <- dif.iii[1,]
                                                     dummy2[,"coefficient"] <- "es"
@@ -1233,7 +1234,7 @@ checkNests <- function (x, allNam, toAppl, gr) {
 
 doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type, repA, modus, separate.missing.indicator, expected.values,
                     probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, toCall, poolMethod, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR,
-                    crossDiffSE.engine, stochasticGroupSizes, progress, correct, family ) {
+                    crossDiffSE.engine, stochasticGroupSizes, progress, correct, family, str1) {
         if(isTRUE(datL1[1,"isClear"])) {                                        
             nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
             nrep<- prod(dim(nrep))
@@ -1243,7 +1244,7 @@ doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type,
                  cri2<- nrep > 9 & length(unique(datL1[,allNam[["ID"]]]))>5000
             }
             if ( progress && (isTRUE(cri1) | isTRUE(cri2)) ) {
-                 pb  <- progress_bar$new( format = "    analyses [:bar] :percent in :elapsed", incomplete = " ", total = nrep, clear = FALSE, width= 60, show_after = 0.01)
+                 pb  <- progress_bar$new( format = paste0(str1, " [:bar] :percent in :elapsed"), incomplete = " ", total = nrep, clear = FALSE, width= 75, show_after = 0.01)
             }  else  {
                  pb <- list()
                  pb$tick <- function (){return(NULL)}
@@ -1270,7 +1271,9 @@ doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type,
                         anaI <- do.call("rbind", lapply(anaI, FUN = function ( x ) { x[["ana.i"]]}))
                    }
                    return(anaI)}))
-            if ( length(unique(ana[,"modus"])) >1 ) {warning("Heterogeneous mode: '", paste(unique(ana[,"modus"]), collapse="', '"),"'")}
+            if ( length(unique(ana[,"modus"])) >1 ) {
+                 warning("Heterogeneous mode: '", paste(unique(ana[,"modus"]), collapse="', '"),"'")
+            }
             mod <- unique(ana[,"modus"])
             if ( poolMethod == "mice" && toCall == "glm")  {
                  retList <- ana
@@ -1450,7 +1453,7 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progre
           zonen       <- names(table(as.character(dat.i[,all.Names[["PSU"]]]) ) )
           if ( verbose) { cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))}
           if ( progress && nrow(dat)>2500 & length(zonen) > 50 ) {              
-               pb     <- progress_bar$new( format = "  replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 60, show_after = 0.01)
+               pb     <- progress_bar$new( format = "         replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 75, show_after = 0.01)
           }
           missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
           if(!all(missings == 0)) {
@@ -1515,3 +1518,8 @@ prepExpecVal <- function (toCall, expected.values, separate.missing.indicator, a
              expected.values <- sort(unique(c(expected.values, names(table(datL[,allNam[["dependent"]]])))))
           }
           return(list(datL=datL, expected.values=expected.values))}
+
+createInfoString <- function ( ai, toCall, gr, toAppl) {
+          nr <- ifelse(is.null(ai), 1, match(gr, names(toAppl)))
+          st <- paste0(paste(rep(" ", times = 8-nchar(toCall)),collapse=""), toCall, " analysis ",nr)
+          return(st)}
