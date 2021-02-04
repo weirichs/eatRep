@@ -2,8 +2,7 @@
  
 <!-- badges: start --> 
 [![CRAN status](https://www.r-pkg.org/badges/version/eatRep)](https://CRAN.R-project.org/package=eatRep)
-[![Travis build status](https://travis-ci.org/weirichs/eatRep.svg?branch=master)](https://travis-ci.org/weirichs/eatRep) 
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/weirichs/eatRep?branch=master&svg=true)](https://ci.appveyor.com/project/weirichs/eatRep) 
+[![R-CMD-check](https://github.com/weirichs/eatRep/workflows/R-CMD-check/badge.svg)](https://github.com/weirichs/eatRep/actions)
 [![](http://cranlogs.r-pkg.org/badges/grand-total/eatRep?color=blue)](https://cran.r-project.org/package=eatRep)
 <!-- badges: end --> 
 
