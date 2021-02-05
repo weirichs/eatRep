@@ -280,6 +280,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           i     <- 0                                                            
           fc    <- NULL                                                         
           while ( !is.null(sys.call(i))) { fc <- c(fc, eatTools::crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
+    ### unten stehende Zeile deshalb, damit der Nutzer sowohl repMean(...) als auch eatRep::repMean(...) als auch eatRep:::repMean(...) aufrufen kann
+          fc   <- unlist(lapply(strsplit(fc, ":"), FUN = function ( l ) {l[length(l)]}))
           fc   <- fc[max(which(fc %in% c("repMean", "repTable", "repGlm", "repQuantile")))]
           toCall<- match.arg(toCall)                                            
           type  <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
