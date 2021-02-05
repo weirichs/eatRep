@@ -1,7 +1,7 @@
 pool.means <- function (m, se, na.rm = FALSE) {
      if(is.list(m))   {if(length(m) == 1)  { stopifnot(length(se)==1); m <- unlist(m); se <- unlist(se)}}
      if(!is.list(m))  {                                                         
-        pooled <- pool.scalar(Q=m, U=se^2)
+        pooled <- mice::pool.scalar(Q=m, U=se^2)
         pooled <- data.frame ( m.pooled = pooled$qbar, se.pooled = sqrt(pooled$t), df = pooled$df, stringsAsFactors = FALSE)
      }  else  {                                                                 
         if(!all(unlist(lapply(m, length)) == unlist(lapply(se, length)) ) ) {   
@@ -55,7 +55,7 @@ jk2.pool <- function ( datLong, allNam, forceSingularityTreatment, modus ) {
                        cat(paste0("Warning for '",u[1,"group"],"': degrees of freedom vary between imputations. Min: ",min(unlist(degFr)),"; Max: ", max(unlist(degFr)),". Chi-square test will be skipped.\n"))
                   }                                                             
                   degFr<- unique(unlist(degFr))[1]                              
-                  pool <- micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
+                  pool <- miceadds::micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
                   ret  <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus=modus, comparison = names(comp), parameter = names(table(u[,"parameter"])), coefficient = c("D2statistic","chi2Approx", "df1", "df2", "p", "pApprox"), value = pool[c("D", "chisq.approx", "df", "df2", "p", "p.approx")], u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE, row.names=NULL)
                }  else  {
                   uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
@@ -99,7 +99,7 @@ jk2.pool <- function ( datLong, allNam, forceSingularityTreatment, modus ) {
 pool.corr <- function( corrs , N , conf.level = .05){
         fisher.corrs <- 1/2*log( ( 1 + corrs) / ( 1 - corrs ) )                 
         var.fisher <- rep( 1/(N-3) , length(corrs) )                            
-        fisher.cor.combine <- pool.scalar( fisher.corrs , var.fisher)
+        fisher.cor.combine <- mice::pool.scalar( fisher.corrs , var.fisher)
         zr <- fisher.cor.combine$qbar
         zr.se <- sqrt( fisher.cor.combine$t )
         t.zr <- zr / zr.se

@@ -24,5 +24,5 @@ make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, 
                   return(ind.i)}
 
 identifyMode <- function ( name, type) {
-            res <- paste0(recode(type, "'NONE'='CONV'"),".", name)
+            res <- paste0(car::recode(type, "'NONE'='CONV'"),".", name)
             return(res)}

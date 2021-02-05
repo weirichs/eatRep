@@ -59,7 +59,7 @@ groupToTotalMeanComparisonLavaan <- function( d, y.var, group.var, weight.var=NU
 		orig.groups <- unique( d[,group.var] )
 
 		# clean group labels
-		group.lab <- make_clean_names( orig.groups )
+		group.lab <- janitor::make_clean_names( orig.groups )
 
 		# forbidden group labels
 		if( any( group.lab %in% (forbidden.gr.lab <- c("Mtotal", "N")) ) ) stop( paste0( "group labels must not be ", paste( forbidden.gr.lab, collapse=" | " ) ) )

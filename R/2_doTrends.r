@@ -15,7 +15,7 @@ computeTrend <- function(jk2, tv, le, fun) {
             jk2_bind<- jk2_bind[which(!jk2_bind[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
         }
         jk2_bind<- jk2_bind[jk2_bind[["coefficient"]] %in% c("est", "se"), ]    
-        jk2_wide<- dcast ( jk2_bind, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
+        jk2_wide<- reshape2::dcast ( jk2_bind, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
         lev     <- unique(jk2_bind[[tv]])                                       
         jk2_wide[,"est_trend"] <- jk2_wide[,paste("est_",lev[2],sep="")] - jk2_wide[,paste("est_",lev[1],sep="")]
         jk2_wide<- merge(jk2_wide, le, by = c("parameter", "depVar"), all = TRUE)
@@ -39,12 +39,12 @@ computeTrend <- function(jk2, tv, le, fun) {
                  jk2_wide <- unique(rbind(jk2_wide, jk2_wideS))
             }
         }
-        jk2_add <- melt ( jk2_wide, measure.vars = c(paste("est_",lev[1], sep=""),
+        jk2_add <- reshape2::melt ( jk2_wide, measure.vars = c(paste("est_",lev[1], sep=""),
                                                                paste("est_",lev[2], sep=""),
                                                                paste("se_",lev[1], sep=""),
                                                                paste("se_",lev[2], sep=""),
                                                                "est_trend", "se_trend", "sig_trend", es), na.rm = FALSE)
         jk2_add <- jk2_add[!is.na(jk2_add[, "value"]), ] 
-        jk2_add <- separate(jk2_add, col = "variable", into = c("coefficient", tv), sep = "_")
+        jk2_add <- tidyr::separate(jk2_add, col = "variable", into = c("coefficient", tv), sep = "_")
         jk2_out <- unique(rbind(jk2_add[, names(jk2_all)], jk2_all))
         return(jk2_out) }

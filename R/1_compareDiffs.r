@@ -16,7 +16,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                    return(NULL)
               }
               if ( !is.na(d[1,"comparison"])) {
-                   cl_diffs  <- as.list(data.frame ( combn(unique(d[,"sum"]),2)))
+                   cl_diffs  <- as.list(data.frame ( combinat::combn(unique(d[,"sum"]),2)))
               }
               ret <- do.call("rbind", lapply ( cl_diffs, FUN = function ( comp_vec ) {
                      redDF_1 <- d[which(d[, "sum"] %in% comp_vec),]
@@ -28,7 +28,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                 matching_levels <- sapply(all_ll_levels, FUN = function ( a ) {all(hl_levels %in% a)})
                                 low_lvl <- fac[[2]][matching_levels]
                                 if ( length(low_lvl)==0) {
-                                     low_lvl <- grep(colsplit(string = paste0(hl_levels, collapse = "_"), pattern="___", names=c("a", "b"))[,"a"], fac[[2]], value = TRUE)
+                                     low_lvl <- grep(reshape2::colsplit(string = paste0(hl_levels, collapse = "_"), pattern="___", names=c("a", "b"))[,"a"], fac[[2]], value = TRUE)
                                 }
                                 vgl     <- expand.grid(high_lvl, low_lvl)
                                 grp <- do.call("rbind", plyr::alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {

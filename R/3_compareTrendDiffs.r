@@ -35,8 +35,8 @@ trendGroupDiffs <- function(jk2, grpv, grp_by, fun) {
     grp_set <- by(redDF_1, INDICES = fac_lvls, function(redDF_2) {
       redDF_2 <- redDF_2[order(redDF_2[, "group"]), ]
       sorted_levels <- sort(unique(redDF_2[, "group"]))
-      vgl <- t(combn(sorted_levels, 2))
-      grp <- do.call("rbind", alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {
+      vgl <- t(combinat::combn(sorted_levels, 2))
+      grp <- do.call("rbind", plyr::alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {
         aus <- redDF_2[which(redDF_2[,"group"] %in% single_comp),]
         newRows <- compareParameters(df_allP = aus, grpv = grpv, fun = fun,
                                      comp_type = "trendDiff_group")
