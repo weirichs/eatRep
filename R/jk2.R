@@ -1321,6 +1321,8 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
                  for ( gg in c(allNam[["group"]], auchUV) ) {                   ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
+                       chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg]) ### personen muessen in gruppierungsvariable genestet sein
+                       if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
                        if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
                            message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
                            if ( class ( datL[,gg] ) == "factor") {
