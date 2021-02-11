@@ -1,8 +1,10 @@
 
-data("lsa")
-rd     <- lsa[which(lsa[,"domain"] == "reading"),]
-rd15 <- rd[rd$year == 2015, ]
-rd15_1 <- rd15[rd15$nest == 1, ]
+
+data(lsa)
+bt         <- lsa[which(lsa[,"nest"] == 1),]
+bt2010     <- bt[which(bt[,"year"] == 2010),]
+bt2010read <- bt2010[which(bt2010[,"domain"] == "reading"),]
+
 
 test_that("repGlm", {
   suppressWarnings(txt <- capture_output(mod1 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
