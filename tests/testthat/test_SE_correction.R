@@ -52,8 +52,8 @@ test_that("wec 2 grouping variables, trend", {
   wec_out <- suppressWarnings(report(means3T))
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "se_2010"], 3.063, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "male.vs.wholeGroup" & wec_out$parameter == "mean", "se_2015"], 2.830, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "LandA.vs.wholeGroup" & wec_out$parameter == "mean", "p_2010"], 0.003, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "LandC.vs.wholeGroup" & wec_out$parameter == "mean", "p_2015"], 0.017, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "p_2010"], 0.003, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryC.vs.wholeGroup" & wec_out$parameter == "mean", "p_2015"], 0.017, tolerance=1e-3)
 })
 
 # means3T_old <- means3T_pisa
@@ -67,22 +67,22 @@ test_that("pisa 2 grouping variables, trend", {
   pisa_out <- suppressWarnings(report(means3T_pisa))
   expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2010"], 3.066)
   expect_equal(pisa_out[pisa_out$group == "male.vs.wholeGroup" & pisa_out$parameter == "mean", "se_2015"], 2.850)
-  expect_equal(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2010"], 0.002)
-  expect_equal(pisa_out[pisa_out$group == "LandC.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2015"], 0.017)
+  expect_equal(pisa_out[pisa_out$group == "countryA.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2010"], 0.002)
+  expect_equal(pisa_out[pisa_out$group == "countryC.vs.wholeGroup" & pisa_out$parameter == "mean", "p_2015"], 0.017)
 })
 
 
 test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
   wec_out <- suppressWarnings(report(means3Tb))
   table(wec_out[which(wec_out$comparison == "crossDiff"), "group"])
-  expect_equal(wec_out[wec_out$group == "LandA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
   
-  expect_equal(wec_out[wec_out$group == "LandA_female.vs.LandA" & wec_out$parameter == "mean", "se"], 3.344, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "LandA_male.vs.LandA" & wec_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_female.vs.countryA" & wec_out$parameter == "mean", "se"], 3.344, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_male.vs.countryA" & wec_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
   
-  expect_equal(wec_out[wec_out$group == "LandC_female.vs.LandC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "LandC_male.vs.LandC" & wec_out$parameter == "mean", "se"], 3.325, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryC_female.vs.countryC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryC_male.vs.countryC" & wec_out$parameter == "mean", "se"], 3.325, tolerance=1e-3)
 })
 
 test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
@@ -90,30 +90,30 @@ test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
   pisa_out <- suppressWarnings(report(means3Tb_pisa))
   
   #means3Tb_pisa$SE_correction[[1]]$resT
-  expect_equal(pisa_out[pisa_out$group == "LandA.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "countryA.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
   expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 2.953, tolerance=1e-3)
   
-  expect_equal(pisa_out[pisa_out$group == "LandA_female.vs.LandA" & pisa_out$parameter == "mean", "se"], 3.346, tolerance=1e-3)
-  expect_equal(pisa_out[pisa_out$group == "LandA_male.vs.LandA" & pisa_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "countryA_female.vs.countryA" & pisa_out$parameter == "mean", "se"], 3.346, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "countryA_male.vs.countryA" & pisa_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
   
-  expect_equal(pisa_out[pisa_out$group == "LandC_female.vs.LandC" & pisa_out$parameter == "mean", "p"], 0.025, tolerance=1e-3)
-  expect_equal(pisa_out[pisa_out$group == "LandC_male.vs.LandC" & pisa_out$parameter == "mean", "se"], 3.366, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "countryC_female.vs.countryC" & pisa_out$parameter == "mean", "p"], 0.025, tolerance=1e-3)
+  expect_equal(pisa_out[pisa_out$group == "countryC_male.vs.countryC" & pisa_out$parameter == "mean", "se"], 3.366, tolerance=1e-3)
 })
 
 
 test_that("wec 3 grouping variables, no trend, cross diff on higher level", {
   wec_out <- suppressWarnings(report(means4T))
   # lapply(means4T$SE_correction, function(x) x$refGrp)
-  expect_equal(wec_out[wec_out$group == "LandA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
   
   #report(means4T$SE_correction[[4]])
-  expect_equal(wec_out[wec_out$group == "LandA_female_TRUE.vs.LandA_female" & wec_out$parameter == "mean", "se"], 6.866, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "LandA_male_FALSE.vs.LandA_male" & wec_out$parameter == "mean", "p"], 0, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_female_TRUE.vs.countryA_female" & wec_out$parameter == "mean", "se"], 6.866, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_male_FALSE.vs.countryA_male" & wec_out$parameter == "mean", "p"], 0, tolerance=1e-3)
   
   #report(means4T$SE_correction[[18]])
-  expect_equal(wec_out[wec_out$group == "LandA_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "se"], 1.364, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "LandC_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "p"], 0.030, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "se"], 1.364, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryC_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "p"], 0.030, tolerance=1e-3)
 })
 
 test_that("Warning for different point estimates", {
