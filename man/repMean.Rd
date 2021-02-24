@@ -249,7 +249,7 @@ means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "j
           dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
 res1a  <- report(means1a, add = list(domain = "reading"))
 
-### See that the means of 'LandA' and 'LandB' significantly differ from the overall mean.
+### See that the means of 'countryA' and 'countryB' significantly differ from the overall mean.
 print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),
       which(res1a[,"parameter"] == "mean")),], digits = 3)
 
@@ -318,12 +318,14 @@ res5   <- report(means5, add = list(domain = "reading"))
 ### define necessary directories (note: writing permissions required)
 folder <- tempdir()
 
-### download PISA 2015 zipped student questionnaire data (420 MB) to a folder with writing permissions
+### download PISA 2015 zipped student questionnaire data (420 MB) to a folder with
+### writing permissions
 download.file(url = "https://webfs.oecd.org/pisa/PUF_SPSS_COMBINED_CMB_STU_QQQ.zip",
          destfile = file.path(folder, "pisa2015.zip"))
 
 ### unzip PISA 2015 student questionnaire data (1.5 GB) to temporary folder
-zip::unzip(zipfile = file.path(folder, "pisa2015.zip"), files= "CY6_MS_CMB_STU_QQQ.sav", exdir=folder)
+zip::unzip(zipfile = file.path(folder, "pisa2015.zip"), files= "CY6_MS_CMB_STU_QQQ.sav",
+           exdir=folder)
 
 ### read data
 pisa <- foreign::read.spss(file.path (folder, "CY6_MS_CMB_STU_QQQ.sav"), to.data.frame=TRUE,
@@ -340,32 +342,50 @@ measure.vars <- paste0("PV", 1:10, "SCIE")
 #                  'OECD' = dummy variable indicating which country is part of the OECD
 #   'W_FSTURWT' (1 to 80) = balanced repeated replicate weights
 # 'PV1SCIE' to 'PV10SCIE' = 10 plausible values of (latent) science performance
-pisaLong <- reshape2::melt(pisa, id.vars = c("CNTSTUID", "CNT", "SENWT", "W_FSTUWT", "OECD", paste0("W_FSTURWT", 1:80)),
-                           measure.vars = measure.vars, value.name = "value", variable.name="imp", na.rm=TRUE)
+pisaLong <- reshape2::melt(pisa,
+            id.vars = c("CNTSTUID", "CNT", "SENWT", "W_FSTUWT", "OECD",
+                        paste0("W_FSTURWT", 1:80)),
+            measure.vars = measure.vars, value.name = "value",
+            variable.name="imp", na.rm=TRUE)
 
 ### choose OECD countries
 oecd <- pisaLong[which(pisaLong[,"OECD"] == 1),]
 
-### analyze data (see also 'https://rstudio-pubs-static.s3.amazonaws.com/442843_a94f5a3cfb0d483aa1a290761b652350.html')
+### analyze data (see also
+### 'https://rstudio-pubs-static.s3.amazonaws.com/442843_a94f5a3cfb0d483aa1a290761b652350.html')
 ### analysis takes approximately 30 minutes on an Intel i5-6500 machine with 32 GB RAM
-means   <- repMean( datL                 = oecd,                      # data.frame in the long format
-                     ID                   = "CNTSTUID",                # student identifier
-                     dependent            = "value",                   # the dependent variable in the data
-                     groups               = "CNT",                     # the grouping variable
-                     wgt                  = "SENWT",                   # (optional) weighting variable. We use senate weights (assume a population of 5000 in each country)
-                     type                 = "Fay",                     # type of replication method. Corresponding to the PISA sampling method, we use "Fay"
-                     rho                  = 0.5,                       # shrinkage factor for weights in Fay's method
-                     scale                = NULL,                      # scaling constant for variance, set to NULL according to PISA's sampling method
-                     rscales              = NULL,                      # scaling constant for variance, set to NULL according to PISA's sampling method
-                     repWgt               = paste0("W_FSTURWT", 1:80), # the replicate weights, provided by the OECD
-                     imp                  = "imp",                     # the imputation variable
-                     mse                  = FALSE,                     # if TRUE, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
-                     group.splits         = 0:1,                       # defining the 'levels' for which means should be computed. 0:1 implies that means for the whole sample (level 0) as well as for groups (level 1) are computed
-                     cross.differences    = TRUE,                      # defines whether (and which) cross level mean differences should be computed. TRUE means that all cross level mean differences are computed
-                     crossDiffSE          = "wec",                     # method for standard errors of mean differences
-                     crossDiffSE.engine   = "lm",                      # software implementation for standard errors of mean differences
-                     hetero               = TRUE,                      # assume heteroscedastic group variances
-                     stochasticGroupSizes = FALSE                      # assume fixed group sizes
+means   <- repMean( datL        = oecd,       # data.frame in the long format
+                     ID         = "CNTSTUID", # student identifier
+                     dependent  = "value",    # the dependent variable in the data
+                     groups     = "CNT",      # the grouping variable
+                     wgt        = "SENWT",    # (optional) weighting variable. senate weights
+                                              # (assume a population of 5000 in each country)
+                     type       = "Fay",      # type of replication method. Corresponding to
+                                              # the PISA sampling method, we use "Fay"
+                     rho        = 0.5,        # shrinkage factor for weights in Fay's method
+                     scale      = NULL,       # scaling constant for variance, set to NULL
+                                              # according to PISA's sampling method
+                     rscales    = NULL,       # scaling constant for variance, set to NULL
+                                              # according to PISA's sampling method
+                     repWgt     = paste0("W_FSTURWT", 1:80), # the replicate weights,
+                                                             # provided by the OECD
+                     imp        = "imp",      # the imputation variable
+                     mse        = FALSE,      # if TRUE, compute variances based on sum of
+                                              # squares around the point estimate, rather
+                                              # than the mean of the replicates.
+                     group.splits         = 0:1,   # defining the 'levels' for which means
+                                                   # should be computed. 0:1 implies that
+                                                   # means for the whole sample (level 0)
+                                                   # as well as for groups (level 1) are computed
+                     cross.differences    = TRUE,  # defines whether (and which) cross level mean
+                                                   # differences should be computed. TRUE means
+                                                   # that all cross level mean differences are
+                                                   # computed
+                     crossDiffSE          = "wec", # method for standard error of mean differences
+                     crossDiffSE.engine   = "lm",  # software implementation for standard errors
+                                                   # of mean differences
+                     hetero               = TRUE,  # assume heteroscedastic group variances
+                     stochasticGroupSizes = FALSE  # assume fixed group sizes
                    )
 
 ### call a reporting function to generate user-friendly output
