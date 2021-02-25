@@ -5,6 +5,7 @@
 * added an internal check that persons are nested within groups
 
 ## Bug Fixes
+* fixed `report` for cross differences when levels of grouping variable contained the variable name
 * fixed missing entries in mode column in the output of  `repMean()`
 * `eatRep::repMean(...)` now works as well as `library(eatRep); repMean(...)` 
 * added tests for `repGlm()` function

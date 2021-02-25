@@ -103,7 +103,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
     single_grpv <- SE_correction[[i]][["focGrp"]]
 
     SEs <- output[!output$parameter %in% c("(Intercept)", "Nvalid", "R2"), c("parameter", "value", "coefficient")]
-    SEs[, "parameter"] <- gsub(single_grpv, "", SEs[, "parameter"])
+    SEs[, "parameter"] <- gsub(paste0("^", single_grpv), "", SEs[, "parameter"])
     SEs <- as.data.frame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"))
 
     for(param in SEs[["parameter"]]) {
