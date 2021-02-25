@@ -1,0 +1,1222 @@
+---
+title: "Replication analyses with eatRep"
+author: "Sebastian Weirich and Benjamin Becker"
+date: "February 2021"
+output: html_document
+---
+
+
+
+## Introduction
+
+The following vignette demonstrates some analyses based on replication methods. Replication methods are quite common in the context of survey or large-scale assessment data like the "National Assessment Studies and IQB Trends in Student Achievement" ([study description]( https://www.iqb.hu-berlin.de/bt)). The following examples are closely related to the "IQB" context (e.g., jackknife-2 methods are used instead of balanced repeated replicates), but may be adapted for PISA or TIMSS analyses as well. An illustration how `eatRep` can be applied to PISA data and its specific replication design, see the last example in the documentation of the `repMean()` function. 
+
+Please note that the theoretical foundations of the presented methods are beyond the scope of this vignette---literature recommendations for in depth theoretical discussions can be found in the package documentation (type `package?eatRep` into the console). Instead, this vignette focuses on some prototypical analyses. 
+
+Furthermore, note that IRT item calibration or "plausible values" imputation are not covered in this vignette. All the outlined analyses base on survey data in which "plausible values" are already included. Such kind of data is provided by the [OECD](https://webfs.oecd.org/pisa/) or can be requested from the ["Research Data Centre (FDZ) at the IQB"](https://www.iqb.hu-berlin.de/fdz). Most of the analyses comprise of descriptive statistics (means, standard deviations), frequency distributions, and linear or logistic regression models. Usually, sampling designs for large-scale assessments have the following, specific characteristics:
+
+1. Often, individuals in survey data are not randomly drawn from the population. In educational assessments which aim to compare countries, for example, the proportions in the sample do not necessarily correspond to the proportions in the population. Often, institutions like the OECD provide sampling weights according with their data which allow to estimate population parameters.  
+
+2. The (primary) sampling units in educational data are classes instead of individuals. Hence, the sample is clustered. Students within a class are more alike than students from different classes. Therefore, clustered sampled students are more homogeneous than randomly sampled students which may lead to biased standard error estimates in inference-based analyses. 
+
+3. Variables of interest (e.g. educational achievement) are latent and not directly observable (they are inherently missing). Additionally, questionnaire data frequently include missing responses. Therefore, institutions like the OECD or the IQB provide imputed data. 
+
+`eatRep` allows to compute (adjusted) means and mean differences, frequency tables, percentiles, and parameter of (log) linear regression models, taking the clustered and/or imputed sample into account. Trend analyses are possible as well. `eatRep` meets the special features mentioned above (if the apply) in the following way: 
+
+1.: include sampling weights for the analyses. 
+
+2.: Use replication methods (Bootstrap, jackknife or "Balanced repeated replicates") for inference statistics. 
+
+3.: Pool the results according to Rubin (1987).
+
+However, `eatRep` is also suitable if the data is clustered without imputations or imputed without clustered. The three mentioned methods (using weights, replication methods, pooling methods) can be called independently from each other. 
+
+## 0. Installation 
+
+We recommend to use R version 4.0.0 or higher. `eatRep` is available from CRAN:  
+
+
+```r
+install.packages("eatRep")
+```
+
+## 1. Example data 
+
+`eatRep` contains exemplary data named `lsa` ("large scale assessment"), which resembles the "IQB Gesamtanalysedatensatz (GADS)". `lsa`, however, is reduced in numbers of examinees, imputations, and variables. Once the package is loaded, the structure of `lsa` can be inspected via: 
+
+
+```r
+library(eatRep)
+data(lsa, package="eatRep")
+str(lsa, give.attr = FALSE)
+```
+
+```
+## 'data.frame':	90216 obs. of  22 variables:
+##  $ year     : num  2010 2010 2010 2010 2010 2010 2010 2010 2010 2010 ...
+##  $ idstud   : Factor w/ 7518 levels "P0001","P0002",..: 2362 175 1283 783 728 2122 732 2429 2899 2191 ...
+##  $ wgt      : num  2.51 5.19 6.1 4.71 4.42 ...
+##  $ jkzone   : num  18 86 79 5 3 8 3 20 13 12 ...
+##  $ jkrep    : num  1 0 1 0 1 1 1 1 0 0 ...
+##  $ imp      : num  3 3 2 2 2 2 1 2 3 2 ...
+##  $ nest     : num  1 2 1 1 2 1 2 1 2 2 ...
+##  $ country  : Factor w/ 3 levels "LandA","LandB",..: 2 3 2 3 3 2 3 2 1 2 ...
+##  $ sex      : Factor w/ 2 levels "female","male": 2 2 1 2 2 2 1 2 1 1 ...
+##  $ ses      : num  24.8 28.5 23.5 64.4 70.3 ...
+##  $ mig      : logi  FALSE TRUE FALSE FALSE FALSE FALSE ...
+##  $ domain   : Factor w/ 2 levels "listening","reading": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ score    : num  342 317 286 327 360 ...
+##  $ comp     : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ failMin  : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ passReg  : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ passOpt  : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ leScore  : num  1.21 1.21 1.21 1.21 1.21 ...
+##  $ leComp   : num  0.00582 0.00582 0.00582 0.00582 0.00582 ...
+##  $ leFailMin: num  0.00494 0.00494 0.00494 0.00494 0.00494 ...
+##  $ lePassReg: num  0.00601 0.00601 0.00601 0.00601 0.00601 ...
+##  $ lePassOpt: num  0.00141 0.00141 0.00141 0.00141 0.00141 ...
+```
+
+`lsa` is in the long format; this means the data set contains multiple rows per individual person. Imputed variables (e.g., migration background, `mig`) do *not* occur in several columns (`mig_Imp_1`, `mig_Imp_2`, `mig_Imp_3`, and so on), but only once: `mig`. Multiple imputations are stored in multiple rows, and the variable `imp` yields the number of the imputed data set. Furthermore, variables which refer to different competence domains (reading, listening) *and* different imputations *and* different times of measurement (i.e., the competence variable `score`) do not occur in multiple columns (`reading_2010_score_Imp_1`, `reading_2010_score_Imp_2`, ..., `listening_2010_score_Imp_1`, `listening_2015_score_Imp_1`, ...). `score` only occurs once, and `imp` defines the imputation, whereas `domain` gives the competence domain. To reshape data between the long and wide format, see for example the package `tidyr` (`pivot_wider()`, `pivot_longer()`) or the function `wideToLong()` from the package `eatTools`. See section 1.1 for more details. 
+
+`lsa` contains the following variables: 
+
+- `year`: year of assessment (2010 or 2015)
+- `idstud`: individual student identifier; the data set contains 7518 persons overall 
+- `wgt`: sampling weight
+- `jkzone`: jackknife zone 
+- `jkrep`: jackknife replicate 
+- `imp`: number of imputation (1, 2, or 3)
+- `nest`: nummer of nest (for nested imputation which is not yet considered here, but see the examples of `repMean()` for further details)
+- `country`: federal state the student stems from 
+- `sex`: students sex (male, female)
+- `ses`: socio economical status
+- `mig`: migration background
+- `domain`: competence domain (listening or reading)
+- `score`: point estimate (e.g., plausible value) for the corresponding imputation and domain 
+- `comp`: competence level according to pre-defined cut scores 
+- `failMin`: does the student fail to achieve the minimum standard? 
+- `passReg`: does the student achieve regular standard?
+- `passOpt`: does the student achieve optimal standard?
+- `leScore`: linking error according to `score` variable
+- `leComp`: linking error according to `comp` variable 
+- `leFailMin`: linking error according to `failMin` variable 
+- `lePassReg`: linking error according to `passReg` variable 
+- `lePassOpt`: linking error according to `passOpt` variable 
+
+`lsa` includes more than 90.000 observations. Actual large scale assessment data, however, have much more observations. `lsa` only represents a small section with only 3 imputations (instead of 10 used in PISA), 3 federal states (PISA includes 35 OECD countries), and two domains. Most variables have variable and value labels, stored as attributes: 
+
+
+```r
+attributes(lsa[,"year"])
+```
+
+```
+## $varLabel
+## [1] "year of assessment"
+```
+
+As nested imputations are not considered here, we reduce the data to the first nest: 
+
+
+```r
+bt <- lsa[which(lsa[,"nest"] == 1),]
+```
+
+### 1.1 Excursus: reshape imputed data from wide into long format 
+
+Institutions like PISA provide imputed data in the wide format. Each row in the data matrix represents one person. `eatRep`, however, needs the long format. (Without imputations, this procedure is not necessary.) Wide format data stores different imputations of the same variable in different columns. The number of imputations is not stored in a variable but results from the number of additional columns per variable. Long format data stores different imputations of the same variable in additional rows. A variable like `imp` defines the number of the imputation. 
+
+`reshape2`, `tidyr` or `data.table` provide functions for reshaping. Moreover, `eatTools` provides the `wideToLong()` function for easy reshaping into the required long format. We illustrate the functionality with the help of the wide format data `data.timss3` from the `BIFIEsurvey` package: 
+
+
+```r
+data(data.timss3, package="BIFIEsurvey")
+str(data.timss3, give.attr = FALSE)
+```
+
+```
+## 'data.frame':	4668 obs. of  20 variables:
+##  $ IDSTUD : num  4e+08 4e+08 4e+08 4e+08 4e+08 ...
+##  $ TOTWGT : num  17.5 17.5 17.5 17.5 17.5 ...
+##  $ JKZONE : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ JKREP  : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ female : num  1 0 1 1 1 1 1 1 0 0 ...
+##  $ books  : num  3 3 5 3 3 2 4 3 3 4 ...
+##  $ lang   : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ migrant: num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ scsci  : num  NA 2 2 1 2 3 2 2 1 1 ...
+##  $ likesc : num  2 4 2 1 1 1 2 2 NA 1 ...
+##  $ ASMMAT1: num  543 522 456 512 506 ...
+##  $ ASSSCI1: num  600 512 497 584 533 ...
+##  $ ASMMAT2: num  557 533 462 510 563 ...
+##  $ ASSSCI2: num  578 519 545 614 568 ...
+##  $ ASMMAT3: num  506 557 445 531 530 ...
+##  $ ASSSCI3: num  570 554 528 569 564 ...
+##  $ ASMMAT4: num  524 511 473 497 488 ...
+##  $ ASSSCI4: num  560 506 550 597 483 ...
+##  $ ASMMAT5: num  578 546 457 528 583 ...
+##  $ ASSSCI5: num  607 565 546 623 578 ...
+```
+
+Data contains 4668 rows according to 4668 persons. The following variables should be considered for reshaping: 
+
+- `IDSTUD`: individual student identifier 
+- `TOTWGT`: weighting variable
+- `JKZONE`: jackknife zone 
+- `JKREP`: jackknife replicate 
+- `female`: students sex (1 = female; 0 = male)
+- `books`: number of books at home
+- `lang`: language at home (How often is the language used in the test spoken at home?)
+- `migrant`: migration background
+- `ASMMAT1`: first imputation (first plausible value) for math competence 
+- `ASMMAT2`: second imputation (second plausible value) for math competence 
+- `ASMMAT3`: third imputation (third plausible value) for math competence 
+- `ASMMAT4`: fourth imputation (fourth plausible value) for math competence 
+- `ASMMAT5`: fifth imputation (fifth plausible value) for math competence 
+- `ASSSCI1`: first imputation (first plausible value) for science competence 
+- `ASSSCI2`: second imputation (second plausible value) for science competence 
+- `ASSSCI3`: third imputation (third plausible value) for science competence 
+- `ASSSCI4`: fourth imputation (fourth plausible value) for science competence 
+- `ASSSCI5`: fifth imputation (fifth plausible value) for science competence 
+
+As TIMSS data is in the wide format, no imputation variable exists. In contrast to the long format, we can easily see which variables are imputed (`ASMMAT` occurs five times), and which are not (`female` only occurs once). For reshaping, number of imputations must be constant across imputed variables---hence, `wideToLong()` cannot be used for nested imputed data. `wideToLong()` needs to know all variables which should be used for further analyses---the remaining variables can be ignored. The functionality differentiates between imputed and non-imputed variables: 
+
+
+```r
+library(eatTools)
+timssLong <- wideToLong(datWide = data.timss3, 
+             noImp = c("IDSTUD", "TOTWGT", "JKZONE", "JKREP", "female"), 
+             imp = list ( mat = c("ASMMAT1", "ASMMAT2", "ASMMAT3", "ASMMAT4", "ASMMAT5"), 
+			             nawi = c("ASSSCI1", "ASSSCI2", "ASSSCI3", "ASSSCI4", "ASSSCI5")))
+```
+
+The non-imputed variables can be defined in a single string, whereas imputed variables should be defined in a named list with one or more character strings. In our example, variable `mat` consists of five imputations `ASMMAT1`, `ASMMAT2`, `ASMMAT3`, `ASMMAT4`, and `ASMMAT5`. Resulting data `timssLong` now is suitable for `eatRep` analyses. For many imputations (e.g., 15), specifying character strings is more straightforward by using the `paste()` or `paste0()` function:  
+
+
+```r
+timssLong <- wideToLong(datWide = data.timss3, 
+             noImp = c("IDSTUD", "TOTWGT", "JKZONE", "JKREP", "female"), 
+             imp = list ( mat = paste0("ASMMAT",1:5),  
+			             nawi = paste0("ASSSCI",1:5)))
+```
+
+Alternatively, reshaping can be performed with `melt()` from the `data.table` package: 
+
+
+```r
+library(data.table)
+timssLong2<- data.table::melt(setDT(data.timss3), 
+                id = c("IDSTUD", "TOTWGT", "JKZONE", "JKREP", "female"), 
+                measure = patterns("^ASMMAT", "^ASSSCI"), 
+			    value.name = c("mat", "nawi"), variable.name="imp")
+```
+
+## 2. Main functions of "eatRep"
+
+The four main functions can be seen as "replication variants" of the base `R` functions `mean()`, `table()`, `quantile()`, and `glm()`:  
+
+1. `repMean()`: computes means, standard deviations, mean differences, and standard deviation differences 
+
+2. `repTable()`: computes frequency tables and differences thereof  
+
+3. `repQuantile()` for quantiles, percentiles, and so on 
+
+4. `repGlm()`: linear and generalized linear regression models
+
+### 2.1 Mean analysis
+
+
+For the first example, we want to compute means and standard deviations (along with their standard errors) in reading competencies for several federal states at one distinct time of measurement (2010). As `bt` contains data from 2010 and 2015 as well as both competencies reading and listening, we subset the data set:
+
+
+```r
+bt2010     <- bt[which(bt[,"year"] == 2010),]
+bt2010read <- bt2010[which(bt2010[,"domain"] == "reading"),]
+```
+
+We now call `repMean()` with the reduced data set `bt1010read`:
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = "country", dependent = "score", 
+		   progress = FALSE)
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+We use `country` as a grouping variable---all analyses are computed for each country separately. Important: persons in the data must be nested within the grouping variable. This is true for `country`; each person belongs to only one federal state. For another possible grouping variable, `domain`, this is not the case, as one single person may have worked on items from more than one domain. To check whether persons are nested within a grouping variable, the function `isNested()` from the `lme4` package package can be called: 
+
+
+```r
+lme4::isNested(bt2010[,"idstud"], bt2010[,"country"])
+```
+
+```
+## [1] TRUE
+```
+
+```r
+lme4::isNested(bt2010[,"idstud"], bt2010[,"domain"])
+```
+
+```
+## [1] FALSE
+```
+
+To conduct the analyses for both domains in a single call, we recommend using a loop, according to "listening" and "reading". We demonstrate this usage in section 2.5. To collect the results in a single `data.frame` which can be exported to excel, for example, the reporting function `report()` should be called.   
+
+
+```r
+resReading <- report(results, add = list(kb="reading"))
+```
+
+The argument `add` augments the output with additional columns. The function does not know that the analysis is about "reading" competence. If this information should be incorporated in the output, the `add` argument allows to define one or multiple additional columns with scalar information of character type, for example:
+
+
+```r
+resReading <- report(results, add = list(kb="reading", year = "2010"))
+```
+
+The analysis above includes one grouping variable ("country") and one competence domain ("reading") without any group comparisons. The output therefore is rather sparse. 
+
+However, the results can be computed according to more than one grouping variable. If the results should be computed for each country and each migration group, both are specified as grouping variables:  
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "mig"), dependent = "score", 
+		   progress = FALSE)
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+Frequently, one might not only be interested in group means but also the total mean. Hence, we want to know the mean of each single country *and* the mean of Germany as a whole. You can repeat the analysis two times, one including grouping variables and one excluding grouping variables, but it is easier to use only one single call:  
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = "country", group.splits = 0:1, 
+		   dependent = "score", progress = FALSE)
+```
+
+```
+## 2 analyse(s) overall according to: 'group.splits = 0 1'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                     NA
+##                2               1           country                   NA
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+The argument Argument `group.splits` defines "hierarchy levels" for the analyses, indicating whether the analysis should be conducted within or across groups. The number of hierarchy levels always equals the number of grouping variables plus one. One grouping variable means two hierarchy levels, two grouping variables mean three levels, and so on. Without any grouping variables, only one level, the "zeroth" level, exists. At the zeroth level, no differentiation takes place; all statistics are computed for the whole population. With one grouping variable (`country`, for example) two levels can be defined: at the zeroth level, statistics are computed for the whole population, and at the first level, statistics are computed for `countryA`, `countryB`, and `countryC` separately. With two grouping variables (`country` and migration background: `mig`), three hierarchy levels are defined. The entire group (zeroth level), statistics computed for `countryA`, `countryB`, and `countryC` (first level, according to `country`), statistics computed for `no migration background` and `migration background` (first level, according to `mig`), and at the second level, statistics separately computed for migrants in `countryA`, migrants in `countryB`, migrants in `countryB`, natives in `countryA`, natives in `countryB`, natives in `countryC`. `group.splits` is a numeric vector which contains all desired hierarchy levels. Without specifying `group.splits`, only the highest hierarchy level is considered for analysis.  
+
+Assume only one grouping variable. `group.splits = c(0,1)` or `group.splits = 0:1` additionally computes statistics for the zeroth level. For two grouping variables, `group.splits = 1:2` computes statistics for the first and second level. The zeroth level is omitted. To yield statistics for all possible level, type `group.splits = 0:x`, where "x" equals the number of grouping variables.  
+
+### 2.2 Group differences in means 
+
+Do boys and girls significantly differ in their mean competencies? Do Bavarian students outperform Saxonian students in "reading"? Is the mean score of Canadian students significantly above the OECD average? These examples can be distinguished regarding whether both units, which should be compared, share the same hierarchy level. Differences within a hierarchy level (e.g., boys vs. girls) are referred to as "group differences". Differences between (adjacent) hierarchy level (e.g., Canadian vs. OECD average, as Canada itself is part of the OECD average) are referred to as "cross-level differences". The following example deals with group differences according to `sex`---we compare, whether boys and girls significantly differ in their means:  
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = "sex", group.differences.by = "sex", 
+		   dependent = "score", progress = FALSE)
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+The argument `group.differences.by` defines the grouping variable for which differences should be computed. Note that only one variable can be specified in `group.differences.by`, and this variable must also occur in `groups` (which may, however, contain further variables). All pairwise contrasts are computed for the levels in the `group.differences.by`-variable. If the grouping variable is dichotomous with two levels (boys, girls), only one contrast (boys vs. girls) can be defined. If the grouping variable is polytomous with three levels (for example, `country` with countryA, countryB, countryC), three contrasts will be computed (countryA vs. countryB, countryA vs. countryC, countryB vs. countryC). A polytomous variable with four levels defines six contrasts, and so on. If `groups` includes more than one variable, `group.differences.by` defines for which of these variables group differences should be computed. If sex differences should be computed for each country separately, consider the following call:  
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "sex"), 
+		   group.differences.by = "sex", dependent = "score", progress = FALSE)
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+Compute sex differences in each country and additionally for the whole group:  
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2, 
+		   group.differences.by = "sex", dependent = "score", progress = FALSE)
+```
+
+```
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country                 <NA>
+##                3               1               sex                  sex
+##                4               2     country + sex                  sex
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+Compute country differences within each sex group and additionally for the whole group:    
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2, 
+		   group.differences.by = "country", dependent = "score", progress = FALSE)
+```
+
+```
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+### 2.3 cross-level differences in means 
+
+For the easiest case, assume only one grouping variable and two hierarchy levels---the zeroth and the first level. Cross-level differences then refer to the difference of one group mean and the total mean. With two or more grouping variables, cross-level differences can be thought of differences of one distinct group with all higher-ranking hierarchy levels. Assuming two grouping variables (`country` with three levels, and migration background `mig` with two levels), 23 cross-level differences are theoretically possible: 
+
+**level 2 vs. level 1:**
+
+- migrants in countryA vs. migrants
+- migrants in countryB vs. migrants
+- migrants in countryC vs. migrants
+- natives in countryA vs. natives
+- natives in countryB vs. natives
+- natives in countryC vs. natives
+- migrants in countryA vs. countryA
+- migrants in countryB vs. countryB
+- migrants in countryC vs. countryC
+- natives in countryA vs. countryA
+- natives in countryB vs. countryB
+- natives in countryC vs. countryC
+
+**level 1 vs. level 0:**
+
+- migrants vs. whole population
+- natives vs. whole population
+- countryA vs. whole population 
+- countryB vs. whole population 
+- countryC vs. whole population 
+
+**level 2 vs. level 0:**
+
+- migrants in countryA vs. whole population
+- migrants in countryB vs. whole population
+- migrants in countryC vs. whole population
+- natives in countryA vs. whole population
+- natives in countryB vs. whole population
+- natives in countryC vs. whole population
+
+Each cross-level difference "connects" two hierarchy levels. Hierarchy levels are neighboring, if their difference equals 1. Levels 2 and 1 are neighboring, but levels 2 and 0 are not. To compute cross-level differences, `group.splits` must be specified as a numeric vector of at least two distinct elements. To reduce number of cross-level differences, the argument `cross.differences` allows to define for which pairs of hierarchy levels cross-level differences should be computed.  
+
+To give an example: Consider both grouping variables `country` (3 levels) and `mig` (2 levels). Means should be computed for each of the three hierarchy levels. Group differences should be computed for the `country` variable (e.g., countryA vs. countryB, countryA vs. countryC, and countryB vs. countryC). Cross-level differences should be computed only in relation to the zeroth level, e.g. level 1 vs. level 0, and level 2 vs. level 0. The following command should be called:  
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2, 
+		   group.differences.by = "country", cross.differences = list(c(0,1), c(0,2)), 
+		   dependent = "score", progress = FALSE)
+```
+
+```
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+`cross.differences` requests a list of numeric vectors with distinct elements each. Each vector must consist of two integers, specifying the hierarchy levels for which cross-differences should be computed. For simplicity, `cross.differences = TRUE` requests all possible cross-level differences. Conversely, `cross.differences = FALSE` omits all cross-level differences.  
+
+Combining `group.differences.by` and `cross.differences` allows to compute cross-level differences of group differences, for example, if researchers want to know whether the difference "boys vs. girls" in "countryA" differs from the difference "boys vs. girls" in the total population: 
+
+
+```r
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2, 
+		   group.differences.by = "sex", cross.differences = TRUE, dependent = "score", 
+		   progress = FALSE)
+```
+
+```
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country                 <NA>
+##                3               1               sex                  sex
+##                4               2     country + sex                  sex
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## Compute cross level differences using 'wec' method. Assume heteroscedastic variances.
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 39 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 46 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 39 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+In the output data.frame created by `report()`, cross-level differences of group differences are marked with the entry `crossDiff_of_groupDiff` in the `comparison` column.  
+
+### 2.4 Statistical remarks
+
+For cross-level differences, the groups are not independent---when comparing `countryA` with the whole population, one must consider that `countryA` is part of the whole population. Hence, a *t* test is not appropriate. `eatRep` supports "weighted effect coding" or replication methods (e.g, bootstrap), with "weighted effect coding" (wec) being the default. Alternative methods can be chosen with the `crossDiffSE` argument. The method `old` uses an inappropriate *t* test and should not be used. The method is maintained in the package to provide compatibility with older versions. 
+
+### 2.5 Trend analyses 
+
+In general, trends are just group differences. If the groups are distinct, persons are nested within the trend variable (each person belongs to solely one point in time). The major factor distinguishing trends from "conventional" group differences is the item sample: For group differences, the item sample is usually identical, for trends, this is not necessarily the case. Moreover, comparisons across different points in time run the risk of being affected by differential item functioning (DIF) or item parameter drift (IPD). If DIF can be considered as random, it should be incorporated into the computation of standard errors of trend estimates. If standard error of trend estimates should be computed, `eatRep` allows to take the "linking error" according to differently functioning items into account.  
+
+When computing trends, the analysis is conducted in both cohorts (for example, 2010 and 2015) separately. Afterwards, for each combination of grouping variables, the difference $\bar{m}_{2015}-\bar{m}_{2010}$ is estimated. The standard error of this difference is: 
+\begin{equation}
+SE_{trend}=\sqrt{SE_{2010}^2+SE_{2015}^2+SE_{link}^2}. 
+\end{equation}
+
+Trends can be computed for simple means, group differences, and cross-level differences. For illustration the last analysis now will be repeated with additional trend estimation. The former used data object `bt2010read` cannot be used any longer as only 2010 data are included. We use "reading competence" for 2010 and 2015 by subsetting the `bt` data. In the function call, the trend variable `trend = "year"` as well as the linking error `linkErr = "leScore"` have to be defined. Without specifying the `linkErr` argument, the linking error is defaulted to 0.  
+
+
+```r
+btread  <- bt[which(bt[,"domain"] == "reading"),]
+results <- repMean(datL = btread, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2, 
+		   group.differences.by = "country", cross.differences = list(c(0,1), c(0,2)), 
+		   dependent = "score", trend = "year", linkErr = "leScore", progress = FALSE)
+```
+
+```
+## 
+## Trend group: '2010'
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```
+## Note: No linking error was defined. Linking error will be defaulted to '0'.
+```
+
+```
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```
+## Note: No linking error was defined. Linking error will be defaulted to '0'.
+```
+
+```r
+res     <- report(results, add = list(kb="reading")) 		   
+```
+
+### 2.6 Loops across non-nested (grouping) variables 
+
+Arguments `groups` and `group.splits` allow to analyze different groups and different hierarchy levels with just one single call. Alternatively, `repMean()` may be called two times, once without grouping variabe(s), and one with additional grouping variable(s). The argument `groups` requires that individuals are nested within grouping variables. Individuals, however, are not nested within competence domains ("reading" and "listening")---`domain` cannot be used as grouping variable. Alternatively, if both domains should be analyzed with one single call, an additional outer loop is necessary. We demonstrate this procedure with exemplary data `bt`, containing both domains "reading" and "listening". As in the example before, we analyze group, cross-level, and trend differences.  
+
+
+```r
+results <- by(data = bt, INDICES = bt[,"domain"], FUN = function ( teildatensatz) {
+           repMean(datL = teildatensatz, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+		            repInd = "jkrep", imp="imp", groups = c("country", "sex"), 
+					group.splits = 0:2, group.differences.by = "country", 
+					cross.differences = list(c(0,1), c(0,2)), dependent = "score", 
+					trend = "year", linkErr = "leScore", progress = FALSE) } )
+```
+
+```
+## 
+## Trend group: '2010'
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```
+## Note: No linking error was defined. Linking error will be defaulted to '0'.
+```
+
+```
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```
+## Note: No linking error was defined. Linking error will be defaulted to '0'.
+```
+
+```
+## 
+## Trend group: '2010'
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by
+##                1               0                                   <NA>
+##                2               1           country              country
+##                3               1               sex                 <NA>
+##                4               2     country + sex              country
+## 
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```
+## Note: No linking error was defined. Linking error will be defaulted to '0'.
+```
+
+```
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```
+## Note: No linking error was defined. Linking error will be defaulted to '0'.
+```
+
+The `by`-loop around `repMean` splits the data in two subsets which are analyzed consecutively. The `results` object is a list with two elements, "listening" and "reading". The reporting function must be called for these two list elements separately. We now see that the argument `add` can help to distinguish both resulting data.frames. First, the processing is demonstrated without using a loop: 
+
+
+```r
+names(results)
+```
+
+```
+## [1] "listening" "reading"
+```
+
+```r
+resultsListening <- report(results[["listening"]], add = list(kb = "listening"))
+resultsReading   <- report(results[["reading"]], add = list(kb = "reading"))
+alleResults1     <- rbind (resultsListening, resultsReading)
+```
+
+Using a loop shortens the call, especially if more than two competence domains are used:  
+
+
+```r
+alleResults2     <- lapply(names(results), FUN = function ( x ) { 
+                           report(results[[x]], add = list(kb=x))})
+alleResults2     <- do.call("rbind", alleResults2)
+```
+
+### 2.7 Adjusted means
+
+`eatRep` also allows to compute "adjusted" means. We will not elaborate on theoretical issues about adjusted means---broadly speaking, unadjusted comparisons between two countries, say, Japan and Vietnam, may be difficult to interpret, because both countries differ substantially in terms of mean socio-economical status, migration background, and other background variables. Adjusted means can be thought of as weighted means to answer the question: would both countries still differ in their mean competencies, if the distribution of background variables would be equal? The researcher is free to select which background or demographic variables should be chosen for adjustment. 
+
+We demonstrate the computation of adjusted means for the domain "reading" in 2010, where we adjust for `sex`, migration background (`mig`) and socio-economical status (`ses`). All variables selected for adjustment must be numeric. For polytomous variables (e.g., language at home: "german", "german and another language", "only another language") dichotomous indicator variables must be generated beforehand. In the following example, we transform the non-numeric adjustment variables `sex` and `mig` to be numeric.  
+
+
+```r
+sapply(bt2010read[,c("sex", "mig", "ses")], class) 
+```
+
+```
+##       sex       mig       ses 
+##  "factor" "logical" "numeric"
+```
+
+```r
+bt2010read[,"sexnum"] <- car::recode(bt2010read[,"sex"], "'male'=0; 'female'=1", 
+                         as.factor = FALSE)
+bt2010read[,"mignum"] <- as.numeric(bt2010read[,"mig"])
+results <- repMean(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+           repInd = "jkrep", imp="imp", groups = "country", group.splits = 0:1, 
+           cross.differences = TRUE, adjust = c("sexnum", "mignum", "ses"), 
+           dependent = "score", progress = FALSE)
+```
+
+```
+## 2 analyse(s) overall according to: 'group.splits = 0 1'.
+##  
+##  analysis.number hierarchy.level groups.divided.by group.differences.by adjust
+##                1               0                                     NA  FALSE
+##                2               1           country                   NA   TRUE
+## 
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res <- report(results, add = list( kb="reading"))
+```
+
+Please note that, to date, cross-level differences for adjusted means can only be computed using the methods `old`. In the zeroth hierarchy level, no adjustment takes place. As the distribution of background variables in the total population is used as the reference for the adjusted group means, the adjusted population mean is equal to the unadjusted population mean.  
+
+If trends should be computed for adjusted means, the procedure sketched above cannot be adopted without further ado. If the adjusted mean of `countryA` in 2015 should be compared with the adjusted mean of `countryA` in 2010, the reference group is no longer the total population (e.g., all countries). Unadjusted means do no depend on the specific research questions, but for adjusted means, the research questions matters: Does `countryA` differ from `countryB` in 2015? Or does `countryA` in 2010 differ from `countryA` in 2015? Both questions require different adjustment approaches. 
+
+In the previous section, the adjustment for only one time of measurement was sketched: Would Japan still differ from Vietnam, if the distribution of background variables were equivalent? For trend analyses, the research question could be: Would there be differences between 2010 and 2015 for Japan, if the composition of students according to some demographic variables would not have changed? The package `eatRep` does not differentiate between both types of research questions. To compute adjusted trends, the formerly known trend variable `year` must be used as grouping variable. If adjusted trends for different groups should be estimated, the subsetting according to groups must be done by hand or via an outer loop. The incorporation of linking errors, if desired, must be done by hand likewise. The following example illustrates the procedure. The standard error of the trend estimate is computed as the square root of the sum of the squared standard errors for 2010, 2015 and the link:  
+
+
+```r
+btread  <- bt[which(bt[,"domain"] == "reading"),]
+btread[,"sexnum"] <- car::recode(btread[,"sex"], "'male'=0; 'female'=1", as.factor = FALSE)
+btread[,"mignum"] <- as.numeric(btread[,"mig"])
+btread[,"year"] <- as.integer(btread[,"year"])
+results <- by(data = btread,  INDICES = btread[,"country"], FUN = function(sub.dat) {
+           res <- repMean(datL = sub.dat, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+                  repInd = "jkrep", imp="imp", groups = c("year"), 
+                  adjust = c("sexnum", "mignum", "ses"), dependent = "score",
+				  progress = FALSE)
+           res <- report(res, add = list( kb="reading", 
+                                          country= as.character(sub.dat[1,"country"])))
+           res[,"trend"]   <- diff(res[,"est"])
+           res[,"trendSE"] <- sqrt(sum(res[,"se"]^2) + unique(sub.dat[,"leScore"])^2)
+           return(res)})
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 67 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 98 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 65 replicate weights according to JK2 procedure.
+```
+
+```r
+results <- do.call("rbind", results)
+```
+
+## 3. Frequency analyses (repTable)
+
+Univariate frequency analyses of polytomous variables can be thought of mean analyses of dichotomous indicator variables. `repTable()` would not be necessary then---for example, you can redefine a 5-level polytomous variable into five dichotomous indicators and call `repMean()` five times. The main differences between frequency and mean analyses is the underlying statistic for group differences: mean analyses typically uses a *t* test for independent samples (e.g., "Differ males and females in their mean reading competencies?"). Frequency tables, however, use $\chi^2$ tests, for example ("Differ males and females in their distribution of competence levels?"). In theory, you can test for each competence level 1, 2, 3, 4, and 5 with a separate *t* test, whether males and females differ. The comparisons, however, are not independent---a Bonferroni correction might be appropriate then. In the following, both variants are sketched: 
+
+
+```r
+### first example: group comparisons with a chi^2-Test: we check for each country 
+### whether the distribution of competence levels differs between males and females
+freq1 <- repTable(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+         repInd = "jkrep", imp="imp", groups = c("country", "sex"), 
+		 group.differences.by = "sex", cross.differences = FALSE, dependent = "comp", 
+		 chiSquare = TRUE, progress = FALSE)
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res1  <- report(freq1, add = list( kb = "reading"))
+```
+
+In the second example, the group comparisons are conducted applying five separate *t* tests. For each country and each single competence level, `repTable()` checks whether the distribution differs between males and females. Technically, `repMean()` is called five times consecutively.  
+
+
+```r
+freq2 <- repTable(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+         repInd="jkrep", imp="imp", groups = c("country", "sex"), group.differences.by = "sex", 
+		 cross.differences = FALSE, dependent = "comp", chiSquare = FALSE, progress = FALSE)
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res2  <- report(freq2, add = list( kb = "reading"))
+```
+
+In `repTable()`, the computation of cross-level differences and trends works analogously to `repMean()`.  
+
+### 3.1 Looping across several dependent variables 
+
+Section 2.5 demonstrates the use of `by()` loops to analyze more than one domain with one single call. The same principle works for several dependent variables within one domain. Suppose you have several dichotomous criteria (e.g. "failed to reach minimal standard", "pass regular standard", "pass optimal standard"), represented by several variables. A `lapply()` loop ca be applied then:  
+
+
+```r
+### abhaengige Variablen definieren
+DVs   <- c("failMin", "passReg", "passOpt")
+freq3 <- lapply(DVs, FUN = function (dv) { 
+         repTable(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+		    repInd = "jkrep", imp="imp", groups = c("country", "sex"), 
+			group.differences.by = "sex", cross.differences = FALSE, 
+			dependent = dv, progress = FALSE) })
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+		
+The reporting function `report()` must be called three times, likewise in a `lapply()` loop:
+
+
+```r
+alleResults3     <- do.call("rbind", lapply(freq3, report))
+```
+
+### 3.2 Nested loops
+
+Both types of loops (across non-nested grouping variables and across several dependent variables) may be combined. In the following example, we want to analyze three dependent variables for two domains. Hence, a two-stage loop for $3\times 2=6$ analyses is necessary:
+
+
+```r
+DVs   <- c("failMin", "passReg", "passOpt")
+freq4 <- lapply(DVs, FUN = function (dv) { 
+         f4 <- by ( data = bt2010, INDICES = bt2010[,"domain"], FUN = function (sub.dat) {
+               repTable(datL = sub.dat, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+			             repInd = "jkrep", imp="imp", groups = c("country", "sex"), 
+						 group.differences.by = "sex", cross.differences = FALSE, 
+						 dependent = dv, progress = FALSE)})})
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 1 analyse(s) overall according to: 'group.splits = 2'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+To convert the results in a more user-friendly format: 
+
+
+```r
+alleResults4     <- lapply(freq4, FUN = function (av) { 
+                           do.call("rbind", lapply(names(av), FUN = function ( x ) { 
+					               report(av[[x]], add = list(kb=x))}))})
+alleResults4     <- do.call("rbind", alleResults4)
+```
+
+A combination of two loops also works for trend analyses. Please note that each dependent variable potentially has its own linking error. If so, one solution is to store the variable name along with its linking error in a `data.frame` and use an `apply()` loop: 
+
+
+```r
+### two-stage nested loop with trend analysis
+### first we define the dependent variables (dv) and their linking errors (le)
+DVs   <- data.frame ( dv = c("failMin", "passReg", "passOpt"), 
+                      le = c("leFailMin", "lePassReg", "lePassOpt"), 
+                      stringsAsFactors = FALSE)
+freq5 <- apply(DVs, MARGIN = 1, FUN = function (depVars) { 
+         f4 <- by ( data = bt, INDICES = bt[,"domain"], FUN = function (sub.dat) {
+               repTable(datL = sub.dat, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+			             repInd = "jkrep", imp="imp", groups = c("country", "sex"), 
+						 group.differences.by = "sex", cross.differences = FALSE, 
+						 trend = "year", dependent = depVars[["av"]],
+                         linkErr = depVars[["le"]], progress = FALSE)})})
+```
+
+```
+## Error in depVars[["av"]]: Indizierung außerhalb der Grenzen
+```
+
+To convert the results in a more user-friendly format: 
+
+
+```r
+alleResults5     <- lapply(freq5, FUN = function (av) { 
+                           do.call("rbind", lapply(names(av), FUN = function ( x ) { 
+					               report(av[[x]], add = list(kb=x))}))})
+```
+
+```
+## Error in lapply(freq5, FUN = function(av) {: Objekt 'freq5' nicht gefunden
+```
+
+```r
+alleResults5     <- do.call("rbind", alleResults5)
+```
+
+```
+## Error in do.call("rbind", alleResults5): Objekt 'alleResults5' nicht gefunden
+```
+
+## 4. Analyses of ranges (repQuantile)
+
+When analyzing quartiles, quantiles or percentiles, please note that the computation of group differences is not supported yet. `repQuantile` requires to specify the probabilities via the `probs` argument. The following example illustrates the usage of the function for the domain "reading" for 2010 and 2015. We compute the 5., 10., 25., 75., 90., and 95. percentile: 
+
+
+```r
+btRead <- bt[which(bt[,"domain"] == "reading"),]
+quan   <- repQuantile(datL = btRead, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+               repInd = "jkrep", imp="imp", groups = "country", trend = "year", 
+			   dependent = "score", linkErr = "leScore", 
+			   probs = c(0, .05, .1, .25, .75, .90, .95, 1), progress = FALSE )
+```
+
+```
+## 
+## Trend group: '2010'
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+## 
+## 
+## Trend group: '2015'
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 75 replicate weights according to JK2 procedure.
+```
+
+```r
+res    <- report(quan, add = list(domain = "reading"))
+```
+
+## 5. Regression analyses (repGlm)
+
+`repGlm` allows to estimate linear and logistic regression models. To date, trend analyses do not incorporate linking errors. The reporting function `report()` optionally allows to print the results to the console (if `printGlm` is set to `TRUE`). In the first example, the regression of reading competence on sex, SES is estimated in each country separately.  
+
+
+```r
+reg1   <- repGlm(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+               repInd = "jkrep", imp="imp", groups = "country",  formula = score~sex*ses, 
+			   family=gaussian(link="identity"), progress = FALSE) 
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 1'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res1   <- report(reg1, add = list(domain = "reading"), printGlm = TRUE)
+```
+
+```
+##        Trend group: 'noTrend'.
+##             groups: country = LandA
+##             domain: reading
+## dependent Variable: score
+##  
+##     parameter     est     se t.value p.value
+## 1 (Intercept) 438.021 11.907  36.786   0.000
+## 2         ses   1.444  0.187   7.709   0.000
+## 3     sexmale -29.416 16.544  -1.778   0.076
+## 4 sexmale:ses   0.269  0.248   1.085   0.278
+## 
+##             R-squared: 0.134; SE(R-squared): NA
+## Nagelkerkes R-squared: NaN; SE(Nagelkerkes R-squared): NA
+## 1203 observations and 1199 degrees of freedom.
+## ------------------------------------------------------------------
+##             groups: country = LandB
+##             domain: reading
+## dependent Variable: score
+##  
+##     parameter     est     se t.value p.value
+## 1 (Intercept) 367.323 13.060  28.126   0.000
+## 2         ses   2.255  0.241   9.358   0.000
+## 3     sexmale  -4.027 16.196  -0.249   0.804
+## 4 sexmale:ses  -0.167  0.338  -0.495   0.621
+## 
+##             R-squared: 0.222; SE(R-squared): NA
+## Nagelkerkes R-squared: NaN; SE(Nagelkerkes R-squared): NA
+## 1263 observations and 1259 degrees of freedom.
+## ------------------------------------------------------------------
+##             groups: country = LandC
+##             domain: reading
+## dependent Variable: score
+##  
+##     parameter     est     se t.value p.value
+## 1 (Intercept) 413.788 13.914  29.738   0.000
+## 2         ses   2.081  0.250   8.323   0.000
+## 3     sexmale -12.438 16.359  -0.760   0.447
+## 4 sexmale:ses  -0.238  0.301  -0.791   0.429
+## 
+##             R-squared: 0.169; SE(R-squared): NA
+## Nagelkerkes R-squared: NaN; SE(Nagelkerkes R-squared): NA
+## 1243 observations and 1239 degrees of freedom.
+```
+
+The second example illustrates a logistic regression. Whether or not the regular standard was passed (`passReg`) is the dependent variable. The variable `country` is now used as a predictor. 
+
+
+```r
+reg2   <- repGlm(datL = bt2010read, ID="idstud", wgt="wgt", type="jk2", PSU="jkzone", 
+               repInd = "jkrep", imp="imp", formula = passReg~country*ses, 
+			   family=binomial(link="logit"), progress = FALSE) 
+```
+
+```
+## 1 analyse(s) overall according to: 'group.splits = 0'.
+## Assume unnested structure with 3 imputations.
+## Create 62 replicate weights according to JK2 procedure.
+```
+
+```r
+res2   <- report(reg2, add = list(domain = "reading"), printGlm = TRUE)
+```
+
+```
+##        Trend group: 'noTrend'.
+##             domain: reading
+## dependent Variable: passReg
+##  
+##          parameter    est    se t.value p.value
+## 1      (Intercept) -0.816 0.239  -3.419   0.001
+## 2     countryLandB -0.996 0.290  -3.440   0.001
+## 3 countryLandB:ses  0.008 0.006   1.474   0.141
+## 4     countryLandC -0.135 0.354  -0.382   0.703
+## 5 countryLandC:ses  0.005 0.008   0.590   0.555
+## 6              ses  0.032 0.005   6.280   0.000
+## 
+##             R-squared: 0.134; SE(R-squared): NA
+## Nagelkerkes R-squared: 0.125; SE(Nagelkerkes R-squared): NA
+## 3709 observations and 3703 degrees of freedom.
+```
+
+The output gives the $R^2$ (for linear regression models) as well as Nagelkerke's $R^2$ (for logistic regression models).  
