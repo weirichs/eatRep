@@ -1,6 +1,5 @@
 
 
-data(lsa)
 bt         <- lsa[which(lsa[,"nest"] == 1),]
 bt2010     <- bt[which(bt[,"year"] == 2010),]
 bt2010read <- bt2010[which(bt2010[,"domain"] == "reading"),]

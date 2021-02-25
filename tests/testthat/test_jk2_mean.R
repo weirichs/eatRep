@@ -1,20 +1,18 @@
 
-context("repMean")
 
-data("lsa")
 rd     <- lsa[which(lsa[,"domain"] == "reading"),]
 rd15 <- rd[rd$year == 2015, ]
 rd15_1 <- rd15[rd15$nest == 1, ]
 
-txt <- capture.output ( m_withoutCross <- repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+suppressMessages(txt <- capture.output ( m_withoutCross <- repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
               imp="imp", nest="nest", groups = c("sex"), group.splits = 0:1,
               cross.differences = FALSE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="old",
-              engine = "BIFIEsurvey"))
+              engine = "BIFIEsurvey")))
 
-txt2 <- capture.output ( m_oldCross <- repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+suppressMessages(txt2 <- capture.output ( m_oldCross <- repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
               imp="imp", nest="nest", groups = c("sex"), group.splits = 0:1,
               cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="old",
-              engine = "BIFIEsurvey"))
+              engine = "BIFIEsurvey")))
 
 test_that("No cross differences", {
   expect_equal(m_withoutCross[["SE_correction"]], NULL)
@@ -48,8 +46,10 @@ test_that("error for string with multiple categories to jk2.mean", {
 
 ### PISA method
 test_that("PISA runs through", {
-  expect_silent(suppressWarnings(suppressMessages(txt2 <- capture.output ( m_oldCross <- repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+  expect_silent(suppressWarnings(suppressMessages(txt2 <- capture.output(m_oldCross <- repMean(datL = rd15, ID="idstud", 
+                                                                type = "JK2", PSU = "jkzone", repInd = "jkrep",
                                                                 imp="imp", nest="nest", groups = c("sex"), group.splits = 0:1,
-                                                                cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="rep")))))
+                                                                cross.differences = TRUE, dependent = "score", na.rm=FALSE, 
+                                                                doCheck=TRUE, linkErr = "leScore", crossDiffSE="rep")))))
 })
 

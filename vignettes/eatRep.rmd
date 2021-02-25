@@ -2,7 +2,11 @@
 title: "Replication analyses with eatRep"
 author: "Sebastian Weirich and Benjamin Becker"
 date: "February 2021"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Replication analyses with eatRep}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 

@@ -1,7 +1,4 @@
 
-# setwd("C:/Benjamin_Becker/02_Repositories/packages/eatRep")
-
-context("SE correction for WEC and PISA")
 
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction.RData")
 load("helper_SE_correction.RData")
@@ -39,7 +36,7 @@ test_that("Warnings for not supported crossDiffs", {
 
 test_that("wec 1 grouping variable, no trend", {
   wec_out <- report(m_wec)
-  expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 1.954, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 1.975, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "male.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0, tolerance=1e-3)
 })
 test_that("pisa 1 grouping variable, no trend", {
@@ -51,8 +48,8 @@ test_that("pisa 1 grouping variable, no trend", {
 test_that("wec 2 grouping variables, trend", {
   wec_out <- suppressWarnings(report(means3T))
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "se_2010"], 3.063, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "male.vs.wholeGroup" & wec_out$parameter == "mean", "se_2015"], 2.830, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "p_2010"], 0.003, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "male.vs.wholeGroup" & wec_out$parameter == "mean", "se_2015"], 2.850, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "p_2010"], 0.002, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "countryC.vs.wholeGroup" & wec_out$parameter == "mean", "p_2015"], 0.017, tolerance=1e-3)
 })
 
@@ -75,14 +72,14 @@ test_that("pisa 2 grouping variables, trend", {
 test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
   wec_out <- suppressWarnings(report(means3Tb))
   table(wec_out[which(wec_out$comparison == "crossDiff"), "group"])
-  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
   
   expect_equal(wec_out[wec_out$group == "countryA_female.vs.countryA" & wec_out$parameter == "mean", "se"], 3.344, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "countryA_male.vs.countryA" & wec_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
   
   expect_equal(wec_out[wec_out$group == "countryC_female.vs.countryC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
-  expect_equal(wec_out[wec_out$group == "countryC_male.vs.countryC" & wec_out$parameter == "mean", "se"], 3.325, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryC_male.vs.countryC" & wec_out$parameter == "mean", "se"], 3.366, tolerance=1e-3)
 })
 
 test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
@@ -104,15 +101,15 @@ test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
 test_that("wec 3 grouping variables, no trend, cross diff on higher level", {
   wec_out <- suppressWarnings(report(means4T))
   # lapply(means4T$SE_correction, function(x) x$refGrp)
-  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.763, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
   
   #report(means4T$SE_correction[[4]])
-  expect_equal(wec_out[wec_out$group == "countryA_female_TRUE.vs.countryA_female" & wec_out$parameter == "mean", "se"], 6.866, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_female_TRUE.vs.countryA_female" & wec_out$parameter == "mean", "se"], 7.110, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "countryA_male_FALSE.vs.countryA_male" & wec_out$parameter == "mean", "p"], 0, tolerance=1e-3)
   
   #report(means4T$SE_correction[[18]])
-  expect_equal(wec_out[wec_out$group == "countryA_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "se"], 1.364, tolerance=1e-3)
+  expect_equal(wec_out[wec_out$group == "countryA_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "se"], 1.454, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "countryC_female_TRUE.vs.female_TRUE" & wec_out$parameter == "mean", "p"], 0.030, tolerance=1e-3)
 })
 
@@ -125,7 +122,7 @@ test_that("Warning for different point estimates", {
   m_pisa2$SE_correction[[1]]$resT$noTrend[1, "value"] <- 0.5
   expect_warning(report(m_pisa2))
   
-  m_wec2$SE_correction[[1]]$resT$noTrend[10, "value"] <- 0.5
+  m_wec2$SE_correction[[1]]$resT$noTrend[1, "value"] <- 0.5
   expect_warning(report(m_wec2))
 })
 
