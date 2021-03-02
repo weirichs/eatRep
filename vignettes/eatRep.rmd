@@ -91,7 +91,7 @@ str(lsa, give.attr = FALSE)
 - `jkzone`: jackknife zone 
 - `jkrep`: jackknife replicate 
 - `imp`: number of imputation (1, 2, or 3)
-- `nest`: nummer of nest (for nested imputation which is not yet considered here, but see the examples of `repMean()` for further details)
+- `nest`: number of nest (for nested imputation which is not yet considered here, but see the examples of `repMean()` for further details)
 - `country`: federal state the student stems from 
 - `sex`: students sex (male, female)
 - `ses`: socio economical status
