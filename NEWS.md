@@ -1,3 +1,7 @@
+# eatRep 0.13.6
+
+* add asterisks for significance in the console output of the reporting function for `repGlm()`
+
 # eatRep 0.13.5
 
 * added vignette

@@ -1044,6 +1044,7 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
                            ret[,"t.value"] <- ret[,"est"] / ret[,"se"]
                            df     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
                            ret[,"p.value"] <- 2*(1-pt( q = abs(ret[,"t.value"]), df = df ))
+                           ret[,"sig"]     <- eatTools::num.to.cat(x = ret[,"p.value"], cut.points = c(0.001, 0.01, 0.05, 0.1), cat.values = c("***", "**", "*", ".", ""))
                            retNR  <- ret
                            ret    <- data.frame ( lapply(ret, FUN = function ( y ) {if(class(y)=="numeric") {y <- round(y, digits = digits)}; return(y)}), stringsAsFactors = FALSE)
                            groupNamen <- setdiff(colnames(spl), c("group","depVar","modus", "parameter", "coefficient","value", "comparison"))

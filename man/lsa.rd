@@ -4,13 +4,20 @@
 
 \alias{lsa}
 
-\title{Achievement data from large-scale assessment.}
+\title{Achievement data from two large-scale assessments of 2010 and 2015.}
 
 \description{
-This data set contains fictional achievement scores of 7518 students in two domains (reading and
-listening comprehension) in the long format. The data set contains multiple imputed plausible
-values of achievement scores as well as some demographic variables. Illustrating trend analyses,
-data from two fictional time points (2010 and 2015) are included.
+This example data set contains fictional achievement scores of 7518 students from three countries
+and two times of measurement in two domains (reading and listening comprehension) in the long format.
+The data set contains nested multiple imputed plausible values of achievement scores as well as some
+demographic variables. Illustrating trend analyses, data from two fictional time points (2010 and 2015)
+are included.
+
+The data set can be used for several illustration purposes. For example, if only multiple imputation
+should be considered (without nesting), simply use only cases from the first nest (by subsetting). If
+only one time of measurement should be considered (i.e., without any trend analyses), simply choose
+only cases from 2010 or 2015. If only reading or listening should be considerd, choose the desired
+domain by subsetting according to the \code{domain} column.
 }
 
 \usage{data(lsa)}
