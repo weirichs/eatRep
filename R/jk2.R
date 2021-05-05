@@ -540,7 +540,7 @@ jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group
 conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.missing.indicator , correct, expected.values, modus) {
                    table.cast <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                                  prefix <- data.frame(sub.dat[1,allNam[["group"]], drop=FALSE], row.names = NULL, stringsAsFactors = FALSE )
-                                 foo    <- make.indikator(variable = sub.dat[,allNam[["dependent"]]], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = ifelse(separate.missing.indicator==TRUE, "always","no"))
+                                 foo    <- make.indikator(variable = sub.dat[,allNam[["dependent"]]], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = "no")
                                  if(all(dat.i[,allNam[["wgt"]]] == 1)) {ret    <- data.frame ( prefix , eatTools::descr(foo[,-1, drop = FALSE],na.rm=TRUE)[,c("Mean", "std.err")], stringsAsFactors = FALSE )
                                  } else { ret    <- data.frame ( prefix , eatTools::descr(foo[,-1, drop = FALSE], p.weights = sub.dat[,allNam[["wgt"]]],na.rm=TRUE)[,c("Mean", "std.err")], stringsAsFactors = FALSE )}
                                  ret[,"parameter"] <- substring(rownames(ret),5)
@@ -1515,7 +1515,7 @@ prepExpecVal <- function (toCall, expected.values, separate.missing.indicator, a
                 if(length(misInd)>0) { datL[misInd,allNam[["dependent"]]] <- "<NA>"}
              }  else {
                 if(length(misInd)>0) {
-                   warning("No seperate missing categorie was chosen. ", length(misInd), " missings were found anyhow for ",allNam[["dependent"]],". Missings will be detected from the data.")
+                   warning("No seperate missing categorie was chosen. ", length(misInd), " missings were found anyhow for ",allNam[["dependent"]],". Missings will be deleted from the data.")
                    if(length(misInd) == nrow(datL)) {stop()}
                    datL <- datL[-misInd,]
                 }
