@@ -561,7 +561,7 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.m
                                       chisq  <- chisq.test(tbl, correct = correct)
                                       scumm  <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
                                       group  <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
-                                      dif.iii<- data.frame(group = group, parameter = "chiSquareTest", comparison = "groupDiff", modus=modus, coefficient = c("chi2","df","pValue"), value = c(chisq[["statistic"]],chisq[["parameter"]],chisq[["p.value"]]) , stringsAsFactors = FALSE )
+                                      dif.iii<- data.frame(group = group, parameter = "chiSquareTest", comparison = "groupDiff", depVar = allNam[["dependent"]], modus=modus, coefficient = c("chi2","df","pValue"), value = c(chisq[["statistic"]],chisq[["parameter"]],chisq[["p.value"]]) , stringsAsFactors = FALSE )
                                       return(dif.iii)}))                        
                    }                                                            
                    ret        <- reshape2::melt(table.cast, measure.vars = c("Mean", "std.err"), na.rm=TRUE)
@@ -602,7 +602,7 @@ jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA
                                         tbl       <- svychisq(formula = formel, design = designSel, statistic = "Chisq")
                                         scumm     <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
                                         group     <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
-                                        dif.iii   <- data.frame(group = group, parameter = "chiSquareTest", modus = paste(modus,"survey", sep="__"), coefficient = c("chi2","df","pValue"), value = c(tbl[["statistic"]],tbl[["parameter"]],tbl[["p.value"]]) , stringsAsFactors = FALSE )
+                                        dif.iii   <- data.frame(group = group, parameter = "chiSquareTest", depVar = allNam[["dependent"]], modus = paste(modus,"survey", sep="__"), coefficient = c("chi2","df","pValue"), value = c(tbl[["statistic"]],tbl[["parameter"]],tbl[["p.value"]]) , stringsAsFactors = FALSE )
                                         return(dif.iii)                         
                       } ))                                                      
                       difs[,"comparison"] <- "groupDiff"
@@ -643,7 +643,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
                                                                  ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = ".vs."))
                                                                  colnames(ret) <- gg
                                                                  return(ret)}))
-                                                    dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "mean", coefficient = c("est","se"), modus=modus, value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
+                                                    dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "mean", coefficient = c("est","se"), depVar = allNam[["dependent"]], modus=modus, value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
                                                     stopifnot(nrow(dif.iii)==2, nrow(vgl.iii) == 2)
                                                     dummy2    <- dif.iii[1,]
                                                     dummy2[,"coefficient"] <- "es"
@@ -819,6 +819,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, 
                 difsL<- data.frame ( depVar = allNam[["dependent"]], reshape2::melt(data = difs, measure.vars = c("dif", "se", "es") , variable.name = "coefficient" , na.rm=TRUE), modus=paste(modus,"survey", sep="__"), parameter = "mean", stringsAsFactors = FALSE)
                 difsL[,"coefficient"] <- car::recode(difsL[,"coefficient"], "'se'='se'; 'es'='es'; else = 'est'")
                 difsL[,"comparison"]  <- "groupDiff"
+                difsL[,"depVar"]      <- allNam[["dependent"]]
                 difsL[,"group"] <- apply(difsL[,c("group","vgl")],1,FUN = function (z) {paste(z,collapse="____")})
                 resAl<- rbind(resAl,difsL[,-match("vgl", colnames(difsL))])
              }

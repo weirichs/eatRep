@@ -22,7 +22,8 @@ report(repFunOut, trendDiffs = FALSE, add = list(),
   \item{printGlm}{Only relevant for \code{\link{repGlm}}: print summary on console?}
   \item{round}{Logical: should the results be rounded to a limited number of digits?}
   \item{digits}{How many digits should be used for rounding?}
-  \item{printDeviance}{Only relevant for \code{\link{repGlm}} and if \code{printGlm} is TRUE.
+  \item{printDeviance}{Only relevant for \code{\link{repGlm}} when other than the
+  identical function is used as link function, and if \code{printGlm} is TRUE.
   Should the deviance information printed additionally? Note: To print deviance information,
   the argument \code{poolMethod} of the \code{\link{repGlm}} function must be set
   to \code{"scalar"}. }
