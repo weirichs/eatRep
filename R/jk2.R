@@ -1323,7 +1323,12 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
                  for ( gg in c(allNam[["group"]], auchUV) ) {                   ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
-                       chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg]) ### personen muessen in gruppierungsvariable genestet sein
+    ### personen muessen in gruppierungsvariable genestet sein, aber fuer jede Imputation und jedes Nest separat!
+                       if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]])) {
+                            chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg])
+                       }  else  {
+                            chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
+                       }
                        if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
                        if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
                            message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
@@ -1338,7 +1343,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           }
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
-                 if (class ( datL[,gg] ) == "factor") {                         
+                 if (class ( datL[,gg] ) == "factor") {                         ### ausserdem duerfen fuer Gruppierungs- und unabhaengig Variablen keine factor levels ohne Beobachtungen drinsein
                      if ( any(table(datL[,gg]) == 0)) {
                           lev <- names(which(table(datL[,gg]) !=0))
                           nlv <- names(which(table(datL[,gg]) ==0))
@@ -1349,7 +1354,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
              }
           }
           return(datL)}
-          
+
 checkForAdjustment <- function(datL, allNam, groupWasNULL) {
           if(!is.null(allNam[["adjust"]])) {
              chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })

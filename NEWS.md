@@ -1,3 +1,6 @@
+## Bug Fixes
+* fixed inadvertent warning message in function for group checks
+
 # eatRep 0.13.6
 
 * add asterisks for significance in the console output of the reporting function for `repGlm()`
