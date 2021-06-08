@@ -1325,6 +1325,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                  for ( gg in c(allNam[["group"]], auchUV) ) {                   ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
     ### personen muessen in gruppierungsvariable genestet sein, aber fuer jede Imputation und jedes Nest separat!
                        if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]])) {
+                            if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
                             chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg])
                        }  else  {
                             chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
