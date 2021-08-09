@@ -653,7 +653,7 @@ res     <- report(results, add = list(kb="reading"))
 
 ### 2.6 Loops across non-nested (grouping) variables 
 
-Arguments `groups` and `group.splits` allow to analyze different groups and different hierarchy levels with just one single call. Alternatively, `repMean()` may be called two times, once without grouping variabe(s), and one with additional grouping variable(s). The argument `groups` requires that individuals are nested within grouping variables. Individuals, however, are not nested within competence domains ("reading" and "listening")---`domain` cannot be used as grouping variable. Alternatively, if both domains should be analyzed with one single call, an additional outer loop is necessary. We demonstrate this procedure with exemplary data `bt`, containing both domains "reading" and "listening". As in the example before, we analyze group, cross-level, and trend differences.  
+Arguments `groups` and `group.splits` allow to analyze different groups and different hierarchy levels with just one single call. Alternatively, `repMean()` may be called two times, once without grouping variable(s), and one with additional grouping variable(s). The argument `groups` requires that individuals are nested within grouping variables. Individuals, however, are not nested within competence domains ("reading" and "listening")---`domain` cannot be used as grouping variable. Alternatively, if both domains should be analyzed with one single call, an additional outer loop is necessary. We demonstrate this procedure with exemplary data `bt`, containing both domains "reading" and "listening". As in the example before, we analyze group, cross-level, and trend differences.  
 
 
 ```r

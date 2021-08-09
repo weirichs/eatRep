@@ -16,7 +16,7 @@ are included.
 The data set can be used for several illustration purposes. For example, if only multiple imputation
 should be considered (without nesting), simply use only cases from the first nest (by subsetting). If
 only one time of measurement should be considered (i.e., without any trend analyses), simply choose
-only cases from 2010 or 2015. If only reading or listening should be considerd, choose the desired
+only cases from 2010 or 2015. If only reading or listening should be considered, choose the desired
 domain by subsetting according to the \code{domain} column.
 }
 
