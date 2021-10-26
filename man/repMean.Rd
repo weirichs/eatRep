@@ -19,7 +19,8 @@ repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU
          nBoot = 100, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
          na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
          scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE,
-         se_type = c("HC3", "HC0", "HC1", "HC2"), crossDiffSE.engine= c("lavaan", "lm"),
+         se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
+         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
          stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -159,6 +160,11 @@ Logical: Assume heteroscedastic variance for weighted effect coding?
 The sort of standard error sought for cross level differences. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}
 and \code{crossDiffSE.engine == "lm"}. See the help page of \code{\link[estimatr]{lm_robust}} from the \code{estimatr} package for further details.
 }
+  \item{clusters}{
+Optional: Variable name or column number of cluster variable. Only necessary if weighted effecting coding
+should be performed using heteroscedastic variances. See the help page of \code{\link[estimatr]{lm_robust}}
+from the \code{estimatr} package for further details.
+}
   \item{crossDiffSE.engine}{
 Software implementation used for estimating cross-level differences. Choices are either \code{"lavaan"} (required if
 \code{stochasticGroupSites == "TRUE"}) or R function \code{\link[stats]{lm}}. \code{"lavaan"} is the default.
@@ -269,7 +275,8 @@ res2   <- report(means2,add = list(domain = "reading"))
 means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2,
           group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
-          dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm")
+          dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm",
+          clusters = "idclass")
 res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 
 ### Third example: like example 2a, but using nested imputations of dependent variable,

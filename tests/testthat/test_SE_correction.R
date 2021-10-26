@@ -1,18 +1,25 @@
 
 
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction.RData")
 load("helper_SE_correction.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_wec_complex.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_wec_complex.RData")
 load("helper_SE_correction_wec_complex.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_pisa_complex.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_pisa_complex.RData")
 load("helper_SE_correction_pisa_complex.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_table.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_table.RData")
 load("helper_SE_correction_table.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_brr.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_brr.RData")
 load("helper_SE_correction_brr.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_others.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_others.RData")
 load("helper_SE_correction_others.RData")
 #load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_different_modi.RData")
+#load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_different_modi.RData")
 load("helper_different_modi.RData")
 
 
@@ -74,10 +81,8 @@ test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
   table(wec_out[which(wec_out$comparison == "crossDiff"), "group"])
   expect_equal(wec_out[wec_out$group == "countryA.vs.wholeGroup" & wec_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "female.vs.wholeGroup" & wec_out$parameter == "mean", "p"], 0.001, tolerance=1e-3)
-  
   expect_equal(wec_out[wec_out$group == "countryA_female.vs.countryA" & wec_out$parameter == "mean", "se"], 3.344, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "countryA_male.vs.countryA" & wec_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
-  
   expect_equal(wec_out[wec_out$group == "countryC_female.vs.countryC" & wec_out$parameter == "mean", "p"], 0.026, tolerance=1e-3)
   expect_equal(wec_out[wec_out$group == "countryC_male.vs.countryC" & wec_out$parameter == "mean", "se"], 3.366, tolerance=1e-3)
 })
@@ -85,14 +90,12 @@ test_that("wec 2 grouping variables, no trend, cross diff on higher level", {
 test_that("pisa 2 grouping variables, no trend, cross diff on higher level", {
   #expect_error(suppressWarnings(report(means3Tb_pisa)), "PISA method for SE correction has not been fully implemented yet. Use crossDiffSE = 'old'.")
   pisa_out <- suppressWarnings(report(means3Tb_pisa))
-  
+
   #means3Tb_pisa$SE_correction[[1]]$resT
   expect_equal(pisa_out[pisa_out$group == "countryA.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 0.776, tolerance=1e-3)
   expect_equal(pisa_out[pisa_out$group == "female.vs.wholeGroup" & pisa_out$parameter == "mean", "se"], 2.953, tolerance=1e-3)
-  
   expect_equal(pisa_out[pisa_out$group == "countryA_female.vs.countryA" & pisa_out$parameter == "mean", "se"], 3.346, tolerance=1e-3)
   expect_equal(pisa_out[pisa_out$group == "countryA_male.vs.countryA" & pisa_out$parameter == "mean", "p"], 0.002, tolerance=1e-3)
-  
   expect_equal(pisa_out[pisa_out$group == "countryC_female.vs.countryC" & pisa_out$parameter == "mean", "p"], 0.025, tolerance=1e-3)
   expect_equal(pisa_out[pisa_out$group == "countryC_male.vs.countryC" & pisa_out$parameter == "mean", "se"], 3.366, tolerance=1e-3)
 })

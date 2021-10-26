@@ -17,8 +17,8 @@ repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU =
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE,
         engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
-        rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2"),
-        crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE,
+        rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
+        clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE,
         verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -141,6 +141,11 @@ Logical: Assume heteroscedastic variance for weighted effect coding? Only applie
   \item{se_type}{
 The sort of standard error sought for cross level differences. Only applies if \code{crossDiffSE == "wec"} and \code{hetero == TRUE}
 and \code{crossDiffSE.engine == "lm"}. See the help page of \code{\link[estimatr]{lm_robust}} from the \code{estimatr} package for further details.
+}
+  \item{clusters}{
+Optional: Variable name or column number of cluster variable. Only necessary if weighted effecting coding
+should be performed using heteroscedastic variances. See the help page of \code{\link[estimatr]{lm_robust}}
+from the \code{estimatr} package for further details.
 }
   \item{crossDiffSE.engine}{
 Sort of estimator which should be used for using weighted effect coding in cross-level differences. Note: To date,

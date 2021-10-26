@@ -1,3 +1,10 @@
+# eatRep 0.13.7
+
+* add CR0 and CR2 methods for weighted effect coding with heterogeneous variances in `repMean()` and `repGlm()`, including a cluster argument
+* add class ID variable to example data set
+* bug fix: fixed inadequate column definition in the reporting function for `repQuantile()`
+* adapt repQuantile function for rewritten function svyquantile from the survey package
+
 # eatRep 0.13.6
 
 * add asterisks for significance in the console output of the reporting function for `repGlm()`

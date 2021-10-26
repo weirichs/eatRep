@@ -15,7 +15,7 @@ report(repFunOut, trendDiffs = FALSE, add = list(),
       round = TRUE, digits = 3, printDeviance = FALSE)
 }
 \arguments{
-  \item{repFunOut}{output of on of the four \code{eatRep}-functions. }
+  \item{repFunOut}{output of one of the four \code{eatRep}-functions. }
   \item{trendDiffs}{Logical: compute differences of trends? }
   \item{add}{Optional: additional columns for output. See examples of the jk2-functions}
   \item{exclude}{Which parameters should be excluded from reporting?}

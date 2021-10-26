@@ -1,5 +1,3 @@
-
-
 rd     <- lsa[which(lsa[,"domain"] == "reading"),]
 rd15 <- rd[rd$year == 2015, ]
 rd15_1 <- rd15[rd15$nest == 1, ]
@@ -41,8 +39,6 @@ test_that("error for string with multiple categories to jk2.mean", {
   expect_error(test <- repMean(datL = rd15_2, wgt = "wgt", imp = "imp", dependent = "country", ID = "idstud"),
               "Dependent variable 'country' has to be of class 'integer' or 'numeric'.")
 })
-
-
 
 ### PISA method
 test_that("PISA runs through", {
