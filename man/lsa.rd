@@ -7,7 +7,7 @@
 \title{Achievement data from two large-scale assessments of 2010 and 2015.}
 
 \description{
-This example data set contains fictional achievement scores of 7518 students from three countries
+This example data set contains fictional achievement scores of 11655 students from three countries
 and two times of measurement in two domains (reading and listening comprehension) in the long format.
 The data set contains nested multiple imputed plausible values of achievement scores as well as some
 demographic variables. Illustrating trend analyses, data from two fictional time points (2010 and 2015)
@@ -22,10 +22,11 @@ domain by subsetting according to the \code{domain} column.
 
 \usage{data(lsa)}
 
-\format{'data.frame':   90216 obs. of  22 variables
+\format{'data.frame':   77370 obs. of  23 variables
   \describe{
     \item{year}{Year of evaluation}
     \item{idstud}{individual student identification}
+    \item{idclass}{class identifier}
     \item{wgt}{Individual student case weight}
     \item{jkzone}{jackknifing zone (jk2) }
     \item{jkrep}{jackknife replicate}

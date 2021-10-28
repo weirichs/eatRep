@@ -220,6 +220,10 @@ When size matters: advantages of weighted effect coding in observational studies
 Sachse, K. A. & Haag, N. (2017). Standard errors for national trends in international
 large-scale assessments in the case of cross-national differential item functioning. \emph{Applied
 Measurement in Education, 30}, (2), 102-116. http://dx.doi.org/10.1080/08957347.2017.1283315
+
+Weirich, S., Hecht, M., Becker, B. et al. Comparing group means with the total mean in random samples,
+surveys, and large-scale assessments: A tutorial and software illustration. Behav Res (2021).
+https://doi.org/10.3758/s13428-021-01553-1
 }
 \author{
 Sebastian Weirich

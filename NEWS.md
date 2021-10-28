@@ -4,6 +4,7 @@
 * add class ID variable to example data set
 * bug fix: fixed inadequate column definition in the reporting function for `repQuantile()`
 * adapt repQuantile function for rewritten function svyquantile from the survey package
+* slightly revised vignette
 
 # eatRep 0.13.6
 

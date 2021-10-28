@@ -133,6 +133,10 @@ License: \tab GPL(>=2)
 
   Thomas, D. R. & Rao, JNK (1990): Small-sample comparison of level and power for simple goodness-of-
   fit statistics under cluster sampling. JASA 82:630-636
+  
+  Weirich, S., Hecht, M., Becker, B. et al. Comparing group means with the total mean in random samples,
+  surveys, and large-scale assessments: A tutorial and software illustration. Behav Res (2021).
+  https://doi.org/10.3758/s13428-021-01553-1
 
   Westat (2000). \emph{WesVar.} Rockville, MD: Westat.
 

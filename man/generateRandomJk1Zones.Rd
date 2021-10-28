@@ -21,14 +21,10 @@ generateRandomJk1Zones (datL, unit, nZones, name = "randomCluster")
 \value{
 The original data with an additional column of the jackknife-zone variable
 }
-
-\author{
-Sebastian Weirich
-}
 \examples{
 data(lsa)
 
 ### We only consider year 2010
 lsa10<- lsa[which(lsa[,"year"] == 2010),]
-lsa10<- generateRandomJk1Zones(datL = lsa10, unit="idstud", nZones = 80)
+lsa10<- generateRandomJk1Zones(datL = lsa10, unit="idclass", nZones = 50)
 }

@@ -18,8 +18,8 @@ repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU =
         poolMethod = c("mice", "scalar"), useWec = FALSE,
         engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
         rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
-        clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE,
-        verbose = TRUE, progress = TRUE)}
+        clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
+        stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
