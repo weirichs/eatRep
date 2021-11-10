@@ -1,5 +1,9 @@
 # eatRep 0.13.7
 
+* sorting of parameters and determination coefficient enhanced in rporting function for `repGlm()`
+
+# eatRep 0.13.7
+
 * add CR0 and CR2 methods for weighted effect coding with heterogeneous variances in `repMean()` and `repGlm()`, including a cluster argument
 * add class ID variable to example data set
 * bug fix: fixed inadequate column definition in the reporting function for `repQuantile()`
