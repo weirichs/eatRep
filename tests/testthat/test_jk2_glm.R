@@ -12,7 +12,7 @@ test_that("repGlm", {
   expect_equal(res1$est[c(1, 6, 11)], c(508.406, 502.607, 526.287))
   expect_equal(dim(res1), c(15, 9))
   expect_equal(unique(res1$group), c("countryA", "countryB", "countryC"))
-  expect_equal(unique(res1$parameter), c("(Intercept)", "Nvalid", "R2", "R2nagel", "sexmale"))
+  expect_equal(unique(res1$parameter), c("(Intercept)", "sexmale", "Nvalid", "R2", "R2nagel"))
 })
 
 
