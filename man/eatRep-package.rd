@@ -74,9 +74,9 @@
   Belgium) was estimated as if both groups would have been independent from each other. Then standard errors, 
   however, are biased then. Two new methods are now applicable using the argument \code{crossDiffSE} in 
   \code{\link{repMean}} and provide unbiased standard errors---weighted effect coding (wec) and replication
-  methods (rep); see, for example te Grotenhuis et al. (2017). The old method is still available by 
-  using \code{crossDiffSE = "old"}. Note that the default method now is weighted effect coding. 
-  
+  methods (rep); see, for example te Grotenhuis et al. (2017) and Weirich et al. (2021). The old method is still available by
+  using \code{crossDiffSE = "old"}. Note that the default method now is weighted effect coding.
+
   \emph{Second important note:} Starting with version 0.13.0, function names have been changed due to
   inconsistent former denomination: Function \code{jk2.mean} now goes under the name of \code{\link{repMean}},
   \code{jk2.table} was  renamed to \code{\link{repTable}}, \code{jk2.quantile} was  renamed to \code{\link{repQuantile}},
@@ -88,8 +88,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.13.7\cr
-Date: \tab 2021-10-25\cr
+Version: \tab 0.13.8\cr
+Date: \tab 2021-12-01\cr
 License: \tab GPL(>=2)
 }
 }
@@ -134,8 +134,8 @@ License: \tab GPL(>=2)
   Thomas, D. R. & Rao, JNK (1990): Small-sample comparison of level and power for simple goodness-of-
   fit statistics under cluster sampling. JASA 82:630-636
   
-  Weirich, S., Hecht, M., Becker, B. et al. Comparing group means with the total mean in random samples,
-  surveys, and large-scale assessments: A tutorial and software illustration. Behav Res (2021).
+  Weirich, S., Hecht, M., Becker, B. et al. (2021). Comparing group means with the total mean in random samples,
+  surveys, and large-scale assessments: A tutorial and software illustration. Behavior Research Methods.
   https://doi.org/10.3758/s13428-021-01553-1
 
   Westat (2000). \emph{WesVar.} Rockville, MD: Westat.
