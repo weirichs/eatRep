@@ -84,7 +84,7 @@ grouping variables must be equal in both 'sub populations' partitioned by the tr
 }
   \item{linkErr}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
+Optional: name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
 Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). 
 }
   \item{dependent}{
@@ -172,9 +172,6 @@ frequency is given further.}
 values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).}
 \item{value}{The value of the parameter, i.e. the relative frequency or its standard error.}
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
-}
-\author{
-Sebastian Weirich
 }
 \examples{
 \donttest{

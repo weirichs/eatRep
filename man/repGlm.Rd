@@ -87,7 +87,7 @@ grouping variables must be equal in both 'sub populations' partitioned by the tr
 }
   \item{linkErr}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.
+Optional: name or column number of the linking error variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.
 }
   \item{formula}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -192,9 +192,6 @@ If groups were specified, further columns which are denoted by the group names a
 \references{
 te Grotenhuis, M., Pelzer, B., Eisinga, R., Nieuwenhuis, R., Schmidt-Catran, A., & Konig, R. (2017).
 When size matters: advantages of weighted effect coding in observational studies. \emph{International Journal of Public Health.} \bold{62}, 163--167.
-}
-\author{
-Sebastian Weirich
 }
 \examples{
 ### load example data (long format)

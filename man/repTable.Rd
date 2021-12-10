@@ -117,8 +117,17 @@ grouping variables must be equal in both 'sub populations' partitioned by the tr
 }
   \item{linkErr}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
-Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). 
+Optional: Either the name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
+Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). Alternatively, linking errors may be
+given as data.frame with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
+levels of the trend variable. The contrasts between both values indicates which trend is meant. For only two measurement occasions, i.e.
+2010 and 2015, \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be \code{2015}. For three measurement occasions,
+i.e. 2010, 2015, and 2020, additional lines are necessary where \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be
+\code{2020}, to mark the contrast between 2010 and 2020, and further additional lines are necessary where \code{trendLevel1} should be
+\code{2015}, and \code{trendLevel2} should be \code{2020}. The column \code{depVar} must include the name of the dependent variable. This
+string must correspond to the name of the dependent variable in the data. The column \code{parameter} indicates the parameter the linking
+error belongs to. Column \code{linkingError} includes the linking error value. Providing linking error in a data.frame is necessary for
+more than two measurement occasions. See the fourth example below for further details.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -209,14 +218,11 @@ If groups were specified, further columns which are denoted by the group names a
   via partially incompatible MCMC.
   \emph{Statistica Neerlandica} \bold{57, 1}, 3--18.
 }
-\author{
-Sebastian Weirich
-}
 \examples{
 data(lsa)
 
 ### Example 1: only means, SD and variances for each country
-### We only consider domain 'reading'
+### subsetting: We only consider domain 'reading'
 rd     <- lsa[which(lsa[,"domain"] == "reading"),]
 
 ### We only consider the first "nest".
@@ -253,4 +259,14 @@ freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
                  linkErr = "leComp") })
 res3      <- do.call("rbind", lapply(names(freq.tab3), FUN = function (domain) {
              report(freq.tab3[[domain]], trendDiffs = TRUE, add = list ( domain = domain ))}))
+             
+### Fourth example: similar to example 3. trend estimation using a linking error data.frame
+linkErrs  <- data.frame ( trendLevel1 = 2010, trendLevel2 = 2015,  depVar = "comp", unique(lsa[,c("domain", "comp", "leComp")]), stringsAsFactors = FALSE)
+colnames(linkErrs) <- car::recode(colnames(linkErrs), "'comp'='parameter'; 'leComp'='linkingError'")
+freq.tab4 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) {
+             repTable(datL = subdat, ID = "idstud", wgt = "wgt", type="none", imp="imp", nest = "nest",
+                 groups = "country", group.differences.by = "country", group.splits = 0:1, cross.differences = FALSE,
+                 dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = linkErrs[which(linkErrs[,"domain"] == subdat[1,"domain"]),]) })
+res4      <- do.call("rbind", lapply(names(freq.tab4), FUN = function (domain) {
+             report(freq.tab4[[domain]], trendDiffs = TRUE, add = list ( domain = domain ))}))
 }}

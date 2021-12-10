@@ -12,16 +12,15 @@ methods and methods for multiple imputed data. Trend estimation as usual in larg
 Technically, this is a wrapper for the \code{\link[survey]{svymean}} and \code{\link[survey]{svyvar}} functions of the \code{survey} package.}
 \usage{
 repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
-         repInd = NULL, repWgt = NULL,
-         nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-         group.differences.by = NULL, cross.differences = FALSE,
-         crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE,
-         nBoot = 100, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
-         na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"),
-         scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE,
-         se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
-         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
-         stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
+         repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+         group.splits = length(groups), group.differences.by = NULL,
+         cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
+         adjust = NULL, useEffectLiteR = FALSE, nBoot = 100, group.delimiter = "_",
+         trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE,
+         engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
+         rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
+         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE,
+         verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -97,6 +96,7 @@ Variable name or column number of variable(s) for which adjusted means should be
 or 0/1 dichotomous variables are allowed. 
 }
   \item{useEffectLiteR}{
+%%     ~~Describe \code{sig.dif.bound} here~~
 Logical: use the \code{lavaan}-wrapper \code{EffectLiteR} to compute adjusted means? Alternatively, adjusted means
 are computed by applying a simple linear regression model in each group, using the variables in \code{adjust} as
 independent variables. Afterwards, the coefficients are weighted with the (weighted) means of the independent
@@ -123,8 +123,17 @@ Optional: name or column number of the trend variable. Note: Trend variable must
 grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
 }
   \item{linkErr}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
+Optional: Either the name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
+Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). Alternatively, linking errors may be
+given as data.frame with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
+levels of the trend variable. The contrasts between both values indicates which trend is meant. For only two measurement occasions, i.e.
+2010 and 2015, \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be \code{2015}. For three measurement occasions,
+i.e. 2010, 2015, and 2020, additional lines are necessary where \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be
+\code{2020}, to mark the contrast between 2010 and 2020, and further additional lines are necessary where \code{trendLevel1} should be
+\code{2015}, and \code{trendLevel2} should be \code{2020}. The column \code{depVar} must include the name of the dependent variable. This
+string must correspond to the name of the dependent variable in the data. The column \code{parameter} indicates the parameter the linking
+error belongs to. Column \code{linkingError} includes the linking error value. Providing linking error in a data.frame is necessary for
+more than two measurement occasions. See the example 3a for further details.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -225,9 +234,6 @@ Weirich, S., Hecht, M., Becker, B. et al. Comparing group means with the total m
 surveys, and large-scale assessments: A tutorial and software illustration. Behav Res (2021).
 https://doi.org/10.3758/s13428-021-01553-1
 }
-\author{
-Sebastian Weirich
-}
 \examples{
 data(lsa)
 
@@ -253,15 +259,13 @@ res1   <- report(means1, add = list(domain = "reading"))
 ### Example 1a: Additionally to example 1, we decide to estimate whether
 ### each country's mean differ significantly from the overall mean as well
 ### as from the individual means of the other contries
-means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
-          repInd = "jkrep", imp="imp", groups = "country", group.splits = 0:1,
-          group.differences.by = "country", cross.differences = TRUE,
-          dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
+means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = "country", group.splits = 0:1, group.differences.by = "country",
+          cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
 res1a  <- report(means1a, add = list(domain = "reading"))
 
 ### See that the means of 'countryA' and 'countryB' significantly differ from the overall mean.
-print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),
-      which(res1a[,"parameter"] == "mean")),], digits = 3)
+print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),which(res1a[,"parameter"] == "mean")),], digits = 3)
 
 ### Example 2: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.
@@ -270,30 +274,37 @@ means2 <- repMean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", rep
           dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm")
 res2   <- report(means2,add = list(domain = "reading"))
 
-### Example 2a: Additionally to example 2, we decide to estimate whether each
-### country's mean differ significantly from the overall mean. (Note: by default,
-### such cross level differences are estimated using 'weighted effect coding'. Use
-### the 'crossDiffSE' argument to choose alternative methods.) Moreover, we estimate
-### whether each country's sex difference differ significantly from the sex difference
-### in the whole population.
-means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
-          repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2,
-          group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
-          dependent = "score", na.rm=FALSE, doCheck=TRUE, crossDiffSE.engine= "lm",
-          clusters = "idclass")
+### Example 2a: Additionally to example 2, we decide to estimate whether
+### each country's mean differ significantly from the overall mean. (Note: by default, such 
+### cross level differences are estimated using 'weighted effect coding'. Use the 'crossDiffSE'
+### argument to choose alternative methods.) Moreover, we estimate whether each country's sex 
+### difference differ significantly from the sex difference in the whole population. 
+means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
+          cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
+          crossDiffSE.engine= "lm", clusters = "idclass")
 res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
 
 ### Third example: like example 2a, but using nested imputations of dependent variable,
 ### and additionally estimating trend: use 'rd' instead of 'rdN1y10'
 ### assume equally weighted cases by omitting 'wgt' argument
 ### ignoring jackknife by omitting 'type', 'PSU' and 'repInd' argument
-means3T<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest",
-          groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
-          cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE,
-          doCheck=TRUE, trend = "year", linkErr = "leScore", crossDiffSE = "wec",
-          crossDiffSE.engine= "lavaan")
+means3T<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest", groups = c("country", "sex"),
+          group.splits = 0:2, group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
+          dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore",
+          crossDiffSE = "wec", crossDiffSE.engine= "lavaan")
 res3T  <- report(means3T, add = list(domain = "reading"))
-          
+
+### Example 3a: like example 3, but providing linking errors in an additional data.frame
+linkErr<- data.frame ( trendLevel1 = 2010, trendLevel2 = 2015,  depVar = "score", parameter = "mean", unique(lsa[,c("domain", "leScore")]), stringsAsFactors = FALSE)
+colnames(linkErr) <- car::recode(colnames(linkErr), "'leScore'='linkingError'")
+### note that the linking errors for the specified domain have to be chosen via subsetting
+means3a<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest", groups = c("country", "sex"),
+          group.splits = 0:2, group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
+          dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = linkErr[which(linkErr[,"domain"] == "reading"),],
+          crossDiffSE = "wec", crossDiffSE.engine= "lavaan")
+res3a  <- report(means3a, add = list(domain = "reading"))
+
 ### Fourth example: using a loop do analyse 'reading' and 'listening' comprehension
 ### in one function call. Again with group and cross differences and trends, and
 ### trend differences
@@ -301,20 +312,17 @@ res3T  <- report(means3T, add = list(domain = "reading"))
 means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
           repMean(datL = sub.dat, ID="idstud", wgt="wgt", imp="imp", nest="nest",
                  groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
-                 cross.differences = list(c(0,1), c(0,2)), dependent = "score",
-                 na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore",
-                 crossDiffSE.engine= "lm") })
+                 cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
+                 trend = "year", linkErr = "leScore", crossDiffSE.engine= "lm") })
 ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
           report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
           
 ### Fifth example: compute adjusted means, also with trend estimation
 ### Note: all covariates must be numeric or 0/1 dichotomous
 rdN1[,"mignum"] <- as.numeric(rdN1[,"mig"])
-rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE,
-                   as.factor=FALSE)
-means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
-          repInd = "jkrep", imp="imp", groups = "country",
-          adjust = c("sexnum", "ses", "mignum"), useEffectLiteR = FALSE,
+rdN1[,"sexnum"] <- car::recode(rdN1[,"sex"], "'male'=0; 'female'=1", as.numeric=TRUE, as.factor=FALSE)
+means5 <- repMean(datL = rdN1, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = "country", adjust = c("sexnum", "ses", "mignum"), useEffectLiteR = FALSE,
           dependent = "score", na.rm=FALSE, doCheck=TRUE, trend = "year", linkErr = "leScore")
 res5   <- report(means5, add = list(domain = "reading"))
 
@@ -329,14 +337,12 @@ res5   <- report(means5, add = list(domain = "reading"))
 ### define necessary directories (note: writing permissions required)
 folder <- tempdir()
 
-### download PISA 2015 zipped student questionnaire data (420 MB) to a folder with
-### writing permissions
+### download PISA 2015 zipped student questionnaire data (420 MB) to a folder with writing permissions
 download.file(url = "https://webfs.oecd.org/pisa/PUF_SPSS_COMBINED_CMB_STU_QQQ.zip",
          destfile = file.path(folder, "pisa2015.zip"))
 
 ### unzip PISA 2015 student questionnaire data (1.5 GB) to temporary folder
-zip::unzip(zipfile = file.path(folder, "pisa2015.zip"), files= "CY6_MS_CMB_STU_QQQ.sav",
-           exdir=folder)
+zip::unzip(zipfile = file.path(folder, "pisa2015.zip"), files= "CY6_MS_CMB_STU_QQQ.sav", exdir=folder)
 
 ### read data
 pisa <- foreign::read.spss(file.path (folder, "CY6_MS_CMB_STU_QQQ.sav"), to.data.frame=TRUE,
@@ -353,52 +359,35 @@ measure.vars <- paste0("PV", 1:10, "SCIE")
 #                  'OECD' = dummy variable indicating which country is part of the OECD
 #   'W_FSTURWT' (1 to 80) = balanced repeated replicate weights
 # 'PV1SCIE' to 'PV10SCIE' = 10 plausible values of (latent) science performance
-pisaLong <- reshape2::melt(pisa,
-            id.vars = c("CNTSTUID", "CNT", "SENWT", "W_FSTUWT", "OECD",
-                        paste0("W_FSTURWT", 1:80)),
-            measure.vars = measure.vars, value.name = "value",
-            variable.name="imp", na.rm=TRUE)
+pisaLong <- reshape2::melt(pisa, id.vars = c("CNTSTUID", "CNT", "SENWT", "W_FSTUWT", "OECD", paste0("W_FSTURWT", 1:80)),
+                           measure.vars = measure.vars, value.name = "value", variable.name="imp", na.rm=TRUE)
 
 ### choose OECD countries
 oecd <- pisaLong[which(pisaLong[,"OECD"] == 1),]
 
-### analyze data (see also
-### 'https://rstudio-pubs-static.s3.amazonaws.com/442843_a94f5a3cfb0d483aa1a290761b652350.html')
+### analyze data (see also 'https://rstudio-pubs-static.s3.amazonaws.com/442843_a94f5a3cfb0d483aa1a290761b652350.html')
 ### analysis takes approximately 30 minutes on an Intel i5-6500 machine with 32 GB RAM
-means   <- repMean( datL        = oecd,       # data.frame in the long format
-                     ID         = "CNTSTUID", # student identifier
-                     dependent  = "value",    # the dependent variable in the data
-                     groups     = "CNT",      # the grouping variable
-                     wgt        = "SENWT",    # (optional) weighting variable. senate weights
-                                              # (assume a population of 5000 in each country)
-                     type       = "Fay",      # type of replication method. Corresponding to
-                                              # the PISA sampling method, we use "Fay"
-                     rho        = 0.5,        # shrinkage factor for weights in Fay's method
-                     scale      = NULL,       # scaling constant for variance, set to NULL
-                                              # according to PISA's sampling method
-                     rscales    = NULL,       # scaling constant for variance, set to NULL
-                                              # according to PISA's sampling method
-                     repWgt     = paste0("W_FSTURWT", 1:80), # the replicate weights,
-                                                             # provided by the OECD
-                     imp        = "imp",      # the imputation variable
-                     mse        = FALSE,      # if TRUE, compute variances based on sum of
-                                              # squares around the point estimate, rather
-                                              # than the mean of the replicates.
-                     group.splits         = 0:1,   # defining the 'levels' for which means
-                                                   # should be computed. 0:1 implies that
-                                                   # means for the whole sample (level 0)
-                                                   # as well as for groups (level 1) are computed
-                     cross.differences    = TRUE,  # defines whether (and which) cross level mean
-                                                   # differences should be computed. TRUE means
-                                                   # that all cross level mean differences are
-                                                   # computed
-                     crossDiffSE          = "wec", # method for standard error of mean differences
-                     crossDiffSE.engine   = "lm",  # software implementation for standard errors
-                                                   # of mean differences
-                     hetero               = TRUE,  # assume heteroscedastic group variances
-                     stochasticGroupSizes = FALSE  # assume fixed group sizes
+means   <- repMean( datL                 = oecd,                      # data.frame in the long format
+                     ID                   = "CNTSTUID",                # student identifier
+                     dependent            = "value",                   # the dependent variable in the data
+                     groups               = "CNT",                     # the grouping variable
+                     wgt                  = "SENWT",                   # (optional) weighting variable. We use senate weights (assume a population of 5000 in each country)
+                     type                 = "Fay",                     # type of replication method. Corresponding to the PISA sampling method, we use "Fay"
+                     rho                  = 0.5,                       # shrinkage factor for weights in Fay's method
+                     scale                = NULL,                      # scaling constant for variance, set to NULL according to PISA's sampling method
+                     rscales              = NULL,                      # scaling constant for variance, set to NULL according to PISA's sampling method
+                     repWgt               = paste0("W_FSTURWT", 1:80), # the replicate weights, provided by the OECD
+                     imp                  = "imp",                     # the imputation variable
+                     mse                  = FALSE,                     # if TRUE, compute variances based on sum of squares around the point estimate, rather than the mean of the replicates.
+                     group.splits         = 0:1,                       # defining the 'levels' for which means should be computed. 0:1 implies that means for the whole sample (level 0) as well as for groups (level 1) are computed
+                     cross.differences    = TRUE,                      # defines whether (and which) cross level mean differences should be computed. TRUE means that all cross level mean differences are computed
+                     crossDiffSE          = "wec",                     # method for standard errors of mean differences
+                     crossDiffSE.engine   = "lm",                      # software implementation for standard errors of mean differences
+                     hetero               = TRUE,                      # assume heteroscedastic group variances
+                     stochasticGroupSizes = FALSE                      # assume fixed group sizes
                    )
 
 ### call a reporting function to generate user-friendly output
 results <- report(means, exclude = c("Ncases", "NcasesValid", "var", "sd"))
 }}}
+

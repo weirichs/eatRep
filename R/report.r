@@ -38,7 +38,7 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
           }
     ### 3. Trend bestimmen
           if ( !is.null(tv) ) {
-               jk2 <- computeTrend(jk2 = jk2, le = repFunOut[["le"]], tv = tv, fun = fun)
+               jk2 <- computeTrend(jk2 = jk2, repFunOut = repFunOut, tv = tv, fun = fun)
           } else {
                jk2 <- jk2[[1]]
           }
