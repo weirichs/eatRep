@@ -4,8 +4,9 @@
 \title{Checks compatibility of linking errors with GADS data bases.}
 \description{This function checks if a linking error \code{data.frame} is compatible with multiple trend \code{eatGADS} data bases. }
 \usage{
-checkLEStructure(filePaths, leDF)
+checkLEs(filePaths, leDF)
 %- maybe also 'usage' for other objects documented here.
+}
 \arguments{
   \item{filePaths}{
 %%     ~~Describe \code{file} here~~
