@@ -87,7 +87,7 @@ check2 <- function(repFunOut, jk2, fun){
            return(repFunOut[["le"]])
        }  else  {
     ### notwendige Spalten
-           allV  <- list(trendLevel1 = "trendLevel1", trendLevel1 = "trendLevel2", parameter = "parameter", linkingError="linkingError", depVar = "depVar")
+           allV  <- list(trendLevel1 = "trendLevel1", trendLevel2 = "trendLevel2", parameter = "parameter", linkingError="linkingError", depVar = "depVar")
            allN  <- lapply(allV, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = repFunOut[["le"]], variable=ii, warnIfMissing = TRUE)})
     ### AV in linking error objekt enthalten? Achtung! wenn repTable ueber repMean gewrappt wurde, heisst die AV anders. Dann (aber nur dann!) muss das le-Objekt angepasst werden
            le    <- repFunOut[["le"]]

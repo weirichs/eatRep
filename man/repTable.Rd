@@ -269,4 +269,20 @@ freq.tab4 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
                  dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = linkErrs[which(linkErrs[,"domain"] == subdat[1,"domain"]),]) })
 res4      <- do.call("rbind", lapply(names(freq.tab4), FUN = function (domain) {
              report(freq.tab4[[domain]], trendDiffs = TRUE, add = list ( domain = domain ))}))
+
+### Fifth example: minimal example for three measurement occasions
+### borrow data from the eatGADS package
+trenddat1 <- system.file("extdata", "trend_gads_2010.db", package = "eatGADS")
+trenddat2 <- system.file("extdata", "trend_gads_2015.db", package = "eatGADS")
+trenddat3 <- system.file("extdata", "trend_gads_2020.db", package = "eatGADS")
+trenddat  <- eatGADS::getTrendsGADS(filePaths = c(trenddat1, trenddat2, trenddat3), years = c(2010, 2015, 2020), fast=FALSE)
+dat       <- eatGADS::extractData(trenddat)
+### use template linking Error Object
+load(system.file("extdata", "linking_error.rda", package = "eatRep"))
+### check consistency of data and linking error object
+check1 <- checkLEs(c(trenddat1, trenddat2, trenddat3), lErr)
+### Analysis for reading comprehension
+freq.tab5 <- repTable(datL = dat[which(dat[,"dimension"] == "reading"),], ID = "idstud", type="none", imp="imp",
+             dependent = "traitLevel", chiSquare = FALSE, trend = "year", linkErr = lErr[which(lErr[,"domain"] == "reading"),])
+res5      <- report(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ))
 }}

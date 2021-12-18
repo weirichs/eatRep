@@ -1,23 +1,18 @@
 checkLEs <- function(filePaths, leDF) {
-  nam_list <- lapply(filePaths, eatGADS::namesGADS)
-  namLE <- names(leDF)
-  
-  ## check variable names?
-  if(!identical(namLE, c("trendLevel1", "trendLevel2", "depVar", "domain", "parameter", "linkingError"))) stop("Incorrect variable names in 'leDF'.")
-  
-  ## all Linking error variables in trend gads data bases (without LE_)?
-  dep_variables <- leDF$depVar
-  dep_notIn_nam_list <- lapply(seq_along(nam_list), function(i) {
-    nam <- nam_list[[i]]
-    dep_notIn_nam <- setdiff(dep_variables, unlist(nam))
-    if(length(dep_notIn_nam) > 0) message("The following variables have linking errors but are not variables in data base ",  i, ": ",
-                                          paste0(dep_notIn_nam, collapse = ", "))
-    dep_notIn_nam
-  })
-  
-  
-    ## potenziell: Domain checken? Aber dafuer muesste man Variablenname festlegen
-  # domain_variables <- leDF$domain
-  
-  list(dep_notIn_nam = dep_notIn_nam_list)
-}
+       if(length(filePaths) < 2) {stop("At least two data bases must be specified ('filePath' must be a character vector of length 2 or more).")}
+    ### erstmal nur das linking error objekt an sich checken: check variable names
+       allV  <- list(trendLevel1 = "trendLevel1", trendLevel2 = "trendLevel2", parameter = "parameter", linkingError="linkingError", depVar = "depVar")
+       allN  <- lapply(allV, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = leDF, variable=ii, warnIfMissing = TRUE)})
+    ### Namen in GADSdat data bases
+       namlis<- lapply(filePaths, eatGADS::namesGADS)
+    ### all Linking error variables in trend gads data bases (without LE_)?
+       depVar<- unique(leDF[,allN[["depVar"]]])
+       dep_notIn_nam_list <- lapply(seq_along(namlis), function(i) {
+           nam  <- namlis[[i]]
+           dep_notIn_nam <- setdiff(depVar, unlist(nam))
+           if(length(dep_notIn_nam) > 0) {message("The following variables have linking errors but are not variables in data base ",  i, ": '", paste0(dep_notIn_nam, collapse = "', '"),"'")}
+           return(dep_notIn_nam)  })
+    ### Anzahl der Trendzeitpunkte (trend levels)
+       tLevel<- unique(unlist(leDF[,c(allN[["trendLevel1"]], allN[["trendLevel2"]])]))
+       if ( length(tLevel) != length(filePaths)) {warning(paste0("Number of trend levels do not match: Expect ",length(filePaths)," trend levels in data base ('filePaths' has length ",length(filePaths),"). ",length(tLevel), " trend levels for linking errors ('",paste(tLevel, collapse="', '"),"') found."))}
+       return(list(dep_notIn_nam = dep_notIn_nam_list)) }

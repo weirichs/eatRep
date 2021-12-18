@@ -10,7 +10,7 @@ checkLEs(filePaths, leDF)
 \arguments{
   \item{filePaths}{
 %%     ~~Describe \code{file} here~~
-Character vectors with paths to the \code{eatGADS} db files.
+Character vectors with at least two paths to the \code{eatGADS} db files.
 }
   \item{leDF}{
 %%     ~~Describe \code{dif.term} here~~
@@ -32,6 +32,13 @@ Returns a report list.
 }
 
 \examples{
-# tbd
-}}}
+# define eatGADs data bases
+trenddat1 <- system.file("extdata", "trend_gads_2010.db", package = "eatGADS")
+trenddat2 <- system.file("extdata", "trend_gads_2015.db", package = "eatGADS")
+trenddat3 <- system.file("extdata", "trend_gads_2020.db", package = "eatGADS")
+# use template linking Error Object
+load(system.file("extdata", "linking_error.rda", package = "eatRep"))
+check1 <- checkLEs(c(trenddat1, trenddat2, trenddat3), lErr)
+check2 <- checkLEs(c(trenddat1, trenddat2, trenddat3), lErr[1:14,])
+}
 
