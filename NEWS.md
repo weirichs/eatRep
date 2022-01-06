@@ -1,6 +1,9 @@
-# eatRep 0.13.7
+# eatRep 0.14.0
 
-* sorting of parameters and determination coefficient enhanced in rporting function for `repGlm()`
+* sorting of parameters and determination coefficient enhanced in reporting function for `repGlm()`
+* add function `checkLEs` which checks consistency of linking errors with data which stem from an eatGADS data base
+* trend estimation was broadened for more than two measurement occasions
+* add class identifier in exemplary data
 
 # eatRep 0.13.7
 
