@@ -275,7 +275,7 @@ res4      <- do.call("rbind", lapply(names(freq.tab4), FUN = function (domain) {
 trenddat1 <- system.file("extdata", "trend_gads_2010.db", package = "eatGADS")
 trenddat2 <- system.file("extdata", "trend_gads_2015.db", package = "eatGADS")
 trenddat3 <- system.file("extdata", "trend_gads_2020.db", package = "eatGADS")
-trenddat  <- eatGADS::getTrendsGADS(filePaths = c(trenddat1, trenddat2, trenddat3), years = c(2010, 2015, 2020), fast=FALSE)
+trenddat  <- eatGADS::getTrendGADS(filePaths = c(trenddat1, trenddat2, trenddat3), years = c(2010, 2015, 2020), fast=FALSE)
 dat       <- eatGADS::extractData(trenddat)
 ### use template linking Error Object
 load(system.file("extdata", "linking_error.rda", package = "eatRep"))

@@ -2,7 +2,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         jk2_all <- do.call("rbind", jk2)                                        ### bind yearwise results
         jk2_bind<- jk2_all
    ### checks: die selben Zeilen in allen Jahren?? (fuer GLMs insbesondere testen!)
-        jk2_bind<- check1(jk2=jk2, jk2_bind=jk2_bind, jk2_all=jk2_all)
+        jk2_bind<- check1(jk2=jk2, jk2_bind=jk2_bind, jk2_all=jk2_all, tv=tv)
    ### special for mean: select only mean and sd, reshape le
         if(identical(fun, "mean")) {
             jk2_bind<- jk2_bind[jk2_bind[["parameter"]] %in% c("mean", "sd"), ]
@@ -62,7 +62,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         jk2 <- unique(rbind(jk2_all, do.call("rbind", adds)))
         return(jk2) }
 
-check1 <- function(jk2, jk2_bind, jk2_all) {
+check1 <- function(jk2, jk2_bind, jk2_all, tv) {
     ### alles gegen alles vergleichen
        vgl <- combinat::combn(1:length(jk2),2, simplify=FALSE)
        chks<- sapply(vgl, FUN = function ( x ) { length(unique(jk2[[x[1]]]$group)) != length(unique(jk2[[x[2]]]$group)) || suppressWarnings(!all(sort(unique(jk2[[x[1]]]$group)) == sort(unique(jk2[[x[1]]]$group))))})

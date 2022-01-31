@@ -89,7 +89,7 @@
 Package: \tab eatRep\cr
 Type: \tab Package\cr
 Version: \tab 0.14.0\cr
-Date: \tab 2022-01-06\cr
+Date: \tab 2022-01-31\cr
 License: \tab GPL(>=2)
 }
 }
