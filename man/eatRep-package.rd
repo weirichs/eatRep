@@ -71,7 +71,7 @@
   \emph{Important note:} Starting with version 0.10.0, several methods for the standard error estimation
   of cross level differences are implemented. Prior to version 0.10.0, the standard error for the difference
   between one single group (e.g., Belgium) and the total population (which is comprised of several states including 
-  Belgium) was estimated as if both groups would have been independent from each other. Then standard errors, 
+  Belgium) was estimated as if both groups would have been independent from each other. The standard errors,
   however, are biased then. Two new methods are now applicable using the argument \code{crossDiffSE} in 
   \code{\link{repMean}} and provide unbiased standard errors---weighted effect coding (wec) and replication
   methods (rep); see, for example te Grotenhuis et al. (2017) and Weirich et al. (2021). The old method is still available by

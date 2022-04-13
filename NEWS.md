@@ -1,3 +1,6 @@
+* bug fix in repQuantile when using 0% or 100% percentil
+* enhance performance when using the BIFIEsurvey wrapper
+
 # eatRep 0.14.0
 
 * sorting of parameters and determination coefficient enhanced in reporting function for `repGlm()`

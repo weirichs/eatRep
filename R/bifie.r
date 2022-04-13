@@ -1,6 +1,6 @@
 doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, type, verbose){
-      dat.i<- eatTools::facToChar(dat.i, from = "character", to = "factor")
-      dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)                  
+      dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(allNam), colnames(dat.i))], from = "character", to = "factor")
+      dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)
       dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")
       dat2 <- dat2[order(dat2[,allNam[["ID"]]]), ]
       labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["dependent"]]),]

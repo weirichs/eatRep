@@ -272,7 +272,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
 
 repQuantile<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
+            cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, probs = c(0.25, 0.50, 0.75),  na.rm = FALSE,
             nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), 
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE)  {
             modus      <- identifyMode ( name = "quantile", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
@@ -576,7 +576,7 @@ jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group
                       design         <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                       formel         <- as.formula(paste("~ ",allNam[["dependent"]], sep = "") )
                       quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(allNam[["group"]], collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = FALSE, na.rm = na.rm)
-                      molt           <- eatTools::facToChar(reshape2::melt(data=quantile.imp, id.vars=allNam[["group"]], na.rm=TRUE))
+                      molt           <- eatTools::facToChar(reshape2::melt(data=quantile.imp, id.vars=allNam[["group"]], na.rm=FALSE))
                       molt[,"probs"] <- rep(as.character(probs), times = 2)
                       molt           <- do.call("rbind", plyr::alply(molt, .margins = 1, .fun = function (zeile) {
                                         stopifnot(grep(pattern = paste(zeile[["probs"]], "$", sep=""), zeile[["variable"]])==1)

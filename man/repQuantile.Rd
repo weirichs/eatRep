@@ -13,7 +13,7 @@ repQuantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
             groups = NULL, group.splits = length(groups), cross.differences = FALSE,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
-            probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL,
+            probs = c(0.25, 0.50, 0.75),  na.rm = FALSE, nBoot = NULL,
             bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE,
             engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
             rho=NULL, verbose = TRUE, progress = TRUE)}
