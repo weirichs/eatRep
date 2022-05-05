@@ -1,5 +1,6 @@
-report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE) {
+report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE, target = c("default", "BT2021") ) {
           if(is.null(repFunOut)) {return(NULL)}
+          target   <- match.arg(target, choices = c("default", "BT2021"))
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
           if ( length(grep("glm", as.character(repFunOut[["resT"]][[1]][1,"modus"]))) ==1 ) {
                if ( printGlm == TRUE ) { dG(repFunOut, digits = digits, printDeviance = printDeviance, add = add ) }
@@ -73,6 +74,10 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
     ### runden, falls gewuenscht
           if ( isTRUE(round)) {
                jk2wide <- eatTools::roundDF(jk2wide, digits = digits)
+          }
+    ### output fuer BT2021 reshapen, falls gewuenscht
+          if ( target == "BT2021") {
+               jk2wide <- reshapeReport(jk2wide, tv=tv, fun=fun, repFunOut = repFunOut)
           }
           return(jk2wide)}
 
@@ -212,3 +217,46 @@ compare_point_estimates <- function(old_est, new_est, param) {
   }
   return()
 }
+
+reshapeReport <- function(inp, tv, fun, repFunOut) {
+    ### testweise initialisieren
+          inpR <- inp
+    ### reshapen nur machen, wenn Parameterspalte mehr als einen Eintrag hat ... das ist bspw. nicht der Fall, wenn man repTable() mit dichotomer AV (Regelstandard erreicht) macht
+          if (length(unique(inp[,"parameter"])) > 1) {
+    ### fuer trend
+              if (!is.null(tv) ) {                                                  ### levels der trendvariablen
+                   lev <- paste(as.character(unique(do.call("rbind", repFunOut[["resT"]])[,repFunOut[["allNam"]][["trend"]]])), collapse="|")
+    ### fuer mittelwerte mit trend
+                   if (fun == "mean") {
+                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
+                   }
+    ### fuer haeufigkeitsverteilungen mit trend
+                   if (fun == "table") {
+                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
+                   }
+              }  else  {
+    ### fuer mittelwerte ohne trend
+                   if (fun == "mean") {
+                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = intersect(c("es", "est", "p", "se"), colnames(inp))), stringsAsFactors=FALSE)
+                   }
+    ### fuer haeufigkeitsverteilungen ohne trend
+                   if (fun == "table") {
+                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = intersect(c("est", "p", "se"), colnames(inp))), stringsAsFactors=FALSE)
+                   }
+              }
+          }
+    ### fuer allen Output: spalten, die nur NA haben, loeschen
+          onlyNA <- which(sapply(inpR, FUN = function (x) {length(which(is.na(x))) == length(x)}))
+          if (length(onlyNA)>0) {
+               inpR <- inpR[,-onlyNA]
+          }
+    ### crossDiff-Benennung anpassen (Mail Juan Jose, 27.04.2022, 9.37 Uhr). Das passiert auch dann, wenn nicht gereshapet wird
+          if ("comparison" %in% colnames(inpR)) {
+               if("crossDiff" %in% inpR[,"comparison"]) {
+                  cols <- intersect(intersect(grep("wholeGroup$", inpR[,"group"]), setdiff(1:nrow(inpR), grep("_",inpR[,"group"]))), which(inpR[,"comparison"] == "crossDiff"))
+                  if (length(cols)>0) {
+                       inpR[cols,"group"] <- eatTools::removePattern(inpR[cols,"group"], "\\.vs\\.wholeGroup$")
+                  }
+               }
+          }
+          return(inpR)}

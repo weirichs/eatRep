@@ -29,7 +29,7 @@ chooseSeType <- function ( se_type, clusters) {
        return(se_type)}
 
 generateRandomJk1Zones <- function (datL, unit, nZones, name = "randomCluster") {
-       if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
+       datL  <- eatTools::makeDataFrame(datL, name = "data")
        stopifnot(length(unit)==1)
        allVar<- list(ID = unit)
        allNam<- eatTools::existsBackgroundVariables(dat = datL, variable=unlist(allVar), warnIfMissing = FALSE)
@@ -59,7 +59,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             }
             type<- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
             se_type <- chooseSeType(se_type, clusters)
-            datL<- checkIsDataFrame ( datL)
+            datL<- eatTools::makeDataFrame ( datL)
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             }  else  {
@@ -184,14 +184,6 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             }
             return(ret)}
 
-checkIsDataFrame <- function ( d ) {
-    if(!"data.frame" %in% class(d) || "tbl" %in% class(d) ) {
-       message("Convert input data 'datL' of class '",paste(class(d), collapse="', '"),"'to a data.frame.")
-       d <- data.frame ( d, stringsAsFactors = FALSE)
-    }
-    return(d)}
-
-
 repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
@@ -199,7 +191,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             crossDiffSE <- "old"                                                
             if(isFALSE(cross.differences) == FALSE) {message("To date, only method 'old' is applicable for cross level differences in frequency tables.")}
             modus <- identifyMode ( name = "table", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
-            datL  <- checkIsDataFrame ( datL)
+            datL  <- eatTools::makeDataFrame ( datL)
             chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
@@ -277,7 +269,7 @@ repQuantile<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE)  {
             modus      <- identifyMode ( name = "quantile", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             bootMethod <- match.arg ( bootMethod )
-            datL       <- checkIsDataFrame ( datL)
+            datL       <- eatTools::makeDataFrame ( datL)
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, cross.differences=cross.differences, trend = trend, linkErr = linkErr, dependent = dependent,
                    group.delimiter=group.delimiter, probs=probs, na.rm=na.rm, nBoot=nBoot, bootMethod=bootMethod, doCheck=doCheck, modus=modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL)}
@@ -290,7 +282,7 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             poolMethod = c("mice", "scalar") , useWec = FALSE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL,
             hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"), clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE,
             progress = TRUE) {
-            datL   <- checkIsDataFrame ( datL)
+            datL   <- eatTools::makeDataFrame ( datL)
             modus  <- identifyMode ( name = "glm", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'") )
             poolMethod <- match.arg(poolMethod)
             crossDiffSE.engine <- match.arg(crossDiffSE.engine)
@@ -309,7 +301,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine, 
           scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters) {
-          if(!"data.frame" %in% class(datL) || "tbl" %in% class(datL) ) { cat(paste0("Convert 'datL' of class '",paste(class(datL), collapse="', '"),"'to a data.frame.\n")); datL <- data.frame ( datL, stringsAsFactors = FALSE)}
+          datL  <- eatTools::makeDataFrame(datL, name = "datL")
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           i     <- 0                                                            
           fc    <- NULL                                                         
