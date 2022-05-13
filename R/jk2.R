@@ -57,9 +57,9 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                      }
                 }
             }
-            type<- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
+            type    <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
             se_type <- chooseSeType(se_type, clusters)
-            datL<- eatTools::makeDataFrame ( datL)
+            datL    <- eatTools::makeDataFrame ( datL, name = "datL")
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             }  else  {
@@ -341,21 +341,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
              allNam[["linkErr"]] <- leFrame
           }
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
-          if ( type %in% c("JK1", "JK2")) {
-               if ( is.null(repWgt)) {
-                   if (is.null(PSU) ) {
-                       stop("For type = '",type,"', 'PSU' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
-                   }
-                   if (type == "JK2" && is.null(repInd) ) {
-                       stop("For type = '",type,"', 'repInd' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
-                   }
-               }
-          }
-          if(!is.null(attr(datL, "wrapperForWec"))) {
-             auchUV <- allNam[["independent"]]
-          }  else  {
-             auchUV <- NULL
-          }
+          foo   <- checkJK.arguments(type=type, repWgt=repWgt, PSU=PSU, repInd=repInd)
+          auchUV<- checkWecForUV(dat=datL, allNam = allNam)
           datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
           allNam<- checkForAdjustment (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL)
           foo   <- checkNameConvention( allNam = allNam)
@@ -1336,27 +1323,47 @@ checkEngine <- function ( engine , allNam, modus, toCall, type) {
           }
           return(engine)}
 
+checkWecForUV <- function(dat, allNam) {
+          if(!is.null(attr(dat, "wrapperForWec"))) {
+             auchUV <- allNam[["independent"]]
+          }  else  {
+             auchUV <- NULL
+          }
+          return(auchUV)}
+
+checkJK.arguments <- function(type, repWgt, PSU, repInd) {
+          if ( type %in% c("JK1", "JK2")) {
+               if ( is.null(repWgt)) {
+                   if (is.null(PSU) ) {
+                       stop("For type = '",type,"', 'PSU' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
+                   }
+                   if (type == "JK2" && is.null(repInd) ) {
+                       stop("For type = '",type,"', 'repInd' must be defined if no replicate weights are specified (i.e., if 'repWgt' is NULL).")
+                   }
+               }
+          }}
+
 checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
-                 for ( gg in c(allNam[["group"]], auchUV) ) {                   ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
-                       if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]])) {
-                            if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
-                            chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg])
+             for ( gg in c(allNam[["group"]], auchUV) ) {                       ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
+                   if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]])) {
+                        if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
+                        chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg])
+                   }  else  {                                                   
+                        chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
+                   }
+                   if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
+                   if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
+                       message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
+                       if ( class ( datL[,gg] ) == "factor") {
+                           levNew <- gsub("\\.|_", "", levels(datL[,gg]))
+                           datL[,gg] <- factor(gsub("\\.|_", "", datL[,gg]), levels = levNew)
                        }  else  {
-                            chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
+                           datL[,gg] <- gsub("\\.|_", "", datL[,gg])
                        }
-                       if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
-                       if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
-                           message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
-                           if ( class ( datL[,gg] ) == "factor") {
-                               levNew <- gsub("\\.|_", "", levels(datL[,gg]))
-                               datL[,gg] <- factor(gsub("\\.|_", "", datL[,gg]), levels = levNew)
-                           }  else  {
-                               datL[,gg] <- gsub("\\.|_", "", datL[,gg])
-                           }
-                       }
-                 }
+                   }
+             }
           }
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {

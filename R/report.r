@@ -1,6 +1,7 @@
-report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE, target = c("default", "BT2021") ) {
+report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE,
+                     round = TRUE, digits = 3, printDeviance = FALSE, target = c("default", "BT2021", "BT2021.table"), wholeGroupName = "Deutschland" ) {
           if(is.null(repFunOut)) {return(NULL)}
-          target   <- match.arg(target, choices = c("default", "BT2021"))
+          target   <- match.arg(target, choices = c("default", "BT2021", "BT2021.table"))
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
           if ( length(grep("glm", as.character(repFunOut[["resT"]][[1]][1,"modus"]))) ==1 ) {
                if ( printGlm == TRUE ) { dG(repFunOut, digits = digits, printDeviance = printDeviance, add = add ) }
@@ -76,8 +77,8 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
                jk2wide <- eatTools::roundDF(jk2wide, digits = digits)
           }
     ### output fuer BT2021 reshapen, falls gewuenscht
-          if ( target == "BT2021") {
-               jk2wide <- reshapeReport(jk2wide, tv=tv, fun=fun, repFunOut = repFunOut)
+          if ( target %in% c("BT2021", "BT2021.table")) {
+               jk2wide <- reshapeReport(jk2wide, tv=tv, fun=fun, repFunOut = repFunOut, target=target, wholeGroupName=wholeGroupName)
           }
           return(jk2wide)}
 
@@ -218,14 +219,14 @@ compare_point_estimates <- function(old_est, new_est, param) {
   return()
 }
 
-reshapeReport <- function(inp, tv, fun, repFunOut) {
+reshapeReport <- function(inp, tv, fun, repFunOut, target, wholeGroupName) {
     ### testweise initialisieren
-          inpR <- inp
+          inpR <- inp                                                           ### untere zeile: levels der Trendvariablen
+          lev  <- paste(as.character(unique(do.call("rbind", repFunOut[["resT"]])[,repFunOut[["allNam"]][["trend"]]])), collapse="|")
     ### reshapen nur machen, wenn Parameterspalte mehr als einen Eintrag hat ... das ist bspw. nicht der Fall, wenn man repTable() mit dichotomer AV (Regelstandard erreicht) macht
           if (length(unique(inp[,"parameter"])) > 1) {
     ### fuer trend
-              if (!is.null(tv) ) {                                                  ### levels der trendvariablen
-                   lev <- paste(as.character(unique(do.call("rbind", repFunOut[["resT"]])[,repFunOut[["allNam"]][["trend"]]])), collapse="|")
+              if (!is.null(tv) ) {
     ### fuer mittelwerte mit trend
                    if (fun == "mean") {
                         inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
@@ -246,17 +247,33 @@ reshapeReport <- function(inp, tv, fun, repFunOut) {
               }
           }
     ### fuer allen Output: spalten, die nur NA haben, loeschen
-          onlyNA <- which(sapply(inpR, FUN = function (x) {length(which(is.na(x))) == length(x)}))
-          if (length(onlyNA)>0) {
-               inpR <- inpR[,-onlyNA]
-          }
+          inpR <- inpR[, colSums(is.na(inpR)) != nrow(inpR)]
     ### crossDiff-Benennung anpassen (Mail Juan Jose, 27.04.2022, 9.37 Uhr). Das passiert auch dann, wenn nicht gereshapet wird
           if ("comparison" %in% colnames(inpR)) {
-               if("crossDiff" %in% inpR[,"comparison"]) {
-                  cols <- intersect(intersect(grep("wholeGroup$", inpR[,"group"]), setdiff(1:nrow(inpR), grep("_",inpR[,"group"]))), which(inpR[,"comparison"] == "crossDiff"))
-                  if (length(cols)>0) {
-                       inpR[cols,"group"] <- eatTools::removePattern(inpR[cols,"group"], "\\.vs\\.wholeGroup$")
+               if( any(c("crossDiff", "trendDiff_cross") %in% inpR[,"comparison"])) {
+                  rows <- intersect(intersect(grep("wholeGroup$", inpR[,"group"]), setdiff(1:nrow(inpR), grep("_",inpR[,"group"]))), which(inpR[,"comparison"] %in% c("crossDiff", "trendDiff_cross")))
+                  if (length(rows)>0) {
+                       inpR[rows,"group"] <- eatTools::removePattern(inpR[rows,"group"], "\\.vs\\.wholeGroup$")
                   }
                }
           }
+    ### Alternativ: Mail Kristoph, 12.05.2022, 18.40 Uhr (geht wahrscheinlich nur fuer eine Gruppierungsvariable)
+          if (fun == "table" && length(unique(inpR[,"group"])) < nrow(inpR) && target == "BT2021.table" && length(repFunOut[["allNam"]][["group"]])>0 ) {
+              prz <- grep("^est|^se", colnames(inpR), value=TRUE)
+              if(length(prz)<1) {warning("Cannot found colums with percentage values. Skip value transformation.")}  else {
+                  for ( i in prz) { inpR[,i] <- 100*inpR[,i]}
+              }
+    ### Spalten identifizieren, die fuers reshapen entfernt werden muessen, und zwar sowohl fuer mit als auch fuer ohne trend
+              weg  <- grep(repFunOut[["allNam"]][["group"]], colnames(inpR))
+              stopifnot(length(weg)>0)
+    ### erstmal ohne Trend
+              if (is.null(tv) ) {
+                  inpR <- data.frame(tidyr::pivot_wider(inpR[,-weg], names_from = "comparison", values_from = intersect(c("es", "est", "p", "se"), colnames(inpR))), stringsAsFactors=FALSE)
+              }  else  {                                                        ### mit Trend
+                  inpR <- data.frame(tidyr::pivot_wider(inpR[,-weg], names_from = "comparison", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
+              }
+              inpR[,"group"] <- car::recode(inpR[,"group"], paste0("'wholeGroup'='",wholeGroupName,"'"))
+              colnames(inpR) <- eatTools::removePattern(colnames(inpR), pattern = "_NA$")
+          }
+          inpR <- inpR[, colSums(is.na(inpR)) != nrow(inpR)]                    ### nochmal spalten loeschen mit nur NA
           return(inpR)}

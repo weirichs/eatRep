@@ -29,7 +29,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                     jk2_wide[which(is.na(jk2_wide[,"le"])),"le"] <- 0
                }
    ### calculate trend SEs and p values
-               jk2_wide[,paste0("se_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])] <- sqrt(jk2_wide[, paste("se_",vgl[[comp]][2],sep="")]^2 + jk2_wide[, paste("se_",vgl[[comp]][2],sep="")]^2 + jk2_wide[, "le"]^2)
+               jk2_wide[,paste0("se_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])] <- sqrt(jk2_wide[, paste("se_",vgl[[comp]][1],sep="")]^2 + jk2_wide[, paste("se_",vgl[[comp]][2],sep="")]^2 + jk2_wide[, "le"]^2)
                jk2_wide[,paste0("sig_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])]<- 2*pnorm(abs(jk2_wide[, paste0("est_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2])]/jk2_wide[, paste0("se_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])]), lower.tail=FALSE)
    ### Effect size for means (only for jk2.mean)
                existSD <- "sd" %in% jk2_bind[,"parameter"]                      ### nur wenn standardabweichungen drin stehen, koennen effektstaerken berechnet werden ... Message wird nur fuer ersten Schleifendurchlauf ausgegeben (redundanz vermeiden)
