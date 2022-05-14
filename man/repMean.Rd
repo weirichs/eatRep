@@ -302,6 +302,8 @@ means3T<- repMean(datL = rd, ID="idstud", imp="imp", nest="nest",
 res3T  <- report(means3T, add = list(domain = "reading"))
 
 ### Example 3a: like example 3, but providing linking errors in an additional data.frame
+### This is optional for two measurement occasions but mandatory if the analysis contains
+### more than two measurement occasions
 linkErr<- data.frame ( trendLevel1 = 2010, trendLevel2 = 2015,  depVar = "score",
           parameter = "mean", unique(lsa[,c("domain", "leScore")]),
           stringsAsFactors = FALSE)

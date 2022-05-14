@@ -31,8 +31,10 @@ report(repFunOut, trendDiffs = FALSE, add = list(),
   the argument \code{poolMethod} of the \code{\link{repGlm}} function must be set
   to \code{"scalar"}. }
   \item{target}{The target format for the reported data.frame. Option \code{"BT2021"}
-  optimizes the \code{\link{repMean}} output format according to the BT2021 study. Option \code{"BT2021.table"}
-  optimizes the \code{\link{repTable}} output format according to the BT2021 study.}
+  optimizes the \code{\link{repMean}} and \code{\link{repTable}} output format according
+  to the BT2021 study. Option \code{"BT2021.table"} additionally adapts the
+  \code{\link{repTable}} output format according to the BT2021 study. For general purposes,
+  we recommend to use the \code{"default"} option.}
   \item{wholeGroupName}{Optional: only relevant if \code{target} is \code{"BT2021"} or \code{"BT2021.table"}.
   Which notation should be used for whole population in the output?}
 }

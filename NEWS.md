@@ -1,4 +1,6 @@
-* add alterative output formats for the reporting function (argument `target`)
+# eatRep 0.14.2
+
+* add alterNative output formats for the reporting function (argument `target`)
 * bug fix in standard error computation of trend estimates
 * bug fix in repQuantile when using 0% or 100% percentil
 * enhance performance when using the BIFIEsurvey wrapper
