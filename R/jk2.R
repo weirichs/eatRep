@@ -149,7 +149,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                                      }
                                 }
                                 if ( cdse == "wec" ) {                          
-                                     if ( class(d[,grp]) != "factor") {
+                                     if ( !inherits(d[,grp], "factor") ) {
                                          warning("Group variable '",grp,"' must be of class 'factor' for '",cdse,"'. Change class of '",grp,"' from '",class(d[,grp]),"' to 'factor'.")
                                          d[,grp] <- as.factor(d[,grp])
                                      }
@@ -215,7 +215,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                          warning("Warning: Found ",length(isNa)," missing values in dependent variable '",chk[["dependent"]],"'.")
                          if ( isTRUE(separate.missing.indicator) ) {
                               stopifnot ( length( intersect ( "missing" , names(table(datL[, chk[["dependent"]] ])) )) == 0 )
-                              if(class(datL[, chk[["dependent"]] ]) == "factor") {
+                              if(inherits(datL[, chk[["dependent"]] ], "factor")){# Hotfix: fuer Faktorvariablen funktioniert das einfache subsetting
                                   levOld <- levels(datL[, chk[["dependent"]] ]) ### dat[which(is.na(dat[,"var"])) ,"var"] <- "missing" nicht
                                   datL[, chk[["dependent"]] ] <- as.character(datL[, chk[["dependent"]] ])
                                   datL[isNa, chk[["dependent"]] ] <- "missing"
@@ -348,7 +348,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           foo   <- checkNameConvention( allNam = allNam)
           if (isTRUE(useWec) ) {
               if ( length(independent) != 1 ) {stop("Only one independent (grouping) variable is allowed for weighted effect coding.\n")}
-              if ( !class(datL[,independent]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
+              if(!inherits(datL[,independent],c("factor", "character", "logical", "integer"))) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
           }
           if (poolMethod == "mice" && !is.null(allNam[["nest"]]) && toCall == "glm" ) {
               message("Method 'mice' is not available for nested imputation. Switch to method 'scalar'.")
@@ -403,7 +403,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                       }
                   }
                   if(toCall %in% c("mean", "quantile", "glm")) {
-                     if(!class(datL[,allNam[["dependent"]]]) %in% c("integer", "numeric")) {
+                     if(!inherits(datL[,allNam[["dependent"]]],  c("integer", "numeric"))) {
                          stop(paste0("Dependent variable '",allNam[["dependent"]],"' has to be of class 'integer' or 'numeric'.\n"))
                      }
                   }
@@ -476,14 +476,14 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          if ( isKonst == 1) {
                               warning("Predictor '",i,"' is constant. Please check your data.")
                          }
-                         if ( class ( dat[,i] ) == "character" ) {
+                         if ( inherits ( dat[,i],  "character" )) {
                               warning("Predictor '",i,"' has class 'character'. Please check your data.")
                          }
-                         if ( class ( dat[,i] ) %in% c("character", "factor") ) {
+                         if ( inherits ( dat[,i],  c("character", "factor") )) {
                               if ( isKonst > 15 && isFALSE(useWec) ) {
                                    warning("Predictor '",i,"' of class '",class ( dat[,i] ),"' has ",isKonst," levels. Please check whether this is intended.")
                               }
-                         } })   }                                               
+                         } })   }                                               ### keine Rueckgabe
 
 createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc, toCall) {
           if (length(allNam[["linkErr"]]) > 1) {                                
@@ -922,7 +922,7 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
                             r.nagelkerke   <- fmsb::NagelkerkeR2(glm.ii)
                             summaryGlm     <- summary(glm.ii)
-                            if( class(family) == "family" ) {
+                            if( inherits(family, "family" )) {
                                 if (  length(grep("binomial", eatTools::crop(capture.output(family)))) > 0 ) {
                                       res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel", "deviance", "null.deviance", "AIC", "df.residual", "df.null"),
                                                 coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),rep("est", 7)),
@@ -948,7 +948,7 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                                    stopifnot(length(as.character(formula)) == 3 )
                                    formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
                                    if ( isFALSE(useWec) ) {
-                                       if ( class(family) == "function" ) {
+                                       if ( inherits(family, "function" )) {
                                             link <- strsplit(capture.output(str(family)), split="\"")[[1]][2]
                                             fam  <- car::recode(link, "'identity'='gaussian'; 'logit'='binomial'; 'probit'='binomial'")
                                        }  else  {
@@ -1023,7 +1023,7 @@ superSplitter <- function ( group=NULL, group.splits = length(group), group.diff
              group.splits <- unique(group.splits)
              superSplitti <- unlist(lapply(group.splits, FUN = function ( x ) {
                              spl <- combinat::combn(names(group),x)
-                             if("matrix" %in% class(spl)) { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
+                             if(inherits(spl, "matrix")) { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
                              spl <- unlist(lapply(spl, FUN = function ( y ) { paste(as.character(unlist(y)), collapse="________")}))
                              return(spl)}))
              superSplitti <- strsplit(superSplitti, "________")
@@ -1345,7 +1345,7 @@ checkJK.arguments <- function(type, repWgt, PSU, repInd) {
 
 checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
-             chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("factor", "character", "logical", "integer")) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
+             chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !inherits(datL[,v],  c("factor", "character", "logical", "integer"))) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
              for ( gg in c(allNam[["group"]], auchUV) ) {                       ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
                    if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]])) {
                         if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
@@ -1354,9 +1354,9 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                         chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
                    }
                    if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
-                   if ( class(datL[,gg]) %in% c("factor", "character") && length(grep("\\.|_", datL[,gg])) > 0) {
+                   if ( inherits(datL[,gg], c("factor", "character")) && length(grep("\\.|_", datL[,gg])) > 0) {
                        message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
-                       if ( class ( datL[,gg] ) == "factor") {
+                       if ( inherits ( datL[,gg], "factor")) {
                            levNew <- gsub("\\.|_", "", levels(datL[,gg]))
                            datL[,gg] <- factor(gsub("\\.|_", "", datL[,gg]), levels = levNew)
                        }  else  {
@@ -1367,7 +1367,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           }
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
-                 if (class ( datL[,gg] ) == "factor") {                         
+                 if (inherits ( datL[,gg], "factor")) {
                      if ( any(table(datL[,gg]) == 0)) {
                           lev <- names(which(table(datL[,gg]) !=0))
                           nlv <- names(which(table(datL[,gg]) ==0))
@@ -1381,7 +1381,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           
 checkForAdjustment <- function(datL, allNam, groupWasNULL) {
           if(!is.null(allNam[["adjust"]])) {
-             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !class(datL[,v]) %in% c("numeric", "integer")) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
+             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !inherits(datL[,v], c("numeric", "integer"))) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
              if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
              if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
              if (!is.null(allNam[["group.differences.by"]])) {
@@ -1423,7 +1423,7 @@ setCrossDifferences <- function (cross.differences, allNam, group.splits) {
                }
           }  else  {                                                            
                if(!all(unlist(lapply(cross.differences, length)) == 2)) {stop("Each element in 'cross.differences' must be a vector of length 2.\n")}
-               if(!all(unlist(lapply(cross.differences, class)) %in% c("integer","numeric"))) {stop("Each element in 'cross.differences' must be a numerical vector.\n")}
+               if(!all(unlist(lapply(cross.differences, inherits, what = c("integer","numeric"))))) {stop("Each element in 'cross.differences' must be a numerical vector.\n")}
                if(!all(unlist(lapply(cross.differences, FUN = function ( x ) { length(unique(x))})) ==2 ) ) {stop("Each element in 'cross.differences' must be a vector of 2 different numbers.\n")}
                vals <- unique(unlist(cross.differences))
                if(!all(vals %in% group.splits)) {stop("All numerical values in 'cross.differences' must be included in 'group.splits'.\n")}
@@ -1440,7 +1440,7 @@ createLoopStructure <- function(datL, allNam, verbose) {
           if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
           if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else {
               stopifnot(length(allNam[["wgt"]]) == 1 )
-              if ( !class(datL[,allNam[["wgt"]]]) %in% c("numeric", "integer") ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",class(datL[,allNam[["wgt"]]]),"' has to be numeric.\n",sep="")) }
+              if ( !inherits(datL[,allNam[["wgt"]]], c("numeric", "integer")) ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",paste(class(datL[,allNam[["wgt"]]]),collapse = "', '"), "' has to be numeric.\n",sep="")) }
               isMis <- which(is.na(datL[,allNam[["wgt"]]]))
               isZero<- which ( datL[,allNam[["wgt"]]] == 0 )
               if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
