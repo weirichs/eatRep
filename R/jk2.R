@@ -486,7 +486,7 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          } })   }                                               ### keine Rueckgabe
 
 createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc, toCall) {
-          if (length(allNam[["linkErr"]]) > 1) {                                
+          if (length(allNam[["linkErr"]]) > 1) {
               le <- allNam[["linkErr"]]
               attr(le, "linkingErrorFrame") <- TRUE                             
               return(le)
@@ -1347,10 +1347,31 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !inherits(datL[,v],  c("factor", "character", "logical", "integer"))) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
              for ( gg in c(allNam[["group"]], auchUV) ) {                       ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
-                   if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]])) {
-                        if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
-                        chk2 <- lme4::isNested(datL[,allNam[["ID"]]], datL[,gg])
-                   }  else  {                                                   
+    ### personen muessen in gruppierungsvariable genestet sein, aber fuer jede Imputation und jedes Nest separat! (es sei denn, es gibt keine Imputationen oder die Gruppenvariable ist nicht imputiert)
+                   if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
+                   isImp<- TRUE                                                 ### initialisieren: wir gehen davon aus, dass die Variable imputiert ist
+                   if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]]) ) {
+                        isImp <- FALSE                                          ### dieser ganze Krempel nur, um rauszukriegen, ob fuer jede Imputation
+                   }  else  {                                                   ### die genestetheit ueberprueft werden muss oder ob das fuer alle
+                        imps  <- c(allNam[["nest"]], allNam[["imp"]])           ### zusammen geht
+                        if ( length(imps) == 1) {
+                             datL[,"g"] <- datL[,imps]
+                        }  else  {
+                             txt   <- paste0("datL %>% tidyr::unite(\"g\", c(", paste(match(c(allNam[["nest"]],allNam[["imp"]]), colnames(datL)),collapse=", "),"), remove=FALSE)")
+                             datL  <- eval(parse(text=txt))
+                        }
+                        isUniq<- eatGADS::checkUniqueness2(datL, varName=gg, idVar=allNam[["ID"]], impVar="g")
+                        if(isUniq) { isImp <- FALSE}
+                   }
+    ### wenn die Gruppierungsvariable nicht imputiert ist, genuegt es, den check nur fuer die erste Imputation auszufuehren
+                   if ( isFALSE(isImp) ) {
+                        if ( "g" %in% colnames(datL) ) {
+                            d <- datL[which(datL[,"g"] == unique(datL[,"g"])[1]),]
+                        }  else  {
+                            d <- datL
+                        }
+                        chk2 <- lme4::isNested(d[,allNam[["ID"]]], d[,gg])
+                   }  else  {
                         chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
                    }
                    if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
@@ -1367,7 +1388,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           }
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
-                 if (inherits ( datL[,gg], "factor")) {
+                 if (inherits ( datL[,gg], "factor")) {                         ### ausserdem duerfen fuer Gruppierungs- und unabhaengig Variablen keine factor levels ohne Beobachtungen drinsein
                      if ( any(table(datL[,gg]) == 0)) {
                           lev <- names(which(table(datL[,gg]) !=0))
                           nlv <- names(which(table(datL[,gg]) ==0))
@@ -1377,6 +1398,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                  }
              }
           }
+          if ( "g" %in% colnames(datL)) {datL <- datL[,-match("g", colnames(datL))]}
           return(datL)}
           
 checkForAdjustment <- function(datL, allNam, groupWasNULL) {

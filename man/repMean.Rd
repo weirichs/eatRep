@@ -92,8 +92,8 @@ groups and treat the groups as if they were independent from each other.
 }
   \item{adjust}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable(s) for which adjusted means should be computed. Note: to date, only numeric 
-or 0/1 dichotomous variables are allowed. 
+Variable name or column number of variable(s) for which adjusted means should be computed. Non-numeric variables (factors) will
+be converted to 0/1 dichotomous variables.
 }
   \item{useEffectLiteR}{
 %%     ~~Describe \code{sig.dif.bound} here~~
