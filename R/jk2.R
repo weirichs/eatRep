@@ -47,6 +47,8 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
             clusters =NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE) {
+            depO <- attr(datL, "depOri")
+            fc   <- attr(datL, "fc")
             crossDiffSE.engine <- match.arg(crossDiffSE.engine)
             cdse<- match.arg(arg = crossDiffSE, choices = c("wec", "rep","old"))
             if (!is.null(adjust)) {
@@ -68,7 +70,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "mean",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by,
                    cross.differences = cross.differences, adjust=adjust, useEffectLiteR = useEffectLiteR, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine,
-                   scale = scale, rscales = rscales, mse=mse, rho=rho, crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, clusters=clusters)
+                   scale = scale, rscales = rscales, mse=mse, rho=rho, crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, clusters=clusters, fc=fc, depOri=depO)
             if ( isFALSE(ret[["allNam"]][["cross.differences"]])) {return(ret)}
             if ( (is.list(cross.differences) || cross.differences == TRUE) && cdse == "old" ) {
                  ret[["SE_correction"]] <- list(NULL)
@@ -170,7 +172,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                                 }  else  {                                      
                                      b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot,
                                           nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine="survey", modus=modus,scale = scale,
-                                          rscales = rscales, mse=mse, rho=rho, reihenfolge = ret[["allNam"]][["group"]], verbose=verbose, progress=progress, clusters=clusters)
+                                          rscales = rscales, mse=mse, rho=rho, reihenfolge = ret[["allNam"]][["group"]], verbose=verbose, progress=progress, clusters=clusters, fc=fc)
                                 }
                                 b[["vgl"]]      <- vgl
                                 b[["focGrp"]]   <- grp                          
@@ -195,9 +197,10 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
-                     expected.values=expected.values, na.rm=na.rm, doCheck=FALSE, onlyCheck= TRUE, modus = modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL)
+                     expected.values=expected.values, na.rm=na.rm, doCheck=FALSE, onlyCheck= TRUE, modus = modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL, fc="repTable")
             if ( length(unique(datL[,chk1[["dependent"]]])) == 2 && isTRUE(all(sort(unique(datL[,chk1[["dependent"]]])) == 0:1)) && isFALSE(forceTable)) {
                  attr(datL, "modus") <- modus
+                 attr(datL,"fc") <- "repTable"
                  ret <- repMean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], repWgt = repWgt,
                         nest = chk1[["nest"]], imp = chk1[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                         crossDiffSE = crossDiffSE, nBoot = nBoot, group.delimiter =group.delimiter, trend = chk1[["trend"]], linkErr = chk1[["linkErr"]], dependent = chk1[["dependent"]],
@@ -209,13 +212,13 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                            trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                            expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, onlyCheck= TRUE, modus = modus, engine=engine, scale = scale, rscales = rscales,
-                           mse=mse, rho=rho, verbose=verbose, progress=progress, clusters = NULL)
+                           mse=mse, rho=rho, verbose=verbose, progress=progress, clusters = NULL, fc="repTable")
                     isNa<- which ( is.na ( datL[, chk[["dependent"]] ] ))
                     if ( length ( isNa ) > 0 ) {
                          warning("Warning: Found ",length(isNa)," missing values in dependent variable '",chk[["dependent"]],"'.")
                          if ( isTRUE(separate.missing.indicator) ) {
                               stopifnot ( length( intersect ( "missing" , names(table(datL[, chk[["dependent"]] ])) )) == 0 )
-                              if(inherits(datL[, chk[["dependent"]] ], "factor")){# Hotfix: fuer Faktorvariablen funktioniert das einfache subsetting
+                              if(inherits(datL[, chk[["dependent"]] ], "factor")){
                                   levOld <- levels(datL[, chk[["dependent"]] ]) ### dat[which(is.na(dat[,"var"])) ,"var"] <- "missing" nicht
                                   datL[, chk[["dependent"]] ] <- as.character(datL[, chk[["dependent"]] ])
                                   datL[isNa, chk[["dependent"]] ] <- "missing"
@@ -235,6 +238,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                     ret <- lapply ( colnames(matr), FUN = function ( dpd ) {
                            attr(datL, "modus") <- modus
                            attr(datL,"depOri") <- chk[["dependent"]]
+                           attr(datL,"fc") <- "repTable"
                            res <- repMean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt,
                                              nest = chk[["nest"]], imp = chk[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                                              crossDiffSE = crossDiffSE, nBoot = nBoot, group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,
@@ -257,7 +261,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                            trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                            expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, modus=modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho,
-                           verbose=verbose, progress=progress, clusters = NULL)
+                           verbose=verbose, progress=progress, clusters = NULL, fc="repTable")
                  }
                  return(ret)}}
 
@@ -299,15 +303,15 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           toCall = c("mean", "table", "quantile", "glm", "cov"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, useEffectLiteR = TRUE, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
-          forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine, 
-          scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters) {
+          forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine,
+          scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters, fc = NULL, isRecursive = FALSE, depOri = NULL) {
           datL  <- eatTools::makeDataFrame(datL, name = "datL")
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
-          i     <- 0                                                            
-          fc    <- NULL                                                         
-          while ( !is.null(sys.call(i))) { fc <- c(fc, eatTools::crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
-          fc   <- unlist(lapply(strsplit(fc, ":"), FUN = function ( l ) {l[length(l)]}))
-          fc   <- fc[max(which(fc %in% c("repMean", "repTable", "repGlm", "repQuantile")))]
+          if (is.null(fc) && isFALSE(onlyCheck)) {                              
+               beg   <- Sys.time()
+               fc    <- identifyFunctionCall()
+               message(paste0("Identify function call: ", capture.output(Sys.time() - beg)))
+          }
           toCall<- match.arg(toCall)                                            
           type  <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
           if ( type == "NONE") {doJK <- FALSE }  else {doJK <- TRUE}
@@ -343,132 +347,138 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           if(forceSingularityTreatment == TRUE && !is.null(allNam[["PSU"]]) ) { poolMethod <- "scalar"}
           foo   <- checkJK.arguments(type=type, repWgt=repWgt, PSU=PSU, repInd=repInd)
           auchUV<- checkWecForUV(dat=datL, allNam = allNam)
-          datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
-          allNam<- checkForAdjustment (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL)
-          foo   <- checkNameConvention( allNam = allNam)
+          if (isFALSE(isRecursive)) {                                           
+              beg   <- Sys.time()
+              datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
+              message(paste0("checkGroupVars: ", capture.output(Sys.time() - beg)))
+          }
+          datNam<- checkForAdjustment (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL)
+          foo   <- checkNameConvention( allNam = datNam[["allNam"]])
           if (isTRUE(useWec) ) {
               if ( length(independent) != 1 ) {stop("Only one independent (grouping) variable is allowed for weighted effect coding.\n")}
-              if(!inherits(datL[,independent],c("factor", "character", "logical", "integer"))) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
+              if(!inherits(datNam[["datL"]][,independent],c("factor", "character", "logical", "integer"))) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
           }
-          if (poolMethod == "mice" && !is.null(allNam[["nest"]]) && toCall == "glm" ) {
+          if (poolMethod == "mice" && !is.null(datNam[["allNam"]][["nest"]]) && toCall == "glm" ) {
               message("Method 'mice' is not available for nested imputation. Switch to method 'scalar'.")
               poolMethod <- "scalar"
           }
-          engine<- checkEngine (engine = engine, allNam=allNam, modus=modus, toCall = toCall, type=type)
+          engine<- checkEngine (engine = engine, allNam=datNam[["allNam"]], modus=modus, toCall = toCall, type=type)
           if ( isTRUE(onlyCheck) ) {
-              ret <- allNam
+              ret <- datNam[["allNam"]]
           }  else  {
-              if(!is.null(allNam[["trend"]])) {                                 
-                  if (!is.null(allNam[["group"]])) {
-                       foo <- lapply(allNam[["group"]], FUN = function ( gr ) {
-                              ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
-                              if ( !all ( names(ch[[1]]) == names(ch[[2]]))) { stop(paste("Error in grouping variable '",gr,"': Levels do not match. Levels in trend group '",names(ch)[1],"': \n    ", paste(names(ch[[1]]), collapse = ", "),"\nLevels in trend group '",names(ch)[2],"': \n    ", paste(names(ch[[2]]), collapse = ", "),sep="")) } } )
-                  }
-                  resT<- by ( data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) {
-                         if(verbose) {cat(paste("\nTrend group: '",subdat[1,allNam[["trend"]] ], "'\n",sep=""))}
-                         do    <- paste ( "eatRep ( ", paste(names(formals(eatRep)), car::recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='subdat'; 'group.differences.by'='group.differences.by'"), sep =" = ", collapse = ", "), ")",sep="")
+              if(!is.null(datNam[["allNam"]][["trend"]])) {                                 
+                  chk5<- checkFactorLevels(datL=datNam[["datL"]], allNam=datNam[["allNam"]])
+                  resT<- by ( data = datNam[["datL"]], INDICES = datNam[["datL"]][,datNam[["allNam"]][["trend"]]], FUN = function ( subdat ) {
+                         if(verbose) {cat(paste("\nTrend group: '",subdat[1,datNam[["allNam"]][["trend"]] ], "'\n",sep=""))}
+                         do    <- paste ( "eatRep ( ", paste(names(formals(eatRep)), car::recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='subdat'; 'group.differences.by'='group.differences.by'; 'isRecursive'='TRUE'"), sep =" = ", collapse = ", "), ")",sep="")
                          foo   <- eval(parse(text=do))
-                         foo[["resT"]][["noTrend"]][,allNam[["trend"]]] <- subdat[1,allNam[["trend"]] ]
+                         foo[["resT"]][["noTrend"]][,datNam[["allNam"]][["trend"]]] <- subdat[1,datNam[["allNam"]][["trend"]] ]
                          out1  <- foo[["resT"]][["noTrend"]]
                          out2  <- foo[["allNam"]]
                          return(list(out1=out1, out2=out2))}, simplify = FALSE)
-                  allNam <- c(allNam, resT[[1]][["out2"]])
+                  allNam <- c(datNam[["allNam"]], resT[[1]][["out2"]])
                   allNam <- allNam[unique(names(allNam))]
-                  le     <- createLinkingError ( allNam = allNam, resT = resT, datL = datL, fc=fc, toCall = toCall)
+                  le     <- createLinkingError ( allNam = allNam, resT = resT, datL = datNam[["datL"]], fc=fc, toCall = toCall)
                   out3   <- lapply(resT, FUN = function ( k ) { k[["out1"]]})
                   ret    <- list(resT = out3, allNam = allNam, toCall = toCall, family=family, le=le)
                   return(ret)
               }  else {
-                  if( length( setdiff ( allNam[["group.differences.by"]],allNam[["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
-                  toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
+                  if( length( setdiff ( datNam[["allNam"]][["group.differences.by"]],datNam[["allNam"]][["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
+                  toAppl<- superSplitter(group = datNam[["allNam"]][["group"]], group.splits = group.splits, group.differences.by = datNam[["allNam"]][["group.differences.by"]], group.delimiter = group.delimiter , dependent=datNam[["allNam"]][["dependent"]] )
                   if(verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))}
-                  if ( length ( toAppl ) > 1) {
-                       ret <- do.call("rbind", lapply(1:length(toAppl), FUN = function ( y ) {
-                              gdb <- attr(toAppl[[y]], "group.differences.by")
-                              if ( is.null(gdb)) {gdb <- NA}
-                              res <-  data.frame ( analysis.number = y, hierarchy.level = length(toAppl[[y]]), groups.divided.by = paste(toAppl[[y]], collapse=" + "), group.differences.by = gdb)
-                              if ( !is.null(allNam[["adjust"]])) {
-                                  res[,"adjust"] <- car::recode(res[,"hierarchy.level"], "0='FALSE'; else = 'TRUE'")
-                              }
-                              return(res)}))
-                       if(verbose){cat("\n \n"); print(ret, row.names=FALSE)}
-                  }  else  {ret <- NULL}
-                  allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=allNam, group.splits=group.splits)
-                  fooX  <- createLoopStructure(datL = datL, allNam = allNam, verbose=verbose)
-                  datL  <- fooX[["datL"]]; allNam <- fooX[["allNam"]]           
-                  if(!is.null(allNam[["cross.differences"]])) {
-                      if(length(allNam[["group"]])>1) {
-                         lev <- unlist(lapply(allNam[["group"]], FUN = function ( v ) { unique(as.character(datL[,v]))}))
+                  ret   <- createAnalysisInfTable(toAppl=toAppl, verbose=verbose, allNam=datNam[["allNam"]])
+                  allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=datNam[["allNam"]], group.splits=group.splits)
+                  beg   <- Sys.time()                                           
+                  cls   <- createLoopStructure(datL = datNam[["datL"]], allNam = allNam, verbose=verbose)
+                  message(paste0("createLoopStructure: ", capture.output(Sys.time() - beg)))
+                  if(!is.null(cls[["allNam"]][["cross.differences"]])) {
+                      if(length(cls[["allNam"]][["group"]])>1) {
+                         lev <- unlist(lapply(cls[["allNam"]][["group"]], FUN = function ( v ) { unique(as.character(cls[["datL"]][,v]))}))
                          if (length(lev) != length(unique(lev))) {stop("Factor levels of grouping variables are not disjunct.\n")}
                       }
                   }
                   if(toCall %in% c("mean", "quantile", "glm")) {
-                     if(!inherits(datL[,allNam[["dependent"]]],  c("integer", "numeric"))) {
-                         stop(paste0("Dependent variable '",allNam[["dependent"]],"' has to be of class 'integer' or 'numeric'.\n"))
+                     if(!inherits(cls[["datL"]][,cls[["allNam"]][["dependent"]]],  c("integer", "numeric"))) {
+                         stop(paste0("Dependent variable '",cls[["allNam"]][["dependent"]],"' has to be of class 'integer' or 'numeric'.\n"))
                      }
                   }
-                  repA  <- assignReplicates ( repWgt=repWgt, allNam=allNam, datL = datL, engine = engine, type=type , progress=progress, verbose=verbose)
-                  allRes<- do.call(plyr::rbind.fill, lapply( names(toAppl), FUN = function ( gr ) {
-                      str1  <- createInfoString (ai = ret, toCall=toCall, gr=gr, toAppl=toAppl)
-                      if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") }
-                      if( nchar(gr) == 0 ){                                     
-                          datL[,"dummyGroup"] <- "wholeGroup"
-                          allNam[["group"]] <- "dummyGroup"
-                          allNam[["adjust"]] <- NULL                            
-                      } else {
-                          allNam[["group"]] <- toAppl[[gr]]
-                      }
-                      noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
-                      miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
-                      if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
-                      datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
-                      fooY  <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
-                      datL  <- fooY[["datL"]]; expected.values <- fooY[["expected.values"]]
-                      if ( engine=="survey" || isFALSE(doJK)) {
-                      anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
-                             type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs,
-                             nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation,
-                             toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho,
-                             reihenfolge=reihenfolge, hetero=hetero, se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine,
-                             stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family, str1=str1))
-                      }  else  {                                                
-                      anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
-                             separate.missing.indicator = separate.missing.indicator, expected.values=expected.values, probs=probs, formula=formula, glmTransformation=glmTransformation,
-                             toCall=toCall, modus=modus, type=type, verbose=verbose))
-                      }
-                      if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
-                      return(anaA)}))
-                  rownames(allRes) <- NULL
+                  repA  <- assignReplicates ( repWgt=repWgt, allNam=cls[["allNam"]], datL = cls[["datL"]], engine = engine, type=type , progress=progress, verbose=verbose)
+                  allRes<- innerLoop(toAppl=toAppl, ret=ret, toCall=toCall, allNam=cls[["allNam"]], datL=cls[["datL"]], separate.missing.indicator=separate.missing.indicator,
+                           na.rm=na.rm, expected.values=expected.values, group.delimiter=group.delimiter,type=type, repA=repA, modus=modus,probs=probs, nBoot=nBoot,
+                           bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment,glmTransformation=glmTransformation,doJK=doJK,
+                           poolMethod=poolMethod, useWec=useWec,refGrp=refGrp, scale = scale,rscales = rscales, mse=mse, rho=rho,reihenfolge=reihenfolge, hetero=hetero, se_type=se_type,
+                           useEffectLiteR=useEffectLiteR,crossDiffSE.engine=crossDiffSE.engine,stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct,family=family, verbose=verbose, doCheck=doCheck, engine=engine)
                   if(verbose){cat("\n")}
-                  allRes <- clearTab(allRes, allNam = allNam, depVarOri = attr(datL, "depOri"), fc=fc, toCall=toCall, datL = datL)
-                  allRes <- list(resT = list(noTrend = allRes), allNam = allNam, toCall = toCall, family=family)
+                  allRes <- clearTab(allRes, allNam = cls[["allNam"]], depVarOri = depOri, fc=fc, toCall=toCall, datL = cls[["datL"]])
+                  allRes <- list(resT = list(noTrend = allRes), allNam = cls[["allNam"]], toCall = toCall, family=family)
                   return(allRes) }} }
+                  
+checkFactorLevels <- function(datL, allNam) {
+       if (!is.null(allNam[["group"]])) {
+             foo <- lapply(allNam[["group"]], FUN = function ( gr ) {
+             ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
+             if ( !all ( names(ch[[1]]) == names(ch[[2]]))) { stop(paste("Error in grouping variable '",gr,"': Levels do not match. Levels in trend group '",names(ch)[1],"': \n    ", paste(names(ch[[1]]), collapse = ", "),"\nLevels in trend group '",names(ch)[2],"': \n    ", paste(names(ch[[2]]), collapse = ", "),sep="")) } } )
+       } }
 
-compareTrends <- function ( jk2.out, only.vs.wholePop = FALSE, only.Mean.SD = only.Mean.SD ) {
-          tv  <- which ( sapply (jk2.out, FUN = function ( x ) { length( grep("^trend$", x) > 0) }) > 0 )
-          if ( length( tv ) == 0 ) { stop ("Cannot found any trend variable.\n")}
-          if ( length( tv ) > 1  ) { stop (paste ("Found more than one trend variable: '",paste(names(tv), collapse = "', '"),"'.\n",sep=""))}
-          sel <- jk2.out[which(jk2.out[,names(tv)] == "trend"),]
-          tr  <- do.call("rbind", by ( data = sel, INDICES = sel[,"parameter"], FUN = function ( prm ) {
-                 if ( length (unique(prm[,"group"])) < 2 ) {
-                      vgl <- NULL
-                 }  else  {
-                      spl <- data.frame ( combinat::combn(unique(prm[,"group"]),2), stringsAsFactors = FALSE)
-                      vgl <- do.call("rbind", lapply ( spl, FUN = function ( gr ) {
-                             prms<- prm[which(prm[,"group"] %in% gr),]
-                             estD<- diff ( prms[which(prms[,"coefficient"] == "est"),"value"] )
-                             seD <- sqrt ( sum(prms[which(prms[,"coefficient"] == "se"),"value"]^2) )
-                             ret <- data.frame ( group = paste ("compareTrend=",gr[1],"|__|",gr[2],sep=""), prms[1:2,c("depVar", "modus", "parameter")], coefficient = c("est", "se"), value = c(estD, seD))
-                             return(ret)}))
-                 }
-                 return(vgl) }))
-          if ( isTRUE(only.Mean.SD) && unique(eatTools::halveString(jk2.out[,"modus"], pattern="__", first=TRUE)[,1]) %in% c("JK2.mean", "JK1.mean", "CONV.mean") ) {
-               tr <- tr[which(tr[,"parameter"] %in% c("mean", "sd")), ]
-          }
-          if ( isTRUE(only.vs.wholePop) ) {
-               tr <- tr[grep("wholeGroup", tr[,"group"]), ]
-          }
-          return(tr)}
+createAnalysisInfTable <- function(toAppl, verbose, allNam) {
+         if ( length ( toAppl ) > 1) {
+               ret <- do.call("rbind", lapply(1:length(toAppl), FUN = function ( y ) {
+               gdb <- attr(toAppl[[y]], "group.differences.by")
+               if ( is.null(gdb)) {gdb <- NA}
+               res <-  data.frame ( analysis.number = y, hierarchy.level = length(toAppl[[y]]), groups.divided.by = paste(toAppl[[y]], collapse=" + "), group.differences.by = gdb)
+               if ( !is.null(allNam[["adjust"]])) {
+                      res[,"adjust"] <- car::recode(res[,"hierarchy.level"], "0='FALSE'; else = 'TRUE'")
+               }
+               return(res)}))
+               if(verbose){cat("\n \n"); print(ret, row.names=FALSE)}
+         }  else  {ret <- NULL}
+         return(ret)}
+
+innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indicator, na.rm, expected.values, group.delimiter,type, repA, modus,probs,nBoot,bootMethod, formula, forceSingularityTreatment,
+                      glmTransformation,doJK, poolMethod, useWec,refGrp, scale,rscales, mse, rho,reihenfolge, hetero, se_type, useEffectLiteR,crossDiffSE.engine,stochasticGroupSizes, progress, correct,
+                      family, verbose, doCheck, engine)  {
+       allRes<- do.call(plyr::rbind.fill, lapply( names(toAppl), FUN = function ( gr ) {
+                str1  <- createInfoString (ai = ret, toCall=toCall, gr=gr, toAppl=toAppl)
+                if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") }
+                if( nchar(gr) == 0 ){                                           
+                    datL[,"dummyGroup"] <- "wholeGroup"
+                    allNam[["group"]] <- "dummyGroup"                           ### problematisch!! "allNam" wird hier in jedem Schleifendurchlauf ueberschrieben -- nicht so superschoen!
+                    allNam[["adjust"]] <- NULL                                  
+                } else {
+                    allNam[["group"]] <- toAppl[[gr]]
+                }
+                noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
+                miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
+                if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
+                beg   <- Sys.time()
+                datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
+                message(paste0("checkImpNest: ", capture.output(Sys.time() - beg)))
+                pev   <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
+                if ( engine=="survey" || isFALSE(doJK)) {
+                anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
+                       type=type, repA=repA, modus=modus, separate.missing.indicator = separate.missing.indicator, expected.values=pev[["expected.values"]], probs=probs,
+                       nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation,
+                       toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho,
+                       reihenfolge=reihenfolge, hetero=hetero, se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine,
+                       stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family, str1=str1))
+                }  else  {                                                      
+                       anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
+                              separate.missing.indicator = separate.missing.indicator, expected.values=pev[["expected.values"]], probs=probs, formula=formula, glmTransformation=glmTransformation,
+                              toCall=toCall, modus=modus, type=type, verbose=verbose))
+                }
+                if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
+                return(anaA)}))
+       rownames(allRes) <- NULL
+       return(allRes)}
+
+
+identifyFunctionCall <- function() {
+          i     <- 0                                                            
+          fc    <- NULL                                                         
+          while ( !is.null(sys.call(i))) { fc <- c(fc, eatTools::crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
+          fc   <- unlist(lapply(strsplit(fc, ":"), FUN = function ( l ) {l[length(l)]}))
+          fc   <- fc[max(which(fc %in% c("repMean", "repTable", "repGlm", "repQuantile")))]
+          return(fc)}
 
 checkRegression <- function ( dat, allNam, useWec ) {
                    ch <- lapply( allNam[["independent"]], FUN = function ( i ) {
@@ -483,10 +493,10 @@ checkRegression <- function ( dat, allNam, useWec ) {
                               if ( isKonst > 15 && isFALSE(useWec) ) {
                                    warning("Predictor '",i,"' of class '",class ( dat[,i] ),"' has ",isKonst," levels. Please check whether this is intended.")
                               }
-                         } })   }                                               ### keine Rueckgabe
+                         } })   }                                               
 
 createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc, toCall) {
-          if (length(allNam[["linkErr"]]) > 1) {
+          if (length(allNam[["linkErr"]]) > 1) {                                
               le <- allNam[["linkErr"]]
               attr(le, "linkingErrorFrame") <- TRUE                             
               return(le)
@@ -760,7 +770,7 @@ conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, use
                          x_m <- sapply(dat.i[,allNam[["adjust"]]], mean)        
                     }  else  {                                                  
                          reg <- eval(parse(text = paste0("lm(as.formula(frml), data = gr, weights = ",allNam[["wgt"]], ")")))
-                         x_m <- unlist(lapply (allNam[["adjust"]], FUN = function (u) { Hmisc::wtd.mean(dat.i[,u], weights = dat.i[,"wgt"])}))
+                         x_m <- unlist(lapply (allNam[["adjust"]], FUN = function (u) { Hmisc::wtd.mean(dat.i[,u], weights = dat.i[,allNam[["wgt"]]])}))
                     }                                                           
                     cof1<- coef(reg)
                     adj <- cof1[1] + sum(cof1[-1] * x_m)
@@ -770,7 +780,7 @@ conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, use
                     if ( all(dat.i[,allNam[["wgt"]]] == 1) ) {                  
                          mat[(length(cof1)+1):nrow(mat), (length(cof1)+1):ncol(mat)] <- var(gr[,allNam[["adjust"]]]) / (nrow(gr)-1)
                     }  else  {                                                  
-                         mat[(length(cof1)+1):nrow(mat), (length(cof1)+1):ncol(mat)] <- cov.wt(gr[,allNam[["adjust"]]], wt = gr[,allNam[["wgt"]]], cor = FALSE, center = TRUE)[["cov"]] / (nrow(gr)-1)
+                         mat[(length(cof1)+1):nrow(mat), (length(cof1)+1):ncol(mat)] <- cov.wt(gr[,allNam[["adjust"]], drop=FALSE], wt = gr[,allNam[["wgt"]]], cor = FALSE, center = TRUE)[["cov"]] / (nrow(gr)-1)
                     }
                     frm2<- paste0("~x1 + ", paste(paste("x", 2:length(cof1), sep=""), paste("x", (length(cof1)+1):(length(cof1)+length(x_m)), sep=""), collapse=" + ", sep="*"))
                     se  <- msm::deltamethod(as.formula(frm2), pars, mat)
@@ -948,7 +958,7 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                                    stopifnot(length(as.character(formula)) == 3 )
                                    formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
                                    if ( isFALSE(useWec) ) {
-                                       if ( inherits(family, "function" )) {
+                                       if ( inherits(family,  "function" )) {
                                             link <- strsplit(capture.output(str(family)), split="\"")[[1]][2]
                                             fam  <- car::recode(link, "'identity'='gaussian'; 'logit'='binomial'; 'probit'='binomial'")
                                        }  else  {
@@ -1347,23 +1357,21 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !inherits(datL[,v],  c("factor", "character", "logical", "integer"))) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
              for ( gg in c(allNam[["group"]], auchUV) ) {                       ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
-    ### personen muessen in gruppierungsvariable genestet sein, aber fuer jede Imputation und jedes Nest separat! (es sei denn, es gibt keine Imputationen oder die Gruppenvariable ist nicht imputiert)
                    if ( length(which(is.na(datL[,gg])))>0) { stop("Grouping variable '",gg,"' contains ",length(which(is.na(datL[,gg])))," missing values.")}
-                   isImp<- TRUE                                                 ### initialisieren: wir gehen davon aus, dass die Variable imputiert ist
+                   isImp<- TRUE                                                 
                    if ( is.null(allNam[["nest"]]) && is.null(allNam[["imp"]]) ) {
-                        isImp <- FALSE                                          ### dieser ganze Krempel nur, um rauszukriegen, ob fuer jede Imputation
-                   }  else  {                                                   ### die genestetheit ueberprueft werden muss oder ob das fuer alle
-                        imps  <- c(allNam[["nest"]], allNam[["imp"]])           ### zusammen geht
+                        isImp <- FALSE                                          
+                   }  else  {                                                   
+                        imps  <- c(allNam[["nest"]], allNam[["imp"]])           
                         if ( length(imps) == 1) {
                              datL[,"g"] <- datL[,imps]
                         }  else  {
-                             txt   <- paste0("datL %>% tidyr::unite(\"g\", c(", paste(match(c(allNam[["nest"]],allNam[["imp"]]), colnames(datL)),collapse=", "),"), remove=FALSE)")
+                             txt   <- paste0("datL |> tidyr::unite(\"g\", c(", paste(match(c(allNam[["nest"]],allNam[["imp"]]), colnames(datL)),collapse=", "),"), remove=FALSE)")
                              datL  <- eval(parse(text=txt))
                         }
                         isUniq<- eatGADS::checkUniqueness2(datL, varName=gg, idVar=allNam[["ID"]], impVar="g")
                         if(isUniq) { isImp <- FALSE}
                    }
-    ### wenn die Gruppierungsvariable nicht imputiert ist, genuegt es, den check nur fuer die erste Imputation auszufuehren
                    if ( isFALSE(isImp) ) {
                         if ( "g" %in% colnames(datL) ) {
                             d <- datL[which(datL[,"g"] == unique(datL[,"g"])[1]),]
@@ -1388,7 +1396,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           }
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
-                 if (inherits ( datL[,gg], "factor")) {                         ### ausserdem duerfen fuer Gruppierungs- und unabhaengig Variablen keine factor levels ohne Beobachtungen drinsein
+                 if (inherits ( datL[,gg], "factor")) {                         
                      if ( any(table(datL[,gg]) == 0)) {
                           lev <- names(which(table(datL[,gg]) !=0))
                           nlv <- names(which(table(datL[,gg]) ==0))
@@ -1400,10 +1408,21 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           }
           if ( "g" %in% colnames(datL)) {datL <- datL[,-match("g", colnames(datL))]}
           return(datL)}
-          
+
 checkForAdjustment <- function(datL, allNam, groupWasNULL) {
           if(!is.null(allNam[["adjust"]])) {
-             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) { if ( !inherits(datL[,v], c("numeric", "integer"))) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric' or 'integer'.\n"))} })
+             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) {
+                    if ( !inherits(datL[,v], c("numeric", "integer", "character", "factor"))) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric', 'integer', 'character', or 'factor'.\n")) }
+                    if ( length(which(is.na(datL[,v]))) >0 ) {stop(paste0("Adjusting variable '",v,"' has missing values."))}  })
+             fac <- sapply(allNam[["adjust"]], FUN = function ( v ) {inherits(datL[,v], c("factor", "character"))})
+             if (length(which(fac==TRUE))>0) {
+                 for ( g in which(fac==TRUE)) {
+                       newFr <- model.matrix( as.formula (paste("~",names(fac)[g],sep="")), data = datL)[,-1,drop=FALSE]
+                       message(paste("    Variable '",names(fac)[g],"' of class '",class(datL[,names(fac)[g]]),"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), "'.",sep=""))
+                       datL  <- data.frame(datL, newFr, stringsAsFactors=FALSE)
+                       allNam[["adjust"]] <- c(setdiff(allNam[["adjust"]],names(fac)[g]), colnames(newFr))
+                 }
+             }
              if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
              if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
              if (!is.null(allNam[["group.differences.by"]])) {
@@ -1411,7 +1430,7 @@ checkForAdjustment <- function(datL, allNam, groupWasNULL) {
                   allNam[["group.differences.by"]] <- NULL
              }
           }
-          return(allNam)}
+          return(list(allNam=allNam, datL=datL))}
           
 checkNameConvention <- function( allNam) {
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "le")
@@ -1451,7 +1470,7 @@ setCrossDifferences <- function (cross.differences, allNam, group.splits) {
                if(!all(vals %in% group.splits)) {stop("All numerical values in 'cross.differences' must be included in 'group.splits'.\n")}
                cross.differences <- lapply( cross.differences, sort )
                if ( length(cross.differences) != length(unique(cross.differences)) ) {
-                   message("Some comparisons in 'cross.differences' are identical. Duplicated comparisons will be removed.")
+                    message("Some comparisons in 'cross.differences' are identical. Duplicated comparisons will be removed.")
                     cross.differences <- unique(cross.differences)
                }
           }
@@ -1462,7 +1481,7 @@ createLoopStructure <- function(datL, allNam, verbose) {
           if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
           if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else {
               stopifnot(length(allNam[["wgt"]]) == 1 )
-              if ( !inherits(datL[,allNam[["wgt"]]], c("numeric", "integer")) ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",paste(class(datL[,allNam[["wgt"]]]),collapse = "', '"), "' has to be numeric.\n",sep="")) }
+              if ( !inherits(datL[,allNam[["wgt"]]], c("numeric", "integer")) ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",paste(class(datL[,allNam[["wgt"]]]),collapse = "', '"),"' has to be numeric.\n",sep="")) }
               isMis <- which(is.na(datL[,allNam[["wgt"]]]))
               isZero<- which ( datL[,allNam[["wgt"]]] == 0 )
               if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
@@ -1475,7 +1494,7 @@ createLoopStructure <- function(datL, allNam, verbose) {
           }  else  { if(verbose){cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}}
           datL[,"isClear"] <- TRUE
           if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
-          if(!is.null(allNam[["group"]])) {                             
+          if(!is.null(allNam[["group"]])) {                                     
               for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) }
           }
           return(list(datL = datL, allNam = allNam))}
