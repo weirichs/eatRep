@@ -1,3 +1,6 @@
+# eatRep 0.14.4
+
+* bug fix in computation of adjusted weighted means
 * enhance performance in recursive calls (e.g., trend estimation)
 
 # eatRep 0.14.3
