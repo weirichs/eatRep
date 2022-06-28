@@ -308,9 +308,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           datL  <- eatTools::makeDataFrame(datL, name = "datL")
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           if (is.null(fc) && isFALSE(onlyCheck)) {                              
-               beg   <- Sys.time()
+#               beg   <- Sys.time()
                fc    <- identifyFunctionCall()
-               message(paste0("Identify function call: ", capture.output(Sys.time() - beg)))
+#               message(paste0("Identify function call: ", capture.output(Sys.time() - beg)))
           }
           toCall<- match.arg(toCall)                                            
           type  <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -348,9 +348,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           foo   <- checkJK.arguments(type=type, repWgt=repWgt, PSU=PSU, repInd=repInd)
           auchUV<- checkWecForUV(dat=datL, allNam = allNam)
           if (isFALSE(isRecursive)) {                                           
-              beg   <- Sys.time()
+#              beg   <- Sys.time()
               datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
-              message(paste0("checkGroupVars: ", capture.output(Sys.time() - beg)))
+#              message(paste0("checkGroupVars: ", capture.output(Sys.time() - beg)))
           }
           datNam<- checkForAdjustment (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL)
           foo   <- checkNameConvention( allNam = datNam[["allNam"]])
@@ -388,9 +388,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                   if(verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))}
                   ret   <- createAnalysisInfTable(toAppl=toAppl, verbose=verbose, allNam=datNam[["allNam"]])
                   allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=datNam[["allNam"]], group.splits=group.splits)
-                  beg   <- Sys.time()                                           
+#                  beg   <- Sys.time()
                   cls   <- createLoopStructure(datL = datNam[["datL"]], allNam = allNam, verbose=verbose)
-                  message(paste0("createLoopStructure: ", capture.output(Sys.time() - beg)))
+#                  message(paste0("createLoopStructure: ", capture.output(Sys.time() - beg)))
                   if(!is.null(cls[["allNam"]][["cross.differences"]])) {
                       if(length(cls[["allNam"]][["group"]])>1) {
                          lev <- unlist(lapply(cls[["allNam"]][["group"]], FUN = function ( v ) { unique(as.character(cls[["datL"]][,v]))}))
@@ -450,9 +450,9 @@ innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indic
                 noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
                 miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
                 if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
-                beg   <- Sys.time()
+#                beg   <- Sys.time()
                 datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
-                message(paste0("checkImpNest: ", capture.output(Sys.time() - beg)))
+#                message(paste0("checkImpNest: ", capture.output(Sys.time() - beg)))
                 pev   <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
                 if ( engine=="survey" || isFALSE(doJK)) {
                 anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
@@ -1308,10 +1308,6 @@ doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type,
         retList <- addSig (dat = retList, allNam = allNam)
         return(retList)}
 
-print_and_capture <- function(x, einrueckung = 0) {
- paste(capture.output(print(x)), collapse = paste("\n", paste(rep(" ", einrueckung),collapse=""),  collapse="") ) }
-
-
 checkEngine <- function ( engine , allNam, modus, toCall, type) {
           if (engine == "BIFIEsurvey") {
               if (!is.null(allNam[["nest"]]) ) {
@@ -1556,7 +1552,7 @@ checkImpNest <- function (datL, doCheck, toAppl, gr, allNam, toCall, separate.mi
              if ( length( toAppl[[gr]] ) > 1) {                     
                   crsTab <- table(datL[,toAppl[[gr]]])
                   if ( length(which(crsTab < 10 )) > 0 ) {
-                       warning("Small number of observations in some combinations of grouping variables:\n   Recommend to remove these group(s).\n", print_and_capture(crsTab, 3) )
+                       warning("Small number of observations in some combinations of grouping variables:\n   Recommend to remove these group(s).\n", eatTools::print_and_capture(crsTab, 3) )
                   }
              }
              impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE)
@@ -1565,10 +1561,10 @@ checkImpNest <- function (datL, doCheck, toAppl, gr, allNam, toCall, separate.mi
                   warning(length(laenge), " combination(s) of groups without any observations. Analysis most probably will crash.")
              }
              impNes<- table(impNes[setdiff (1:length(impNes), laenge)])
-             if(length(impNes) != 1 ) {warning("Number of imputations differ across nests and/or groups!\n", print_and_capture(impNes, 3))}
+             if(length(impNes) != 1 ) {warning("Number of imputations differ across nests and/or groups!\n", eatTools::print_and_capture(impNes, 3))}
              if(!is.null(allNam[["PSU"]]))  {
                   psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}, simplify = FALSE) )
-                  if(length(psuNes) != 1 ) {warning("Number of PSUs differ across nests!\n", print_and_capture(psuNes, 3))}
+                  if(length(psuNes) != 1 ) {warning("Number of PSUs differ across nests!\n", eatTools::print_and_capture(psuNes, 3))}
              }
              impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = checkNests, allNam=allNam, toAppl=toAppl, gr=gr, simplify = FALSE)
              impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x[["ret"]], FUN = length)) })) )

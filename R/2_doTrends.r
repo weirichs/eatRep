@@ -40,7 +40,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                    jk2_wideS<- jk2_wide[!jk2_wide[, "comparison"] %in% c("crossDiff_of_groupDiff", "groupDiff") | is.na(jk2_wide[, "comparison"]), ]
                    tabs     <- table(jk2_wideS[,c("parameter", "group")])
                    if ( !all ( tabs == 1) ) {                                   ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen ... sonst Effektstaerkebestimmug ueberspringen
-                        message("Cannot find standard deviations of following groups: \n",print_and_capture(tabs, 5),"\nSkip computation of effect sizes.")
+                        message("Cannot find standard deviations of following groups: \n",eatTools::print_and_capture(tabs, 5),"\nSkip computation of effect sizes.")
                    }  else  {                                                   ### sortieren nach "group" und "parameter"; siehe Mail an Benjamin, 11.06.2019
                         jk2_wideS<- jk2_wideS[with(jk2_wideS, order(parameter, group)),]
                         pooledSD <- sqrt(0.5 * (jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",vgl[[comp]][1], sep="")]^2 + jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",vgl[[comp]][2], sep="")]^2))
