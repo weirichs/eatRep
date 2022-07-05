@@ -1,3 +1,7 @@
+# eatRep 0.14.5
+
+* compatibility with lavaan version 0.6.12
+
 # eatRep 0.14.4
 
 * bug fix in computation of adjusted weighted means

@@ -22,7 +22,6 @@
 #  depending on 'run' either a data frame with results (ordered by factor levels or by occurence in data frame) or lavaan syntax as character string
 
 groupToTotalMeanComparisonLavaan <- function( d, y.var, group.var, weight.var=NULL, heterogeneous=FALSE, stchgrsz=FALSE, extended.results=FALSE, lavaan.syntax.path=NULL, run=TRUE, lavaan.summary.output=FALSE ){
-
 		# lavaan, janitor is required
 #		require( lavaan )
 #		require( janitor )
@@ -39,31 +38,22 @@ groupToTotalMeanComparisonLavaan <- function( d, y.var, group.var, weight.var=NU
 			# stop if not at least lavaan version 0.6-7
 #			if( v < 100010061007 ) stop( "lavaan version 0.6-7 or newer is required" )
 #		}
-
 		# variable names inputted by user
 		vars <- c( y.var, group.var, weight.var )
-
 		# check if in colnames of data frame
 		if( !all( indfr <- vars %in% colnames( d ) ) ) stop( paste0( "variable(s) ", paste(paste0("'",vars[!indfr],"'"),collapse=", "), " not in data" ) )
-
 		# check for missings
 		if( any( sapply( vars, function(var) any( is.na( d[, var] ) ) ) ) ) stop( "data contains missings, not supported" )
-
 		# if factor, keep levels (but only existing ones in the data frame)
 		if( is.factor( d[,group.var] ) ) { orig.levels <- levels( d[,group.var] ); orig.levels <- orig.levels[orig.levels %in% unique( as.character( d[,group.var] ))] } else { orig.levels <- NULL }
-
 		# convert group variable to character
 		d[,group.var] <- as.character ( d[,group.var] )
-
 		# original group labels
 		orig.groups <- unique( d[,group.var] )
-
 		# clean group labels
 		group.lab <- janitor::make_clean_names( orig.groups )
-
 		# forbidden group labels
 		if( any( group.lab %in% (forbidden.gr.lab <- c("Mtotal", "N")) ) ) stop( paste0( "group labels must not be ", paste( forbidden.gr.lab, collapse=" | " ) ) )
-
 		# relative group frequencies (fixed, i.e., from sample), relevant for stchgrsz=FALSE
 		if( is.null( weight.var ) ){
 				rgf <- sapply( orig.groups, function( g ) length( d[d[,group.var] %in% g,y.var] ) )
@@ -80,11 +70,9 @@ groupToTotalMeanComparisonLavaan <- function( d, y.var, group.var, weight.var=NU
 		N <- sum( rgf )
 		relfreq <- rgf / N
 		names( Mg ) <- group.lab
-
 		# "weighted by"-string (just for comments in lavaan code)
 		w.by1 <- ifelse(!is.null(weight.var),paste0( "\n# weighted by sample weights variable '", weight.var, "' via laavan argument sampling.weights='",weight.var,"'\n" ), "\n" )
 		w.by2 <- ifelse(!is.null(weight.var) & !stchgrsz,paste0( "\n# weighted by using the sample weights variable '", weight.var, "'" ), "" )
-
 		# lavaan model
 		m <- paste0( 
 				'# dependent variable is regressed on intercept in each group (gives group means)',w.by1,
@@ -96,47 +84,40 @@ groupToTotalMeanComparisonLavaan <- function( d, y.var, group.var, weight.var=NU
 				'\n# group mean to total mean difference (sample values behind #)\n',
 				paste(paste0(group.lab," := M",group.lab," - Mtotal # ",Mg, " - ", Mtotal, " = ", Mg-Mtotal ),collapse="\n")
 		)
-
 		# write lavaan syntax to path
 		if( !is.null( lavaan.syntax.path ) ){
 				tried <- try( write( m, lavaan.syntax.path ) )
 				if( inherits( tried, "try-error" ) ) warning( "Couldn't create lavaan syntax" )
 		}
-			
 		if( run ){
-
 				# run lavaan model
 				r <- sem( m, data=d, group=group.var, sampling.weights=weight.var, estimator="MLR" )
-
 				# results
 				if( !lavaan.summary.output ) sink("nul")
 				smr <- summary( r )
 				if( !lavaan.summary.output ) sink()
-
-				# results data frame
-				res <- smr[[1]]
+				# results data frame: lavaan behavior depends on version!
+				ver <- as.character(utils::packageVersion("lavaan"))
+				if(utils::compareVersion(ver, "0.6.11") == 1) {
+				    res <- smr[["pe"]]
+				}  else  { 	
+ 				    res <- smr[[1]]
+				}
 				colnames( res )[colnames( res ) %in% "label"] <- "par"
-
 				# keep only relevant results
 				res2 <- res[ res$par %in% group.lab, rel.cols <- c("par","est","se","z","pvalue")]
-
 				# restore parameter labels (as before cleaning)
 				res3 <- res2
 				res3$par <- orig.groups
-
 				# if group variable was originally factor, sort results by levels
 				if ( !is.null( orig.levels ) ){
 					res3 <- res3[ match( orig.levels, res3$par ), ]
 				}
-
 				# add extended results (Mtotal)
 				if( extended.results ) res3 <- rbind( res3, res[ res$par %in% "Mtotal", rel.cols ] )
-
 				# rownames
 				rownames( res3 ) <- seq( along=rownames( res3 ) )
-
 				# return
 				return( res3 )
-				
 		} else { return( m ) }
 }
