@@ -98,7 +98,7 @@ groupToTotalMeanComparisonLavaan <- function( d, y.var, group.var, weight.var=NU
 				if( !lavaan.summary.output ) sink()
 				# results data frame: lavaan behavior depends on version!
 				ver <- as.character(utils::packageVersion("lavaan"))
-				if(utils::compareVersion(ver, "0.6.11") == 1) {
+				if(utils::compareVersion(ver, "0.6-11") == 1) {
 				    res <- smr[["pe"]]
 				}  else  { 	
  				    res <- smr[[1]]
