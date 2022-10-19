@@ -1,3 +1,8 @@
+# eatRep 0.14.5.9000
+
+* add function `repLmer` for replication methods for linear multilevel models
+* bug fix in internally used check function whether levels of grouping variable(s) are equal across assessment cycles (trend groups)
+
 # eatRep 0.14.5
 
 * compatibility with lavaan version 0.6-12

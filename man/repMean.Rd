@@ -274,7 +274,7 @@ print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),
 means2 <- repMean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone",
           repInd = "jkrep", imp="imp", groups = c("country", "sex"), group.splits = 0:2,
           group.differences.by="sex", dependent = "score", na.rm=FALSE, doCheck=TRUE,
-          crossDiffSE.engine= "lm")
+          cross.differences =TRUE, crossDiffSE.engine= "lm")
 res2   <- report(means2,add = list(domain = "reading"))
 
 ### Example 2a: Additionally to example 2, we decide to estimate whether

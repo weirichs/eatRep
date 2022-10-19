@@ -1,6 +1,6 @@
-createCall <- function ( hetero, allNam) {
+createCall <- function ( hetero, allNam, formula) {
          part1 <- ifelse(hetero, yes = "estimatr::lm_robust(", no = "lm(")
-         part2 <- "as.formula(formelNew), data = dat.i"
+         part2 <- "formula, data = dat.i"
          if ( is.null(allNam[["wgt"]]) && is.null(allNam[["clusters"]]) && !hetero) {
               part3 <- paste0(part1, part2, ")")
               return(part3)
@@ -20,6 +20,26 @@ createCall <- function ( hetero, allNam) {
          }
          part3 <- paste0(part1, part2, ")")
          return(part3)}
+
+identify_UV_AV <- function ( toCall, dependent, formula, formula.random, formula.fixed, glmerFormula)  {
+          independent <- NULL                                                   
+          if(toCall == "glm") {                                                 
+             dependent  <- as.character(formula)[2]
+             independent<- all.vars(formula[-2])
+          }
+          if(toCall == "lmer") {
+             independent<- unique(c(all.vars(formula.random), all.vars(formula.fixed)))
+          }
+          if(toCall == "glmer") {
+             dependent  <- as.character(glmerFormula)[2]
+             independent<- all.vars(glmerFormula[-2])
+          }
+          return(list(uv=independent, av=dependent))}
+
+extractFactorVarsFromFormula <- function ( formula) {
+         r <- Reduce(paste0, deparse(formula))
+         r2<- methods::el(regmatches(r, gregexpr("(?<=factor\\().*?(?=\\))", r, perl=TRUE)))
+         return(r2)}
 
 chooseSeType <- function ( se_type, clusters) {
        if ( length(se_type) > 1) {                                              
@@ -166,7 +186,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                                      }
                                      b <- repGlm(datL=d, ID=ret[["allNam"]][["ID"]], wgt = gew, type = type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]],
                                                   repWgt = ret[["allNam"]][["repWgt"]], nest=ne, imp=im, trend = trend,
-                                                  formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE, engine = "survey",
+                                                  formula = as.formula(paste0(ret[["allNam"]][["dependent"]] , " ~ ", grp)), doCheck = doCheck, na.rm = na.rm, useWec = TRUE,
                                                   scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type , crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes,
                                                   verbose=verbose, progress=progress, clusters=clusters)
                                 }  else  {                                      
@@ -283,7 +303,7 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
             group.splits = length(groups), group.delimiter = "_", cross.differences = FALSE, trend = NULL, linkErr = NULL, formula,
             family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
-            poolMethod = c("mice", "scalar") , useWec = FALSE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL,
+            poolMethod = c("mice", "scalar") , useWec = FALSE, scale = 1, rscales = 1, mse=TRUE, rho=NULL,
             hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"), clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE,
             progress = TRUE) {
             datL   <- eatTools::makeDataFrame ( datL)
@@ -294,23 +314,32 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "glm",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, cross.differences = cross.differences, trend = trend, linkErr = linkErr,
                    formula=formula, family=family, forceSingularityTreatment=forceSingularityTreatment, glmTransformation = glmTransformation,
-                   group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus=modus, poolMethod=poolMethod, useWec=useWec, engine=engine,
+                   group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus=modus, poolMethod=poolMethod, useWec=useWec,
                    scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type, crossDiffSE.engine=crossDiffSE.engine,
-                   stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, clusters=clusters)}
+                   stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, clusters=clusters, engine="survey")}
 
+repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2", "JK1"),
+            PSU = NULL, repInd = NULL, imp=NULL, group=NULL, trend = NULL,  dependent, formula.fixed, formula.random,
+            doCheck = TRUE, na.rm = FALSE, clusters, verbose = TRUE) {
+            datL   <- eatTools::makeDataFrame ( datL)
+            modus  <- identifyMode ( name = "lmer", type = car::recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1")), "'FAY'='Fay'") )
+            eatRep(datL =datL, ID=ID , wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, type=type, PSU = PSU, repInd = repInd, toCall = "lmer",
+                   imp = imp, groups =group, trend = trend, dependent=dependent, formula.fixed=formula.fixed, formula.random=formula.random,engine="BIFIEsurvey",
+                   na.rm=na.rm, doCheck=doCheck, modus=modus, verbose=verbose, clusters=clusters)}
 
-eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
-          toCall = c("mean", "table", "quantile", "glm", "cov"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
+eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
+          toCall = c("mean", "table", "quantile", "glm", "cov", "lmer", "glmer"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, useEffectLiteR = TRUE, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
-          separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL,
+          separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, formula.fixed=NULL, formula.random=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine,
-          scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters, fc = NULL, isRecursive = FALSE, depOri = NULL) {
+          scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters=NULL, fc = NULL, isRecursive = FALSE, depOri = NULL,
+          glmerFormula, cWeights = FALSE,  center_group = NULL,  center_grand = NULL, max_iteration = 10, nQuad = 13L,  acc0 = 120,  keepAdapting = FALSE, nCores =NULL) {
           datL  <- eatTools::makeDataFrame(datL, name = "datL")
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           if (is.null(fc) && isFALSE(onlyCheck)) {                              
 #               beg   <- Sys.time()
                fc    <- identifyFunctionCall()
-#               message(paste0("Identify function call: ", capture.output(Sys.time() - beg)))
+#               message(paste0("Identify function call: ", timeFormat(Sys.time() - beg)))
           }
           toCall<- match.arg(toCall)                                            
           type  <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -320,12 +349,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           if(isFALSE(forceSingularityTreatment) & glmTransformation != "none") {
              message("'forceSingularityTreatment' was set to 'FALSE'. Please note that 'glmTransformation' is only possible if 'forceSingularityTreatment' is 'TRUE'.")
           }
-          if(toCall == "glm") {                                                 
-             dependent  <- as.character(formula)[2]
-             independent<- all.vars(formula[-2])
-           }  else {
-             independent <- NULL
-          }
+          uv_av <- identify_UV_AV(toCall=toCall, dependent=dependent, formula=formula, formula.random=formula.random, formula.fixed=formula.fixed, glmerFormula=glmerFormula)
           if(is.null(groups))  {                                                
              groups <- "wholeGroup"
              datL[,"wholeGroup"] <- "wholePop"
@@ -339,7 +363,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           }  else  {
              leFrame <- NULL
           }
-          allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = dependent, independent=independent, adjust=adjust, clusters=clusters)
+          allVar<- list(ID = ID, wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = uv_av[["av"]], independent=uv_av[["uv"]], adjust=adjust, clusters=clusters)
           allNam<- lapply(allVar, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = datL, variable=ii, warnIfMissing = TRUE)})
           if ( !is.null(leFrame)){
              allNam[["linkErr"]] <- leFrame
@@ -350,13 +374,15 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           if (isFALSE(isRecursive)) {                                           
 #              beg   <- Sys.time()
               datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
-#              message(paste0("checkGroupVars: ", capture.output(Sys.time() - beg)))
+#              message(paste0("checkGroupVars: ", timeFormat(Sys.time() - beg)))
           }
-          datNam<- checkForAdjustment (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL)
+          datNam<- checkForAdjustmentAndLmer (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL, formula.random=formula.random, formula.fixed=formula.fixed)
+          formula.fixed <- datNam[["formula.fixed"]]                            
+          formula.random <- datNam[["formula.random"]]                          
           foo   <- checkNameConvention( allNam = datNam[["allNam"]])
           if (isTRUE(useWec) ) {
-              if ( length(independent) != 1 ) {stop("Only one independent (grouping) variable is allowed for weighted effect coding.\n")}
-              if(!inherits(datNam[["datL"]][,independent],c("factor", "character", "logical", "integer"))) {stop(paste0("For weighted effect coding, independent (grouping) variable '",independent,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
+              if ( length(allNam[["independent"]]) != 1 ) {stop("Only one independent (grouping) variable is allowed for weighted effect coding.\n")}
+              if(!inherits(datNam[["datL"]][,allNam[["independent"]]],c("factor", "character", "logical", "integer"))) {stop(paste0("For weighted effect coding, independent (grouping) variable '",allNam[["independent"]],"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))}
           }
           if (poolMethod == "mice" && !is.null(datNam[["allNam"]][["nest"]]) && toCall == "glm" ) {
               message("Method 'mice' is not available for nested imputation. Switch to method 'scalar'.")
@@ -366,7 +392,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
           if ( isTRUE(onlyCheck) ) {
               ret <- datNam[["allNam"]]
           }  else  {
-              if(!is.null(datNam[["allNam"]][["trend"]])) {                                 
+              if(!is.null(datNam[["allNam"]][["trend"]])) {                     
+                  nlev<- length(unique(datNam[["datL"]][,datNam[["allNam"]][["trend"]]]))
+                  if(nlev == 1) {stop(paste0("Trend variable '",datNam[["allNam"]][["trend"]],"' is constant with value '",unique(datNam[["datL"]][,datNam[["allNam"]][["trend"]]]),"'."))}
                   chk5<- checkFactorLevels(datL=datNam[["datL"]], allNam=datNam[["allNam"]])
                   resT<- by ( data = datNam[["datL"]], INDICES = datNam[["datL"]][,datNam[["allNam"]][["trend"]]], FUN = function ( subdat ) {
                          if(verbose) {cat(paste("\nTrend group: '",subdat[1,datNam[["allNam"]][["trend"]] ], "'\n",sep=""))}
@@ -390,7 +418,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                   allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=datNam[["allNam"]], group.splits=group.splits)
 #                  beg   <- Sys.time()
                   cls   <- createLoopStructure(datL = datNam[["datL"]], allNam = allNam, verbose=verbose)
-#                  message(paste0("createLoopStructure: ", capture.output(Sys.time() - beg)))
+#                  message(paste0("createLoopStructure: ", timeFormat(Sys.time() - beg)))
                   if(!is.null(cls[["allNam"]][["cross.differences"]])) {
                       if(length(cls[["allNam"]][["group"]])>1) {
                          lev <- unlist(lapply(cls[["allNam"]][["group"]], FUN = function ( v ) { unique(as.character(cls[["datL"]][,v]))}))
@@ -407,7 +435,10 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            na.rm=na.rm, expected.values=expected.values, group.delimiter=group.delimiter,type=type, repA=repA, modus=modus,probs=probs, nBoot=nBoot,
                            bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment,glmTransformation=glmTransformation,doJK=doJK,
                            poolMethod=poolMethod, useWec=useWec,refGrp=refGrp, scale = scale,rscales = rscales, mse=mse, rho=rho,reihenfolge=reihenfolge, hetero=hetero, se_type=se_type,
-                           useEffectLiteR=useEffectLiteR,crossDiffSE.engine=crossDiffSE.engine,stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct,family=family, verbose=verbose, doCheck=doCheck, engine=engine)
+                           useEffectLiteR=useEffectLiteR,crossDiffSE.engine=crossDiffSE.engine,stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct,family=family,
+                           verbose=verbose, doCheck=doCheck, engine=engine, L1wgt=L1wgt, L2wgt=L2wgt,formula.fixed=formula.fixed, formula.random=formula.random,
+                           glmerFormula=glmerFormula, cWeights = cWeights,  center_group = center_group,  center_grand = center_grand,
+                           max_iteration = max_iteration, nQuad = nQuad,  acc0 = acc0,  keepAdapting =keepAdapting, nCores=nCores)
                   if(verbose){cat("\n")}
                   allRes <- clearTab(allRes, allNam = cls[["allNam"]], depVarOri = depOri, fc=fc, toCall=toCall, datL = cls[["datL"]])
                   allRes <- list(resT = list(noTrend = allRes), allNam = cls[["allNam"]], toCall = toCall, family=family)
@@ -416,9 +447,13 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
 checkFactorLevels <- function(datL, allNam) {
        if (!is.null(allNam[["group"]])) {
              foo <- lapply(allNam[["group"]], FUN = function ( gr ) {
-             ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
-             if ( !all ( names(ch[[1]]) == names(ch[[2]]))) { stop(paste("Error in grouping variable '",gr,"': Levels do not match. Levels in trend group '",names(ch)[1],"': \n    ", paste(names(ch[[1]]), collapse = ", "),"\nLevels in trend group '",names(ch)[2],"': \n    ", paste(names(ch[[2]]), collapse = ", "),sep="")) } } )
-       } }
+                    ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
+                    cmb<- combinat::combn(x=1:length(ch), m=2, simplify=FALSE)
+                    ch1<- all(unlist(lapply(cmb,FUN = function (y) {all ( names(ch[[y[1]]]) == names(ch[[y[2]]]))})))
+                    if(!ch1) {
+                        tab <- table(datL[,c(gr,allNam[["trend"]])])
+                        stop(paste0("Levels of grouping variable '",gr,"' do not match between trend groups: \n", eatTools::print_and_capture(tab, 5) ))
+                    }})}}
 
 createAnalysisInfTable <- function(toAppl, verbose, allNam) {
          if ( length ( toAppl ) > 1) {
@@ -436,7 +471,8 @@ createAnalysisInfTable <- function(toAppl, verbose, allNam) {
 
 innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indicator, na.rm, expected.values, group.delimiter,type, repA, modus,probs,nBoot,bootMethod, formula, forceSingularityTreatment,
                       glmTransformation,doJK, poolMethod, useWec,refGrp, scale,rscales, mse, rho,reihenfolge, hetero, se_type, useEffectLiteR,crossDiffSE.engine,stochasticGroupSizes, progress, correct,
-                      family, verbose, doCheck, engine)  {
+                      family, verbose, doCheck, engine, L1wgt, L2wgt,formula.fixed, formula.random, glmerFormula, cWeights,  center_group,  center_grand,
+                      max_iteration, nQuad,  acc0,  keepAdapting, nCores)  {
        allRes<- do.call(plyr::rbind.fill, lapply( names(toAppl), FUN = function ( gr ) {
                 str1  <- createInfoString (ai = ret, toCall=toCall, gr=gr, toAppl=toAppl)
                 if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") }
@@ -452,7 +488,7 @@ innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indic
                 if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
 #                beg   <- Sys.time()
                 datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
-#                message(paste0("checkImpNest: ", capture.output(Sys.time() - beg)))
+#                message(paste0("checkImpNest: ", timeFormat(Sys.time() - beg)))
                 pev   <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
                 if ( engine=="survey" || isFALSE(doJK)) {
                 anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
@@ -460,11 +496,13 @@ innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indic
                        nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation,
                        toCall=toCall, doJK=doJK, poolMethod=poolMethod, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho,
                        reihenfolge=reihenfolge, hetero=hetero, se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine,
-                       stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family, str1=str1))
+                       stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family, str1=str1,
+                       glmerFormula=glmerFormula, cWeights = cWeights,  center_group = center_group,  center_grand = center_grand,
+                       max_iteration = max_iteration, nQuad = nQuad,  acc0 = acc0,  keepAdapting =keepAdapting, nCores=nCores))
                 }  else  {                                                      
                        anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
                               separate.missing.indicator = separate.missing.indicator, expected.values=pev[["expected.values"]], probs=probs, formula=formula, glmTransformation=glmTransformation,
-                              toCall=toCall, modus=modus, type=type, verbose=verbose))
+                              toCall=toCall, modus=modus, type=type, verbose=verbose, L1wgt=L1wgt, L2wgt=L2wgt,formula.fixed=formula.fixed, formula.random=formula.random))
                 }
                 if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
                 return(anaA)}))
@@ -477,7 +515,7 @@ identifyFunctionCall <- function() {
           fc    <- NULL                                                         
           while ( !is.null(sys.call(i))) { fc <- c(fc, eatTools::crop(unlist(strsplit(deparse(sys.call(i))[1], split = "\\("))[1])); i <- i-1  }
           fc   <- unlist(lapply(strsplit(fc, ":"), FUN = function ( l ) {l[length(l)]}))
-          fc   <- fc[max(which(fc %in% c("repMean", "repTable", "repGlm", "repQuantile")))]
+          fc   <- fc[max(which(fc %in% c("repMean", "repTable", "repGlm", "repQuantile", "repLmer", "repGlmer")))]
           return(fc)}
 
 checkRegression <- function ( dat, allNam, useWec ) {
@@ -515,7 +553,7 @@ createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc,
                    le <- unique(datL[,allNam[["linkErr"]]])                     
                    le <- data.frame ( init, depVar = unique(resT[[1]][["out1"]][,"depVar"]), parameter = c("mean", "sd"), le = c(le,0), stringsAsFactors = FALSE)
               }
-              if ( fc == "repGlm") {
+              if ( fc %in% c("repGlm", "repLmer", "repGlmer")) {
                    stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
                    le <- unique(datL[,allNam[["linkErr"]]])
                    le <- data.frame ( init, depVar = unique(as.character(resT[[1]][["out1"]][,"depVar"])), parameter = unique(as.character(resT[[1]][["out1"]][,"parameter"])), le = le, stringsAsFactors = FALSE)
@@ -653,7 +691,12 @@ jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA
 conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter, modus) {
                   deskr    <- data.frame ( do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                               prefix <- sub.dat[1,allNam[["group"]], drop=FALSE]
-                              if ( all(sub.dat[,allNam[["wgt"]]] == 1) )  { useWGT <- NULL}  else  {useWGT <- sub.dat[,allNam[["wgt"]]] }
+                              if ( all(sub.dat[,allNam[["wgt"]]] == 1) )  {
+                                   useWGT <- NULL
+                              }  else  {
+                                   useWGT <- sub.dat[,allNam[["wgt"]]]
+                                   attr(useWGT, "onlyUnweightedN") <- TRUE      
+                              }                                                 
                               ret    <- data.frame ( nValidUnweighted = length(na.omit(sub.dat[, allNam[["dependent"]] ])), prefix, eatTools::descr(sub.dat[, allNam[["dependent"]] ], p.weights = useWGT, na.rm=na.rm)[,c("N", "N.valid", "Mean", "std.err", "Var", "SD")], stringsAsFactors = FALSE)
                               names(ret) <- c( "nValidUnweighted", allNam[["group"]] , "Ncases", "NcasesValid", "mean", "se.mean", "var","sd")
                               return(ret)})), modus=modus, stringsAsFactors = FALSE)
@@ -713,44 +756,45 @@ jackknife.adjust.mean <- function (dat.i , allNam, na.rm, group.delimiter, type,
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], allNam[["adjust"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE, rho=rho)
           if ( useEffectLiteR ) {
-               strng<- paste("withReplicates(des, quote(funAdjustEL(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+               ret <- withReplicates(des, funAdjustEL, allNam=allNam)
           }  else  {
-               strng<- paste("withReplicates(des, quote(funAdjust(",allNam[["dependent"]],",",allNam[["group"]],",cbind(",paste(allNam[["adjust"]],collapse=", "),"), .weights)))",sep="")
+               ret <- withReplicates(des, funAdjust, allNam=allNam)
           }
-          ret  <- eval(parse(text=strng))
           rs   <- data.frame ( group = rep(attr(ret, "names"),2) , depVar = allNam[["dependent"]], modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
           
-funAdjust <- function(d, x, a, w){                                              
-       dat <- data.frame ( d, x, a, w, stringsAsFactors = FALSE)                
-       frml<- as.formula(paste0("d ~ ", paste(setdiff(colnames(dat), c("d", "x", "w")), collapse = " + ")))
-       if ( all(dat[,"w"] == 1) )  {                                            
-            means <- by ( data = dat, INDICES = dat[,"x"], FUN = function ( gr ) {
+funAdjust <- function(w, data, allNam){                                         
+       data[,allNam[["wgt"]]] <- w
+       frml<- as.formula(paste0(allNam[["dependent"]]," ~ ", paste(allNam[["adjust"]], collapse = " + ")))
+       if ( all(data[,allNam[["wgt"]]] == 1) )  {                               
+            means <- by ( data = data, INDICES = data[,allNam[["group"]]], FUN = function ( gr ) {
                      reg <- lm(frml, data = gr)
                      cof1<- coef(reg)                                           
-                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { mean(dat[,v]) * cof1[[v]]})))
+                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { mean(data[,v]) * cof1[[v]]})))
                      return(res1)})
        }  else  {
-            means <- by ( data = dat, INDICES = dat[,"x"], FUN = function ( gr ) {
-                     reg <- lm(frml, data = gr, weights = w)
+            means <- by ( data = data, INDICES = data[,allNam[["group"]]], FUN = function ( gr ) {
+                     do  <- paste0("lm(frml, data = gr, weights = ",allNam[["wgt"]],")")
+                     reg <- eval(parse(text=do))
                      cof1<- coef(reg)
-                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { Hmisc::wtd.mean(dat[,v], weights = dat[,"w"]) * cof1[[v]]})))
+                     res1<- cof1[["(Intercept)"]]+ sum(unlist(lapply(names(cof1)[-1], FUN = function ( v ) { Hmisc::wtd.mean(data[,v], weights = data[,allNam[["wgt"]]]) * cof1[[v]]})))
                      return(res1)})
        }
-       ret   <- as.vector(means)
+       ret   <- as.vector(means)                                                
        names(ret) <- names(means)
        return(ret)}
 
 
-funAdjustEL <- function(d, x, a, w){                                            
-       dat <- data.frame ( d, x, a, w, stringsAsFactors = FALSE)                
-       if ( all(dat[,"w"] == 1) )  {                                            
-            res <- EffectLiteR::effectLite(y = "d", x = "x", z = setdiff(colnames(dat), c("d", "x", "w")), data = dat, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
+funAdjustEL <- function(w, data, allNam){
+       data[,allNam[["wgt"]]] <- w
+       if ( all(data[,allNam[["wgt"]]] == 1) )  {                               
+            res <- EffectLiteR::effectLite(y = allNam[["dependent"]], x = allNam[["group"]], z = allNam[["adjust"]], data = data, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
        }  else  {
-            res <- suppressMessages(EffectLiteR::effectLite(y = "d", x = "x", z = setdiff(colnames(dat), c("d", "x", "w")), data = dat, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = ~w, method="sem"))
+            frml<- as.formula(paste0("~", allNam[["wgt"]]))
+            res <- suppressMessages(EffectLiteR::effectLite(y = allNam[["dependent"]], x = allNam[["group"]], z = allNam[["adjust"]], data = data, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, weights = frml, method="sem"))
        }
        ret <- res@results@adjmeans[,"Estimate"]
-       names(ret) <- names(table(x))
+       names(ret) <- names(table(data[,allNam[["group"]]]))
        return(ret)}  
        
 conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, useEffectLiteR) {
@@ -791,20 +835,25 @@ conv.adjust.mean <- function ( dat.i, allNam, na.rm, group.delimiter, modus, use
        return(rs)}
 
 jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, modus, scale, rscales, mse, rho) {
-          dat.i[,"N_weighted"] <- dat.i[,"N_weightedValid"] <- 1
-          if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) > 0 ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
-          des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], "N_weighted", "N_weightedValid")], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
-          rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
+          des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
+          rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c(NA,NA,"svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    
-                  do   <- paste("svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
-                  res  <- suppressWarnings(eval(parse(text=do)))                
-                  resL <- reshape2::melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
-                  stopifnot(length(table(resL[,"coefficient"])) == 2)
-                  resL[,"coefficient"] <- car::recode(resL[,"coefficient"], "'se'='se'; else ='est'")
-                  resL[,"parameter"]   <- toCall[["target"]]
-                  attr(resL, "original") <- res
+                  if (is.na(toCall[["FunctionToCall"]])) {                      
+                      resL <- do.call("rbind", by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function (y){
+                              if (toCall[["target"]] == "Ncases") {weg <- 0} else {weg <- length(which(is.na(y[,allNam[["dependent"]]])))}
+                              r1 <- data.frame ( y[1,allNam[["group"]], drop=FALSE], parameter =toCall[["target"]], coefficient="est", value=nrow(y)-weg, stringsAsFactors = FALSE)
+                              return(r1) }))
+                  }  else  {
+                      do   <- paste("svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
+                      res  <- suppressWarnings(eval(parse(text=do)))            
+                      resL <- reshape2::melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
+                      stopifnot(length(table(resL[,"coefficient"])) == 2)
+                      resL[,"coefficient"] <- car::recode(resL[,"coefficient"], "'se'='se'; else ='est'")
+                      resL[,"parameter"]   <- toCall[["target"]]
+                      attr(resL, "original") <- res
+                  }
                   return(resL)})
           sds  <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,allNam[["group"]]], FUN = function (uu) {
                   namen   <- uu[1, allNam[["group"]], drop=FALSE]               
@@ -887,26 +936,25 @@ jackknife.cov <- function (dat.i , allNam, na.rm, group.delimiter, type, repA, r
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
-          strng<- paste("withReplicates(des, quote(groupVersusTotalMean(",allNam[["dependent"]],",",allNam[["group"]],", .weights)))",sep="")
-          ret  <- eval(parse(text=strng))
+          ret  <- withReplicates(des, groupVersusTotalMean, allNam=allNam)
           rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
 
 
-groupVersusTotalMean <- function(d, g, w){                                      
-       dat <- data.frame ( d, g, w, stringsAsFactors = FALSE)
-       if ( all(dat[,"w"] == 1) )  { 
-           ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { mean(y[,"d"])})
-           gm  <- mean(dat[,"d"])                                               
+groupVersusTotalMean <- function(w, data, allNam){                              
+       data[,allNam[["wgt"]]] <- w
+       if ( all(data[,allNam[["wgt"]]] == 1) )  {
+           ret <- by(data=data, INDICES = data[,allNam[["group"]]], FUN = function ( y ) { mean(y[,allNam[["dependent"]]])})
+           gm  <- mean(data[,allNam[["dependent"]]])                            
        }  else  {
-           ret <- by(data=dat, INDICES = dat[,"g"], FUN = function ( y ) { Hmisc::wtd.mean(y[,"d"], weights = y[,"w"])})
-           gm  <- Hmisc::wtd.mean(dat[,"d"], weights = dat[,"w"])               
-       }
+           ret <- by(data=data, INDICES = data[,allNam[["group"]]], FUN = function ( y ) { Hmisc::wtd.mean(y[,allNam[["dependent"]]], weights = y[,allNam[["wgt"]]])})
+           gm  <- Hmisc::wtd.mean(data[,allNam[["dependent"]]], weights = data[,allNam[["wgt"]]])
+       }                                                                        
        ret <- gm - ret
        return(ret)}
 
 conv.cov <- function (dat.i, allNam, na.rm, group.delimiter, nBoot, refGrp, reihenfolge){
-          covs<- boot::boot(data=dat.i, R = nBoot, statistic = function ( x, i) { groupVersusTotalMean(x[i,allNam[["dependent"]]], x[i,allNam[["group"]]], x[i,allNam[["wgt"]]])})
+          covs<- boot::boot(data=dat.i, R = nBoot, statistic = function ( x, i) {groupVersusTotalMean(w = x[i,allNam[["wgt"]]], data = x[i,c(allNam[["group"]], allNam[["dependent"]])], allNam=allNam)})
           mns <- colMeans(covs$t)
           ses <- sapply(as.data.frame(covs$t), FUN = sd)                        
           rs  <- data.frame ( group =  buildString(dat= dat.i,allNam=allNam, refGrp=refGrp, reihenfolge) , depVar = allNam[["dependent"]], modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( x ) { x[1,allNam[["group"]], drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
@@ -956,25 +1004,15 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                                 }
                                 if(length(singular) > 0 || forceSingularityTreatment == TRUE ) {
                                    stopifnot(length(as.character(formula)) == 3 )
-                                   formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
                                    if ( isFALSE(useWec) ) {
-                                       if ( inherits(family,  "function" )) {
-                                            link <- strsplit(capture.output(str(family)), split="\"")[[1]][2]
-                                            fam  <- car::recode(link, "'identity'='gaussian'; 'logit'='binomial'; 'probit'='binomial'")
-                                       }  else  {
-                                            link <- family$link
-                                            fam  <- family$family
-                                       }
                                        warning("Unidentified bug with Nagelkerkes r^2 in singularity treatment. No r^2 is computed.")
-                                       if ( glmTransformation == "none" )  {string <- paste("data.frame( withReplicates(design, quote(getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
-                                       if ( glmTransformation == "sdY" )   {string <- paste("data.frame( withReplicates(design, quote(getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",fam,"(link=\"", link,"\"))))), stringsAsFactors = FALSE)",sep="")}
-                                       resRoh <- eval ( parse ( text = string ) )
+                                       if ( glmTransformation == "none" )  {resRoh <- withReplicates(design, getOutputIfSingular, allNam=allNam,  frml= formula, fam =family)}
+                                       if ( glmTransformation == "sdY" )   {resRoh <- withReplicates(design, getOutputIfSingularT1, allNam=allNam,  frml= formula, fam =family)}
                                    }  else  {                                   
                                        if ( crossDiffSE.engine == "lavaan") {
                                             if(!is.null(repA) ) {               
                                                 design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                strng  <- paste("withReplicates(design1, quote(funadjustLavaanWec(",allNam[["dependent"]],",",allNam[["group"]],",",allNam[["independent"]],", .weights)))",sep="")
-                                                ret    <- eval(parse(text=strng))
+                                                ret    <- withReplicates(design1, funadjustLavaanWec, allNam=allNam)
                                                 resRoh <- data.frame ( ret, stringsAsFactors=FALSE)
                                                 rownames(resRoh) <- paste0(allNam[["independent"]], rownames(resRoh))
                                             }  else  {                          
@@ -986,17 +1024,15 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                                             contrasts(dat.i[,as.character(formula)[3]]) <- eatTools::contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[1], weights = dat.i[,allNam[["wgt"]]])
                                             if(!is.null(repA) ) {
                                                 design1<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                string1<- paste("data.frame( withReplicates(design1, quote(getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
-                                                resRoh1<- eval ( parse ( text = string1 ) )
+                                                resRoh1<- withReplicates(design1, getOutputIfSingularWec, allNam=allNam, frml = formula)
                                                 contrasts(dat.i[,as.character(formula)[3]]) <- eatTools::contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
                                                 design2<- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                string2<- paste("data.frame( withReplicates(design2, quote(getOutputIfSingularWec(lm(formula = ",formelNew,", weights=.weights)))), stringsAsFactors = FALSE)",sep="")
-                                                resRoh2<- eval ( parse ( text = string2 ) )
+                                                resRoh2<- withReplicates(design2, getOutputIfSingularWec, allNam=allNam, frml = formula)
                                                 resRoh <- rbind(resRoh1, resRoh2)[which(!duplicated(c(row.names(resRoh1), row.names(resRoh2)))),]
                                             }  else  {
-                                                res1   <- eval(parse(text=createCall ( hetero=hetero, allNam=allNam) ))
+                                                res1   <- eval(parse(text=createCall ( hetero=hetero, allNam=allNam, formula=formula) ))
                                                 contrasts(dat.i[,as.character(formula)[3]]) <- eatTools::contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,allNam[["wgt"]]])
-                                                res2   <- eval(parse(text=createCall ( hetero=hetero, allNam=allNam) ))
+                                                res2   <- eval(parse(text=createCall ( hetero=hetero, allNam=allNam, formula=formula) ))
                                                 resRoh <- data.frame (theta = c(res1[["coefficients"]],res2[["coefficients"]], res1[["r.squared"]], length(res1[["fitted.values"]])), SE = c(res1[["std.error"]],res2[["std.error"]], NA, NA), stringsAsFactors = FALSE)
                                                 rowNam <- c(names(res1[["coefficients"]]),names(res2[["coefficients"]]),"R2", "Nvalid")
                                                 resRoh <- resRoh[which(!duplicated(rowNam)),]
@@ -1019,9 +1055,9 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                  sub.ana[,"comparison"] <- NA
                  return(list(sub.ana=sub.ana, ori.glm=ori.glm, nams=nams)) }
                  
-funadjustLavaanWec <- function(d, x, i, w){                                     
-       dat  <- data.frame ( d, x, i, w, stringsAsFactors = FALSE)               
-       res  <- groupToTotalMeanComparisonLavaan ( d = dat, y.var = "d", group.var = "i", weight.var="w", heterogeneous=TRUE, stchgrsz=FALSE, extended.results=FALSE, lavaan.syntax.path=NULL, run=TRUE, lavaan.summary.output=FALSE )
+funadjustLavaanWec <- function(w, data, allNam){
+       data[,allNam[["wgt"]]] <- w
+       res  <- groupToTotalMeanComparisonLavaan ( d = data, y.var = allNam[["dependent"]], group.var = allNam[["group"]], weight.var=allNam[["wgt"]], heterogeneous=TRUE, stchgrsz=FALSE, extended.results=FALSE, lavaan.syntax.path=NULL, run=TRUE, lavaan.summary.output=FALSE )
        ret  <- res[,"est"]
        names(ret) <- res[,"par"]
        return(ret)}
@@ -1096,26 +1132,35 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
                      }) }
 
 
-getOutputIfSingularWec <- function ( glmRes ) {
-                       coefs <- c(glmRes[["coefficients"]], R2 = summary(glmRes)[["r.squared"]], Nvalid = length(glmRes$fitted.values))
+getOutputIfSingularWec <- function ( w, data, allNam, frml) {
+                       data[,allNam[["wgt"]]] <- w
+                       do  <- paste0("lm(formula = ",capture.output(frml)[1],", weights=",allNam[["wgt"]],", data=data)")
+                       res <- eval(parse(text=do))
+                       coefs <- c(res[["coefficients"]], R2 = summary(res)[["r.squared"]], Nvalid = length(res$fitted.values))
                        return(coefs)}
 
-getOutputIfSingular <- function ( glmRes ) {
-                       coefs <- na.omit(coef(glmRes))
-                       rnagel<- unlist(fmsb::NagelkerkeR2(glmRes))
+getOutputIfSingular <- function ( w, data, allNam, frml, fam ) {
+                       data[,allNam[["wgt"]]] <- w
+                       do  <- paste0("glm(formula = ",capture.output(frml),", weights=",allNam[["wgt"]],", data=data, family = fam)")
+                       res <- eval(parse(text=do))
+                       coefs <- na.omit(coef(res))
+                       rnagel<- unlist(fmsb::NagelkerkeR2(res))
                        names(rnagel) <- c("Nvalid", "R2nagel")
                        rnagel<- rnagel[1]
-                       coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
+                       coefs <- c(coefs, R2 = var(res$fitted.values)/var(res$y), rnagel)
                        return(coefs)}
                        
-getOutputIfSingularT1<- function ( glmRes) {
-                       coefs <- na.omit(coef(glmRes))
-                       pred  <- sd ( glmRes$linear.predictors ) +  (pi^2)/3
+getOutputIfSingularT1<- function ( w, data, allNam, frml, fam ) {
+                       data[,allNam[["wgt"]]] <- w
+                       do  <- paste0("glm(formula = ",capture.output(frml),", weights=",allNam[["wgt"]],", data=data, family = fam)")
+                       res <- eval(parse(text=do))
+                       coefs <- na.omit(coef(res))
+                       pred  <- sd ( res[["linear.predictors"]] ) +  (pi^2)/3
                        coefs <- coefs/pred
-                       rnagel<- unlist(fmsb::NagelkerkeR2(glmRes))
+                       rnagel<- unlist(fmsb::NagelkerkeR2(res))
                        names(rnagel) <- c("Nvalid", "R2nagel")
                        rnagel<- rnagel[1]
-                       coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
+                       coefs <- c(coefs, R2 = var(res$fitted.values)/var(res$y), rnagel)
                        return(coefs)}
 
 clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
@@ -1140,7 +1185,8 @@ clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
 chooseFunction <- function (datI, allNam, na.rm, group.delimiter,type, repA, modus, separate.missing.indicator ,
                   expected.values, probs,nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, pb, toCall,
                   doJK, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR, crossDiffSE.engine,
-                  stochasticGroupSizes, correct, family) {
+                  stochasticGroupSizes, correct, family, glmerFormula, cWeights,  center_group,  center_grand,
+                  max_iteration, nQuad,  acc0,  keepAdapting, nCores) {
         pb$tick(); flush.console()
         if( toCall == "mean" ) {                                                
             if ( isTRUE(doJK) ) {
@@ -1252,7 +1298,8 @@ checkNests <- function (x, allNam, toAppl, gr) {
 
 doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type, repA, modus, separate.missing.indicator, expected.values,
                     probs, nBoot,bootMethod, formula, forceSingularityTreatment, glmTransformation, toCall, poolMethod, useWec, refGrp, scale, rscales, mse, rho, reihenfolge, hetero, se_type, useEffectLiteR,
-                    crossDiffSE.engine, stochasticGroupSizes, progress, correct, family, str1) {
+                    crossDiffSE.engine, stochasticGroupSizes, progress, correct, family, str1, glmerFormula, cWeights,  center_group,  center_grand,
+                      max_iteration, nQuad,  acc0,  keepAdapting, nCores) {
         if(isTRUE(datL1[1,"isClear"])) {                                        
             nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
             nrep<- prod(dim(nrep))
@@ -1273,7 +1320,8 @@ doSurveyAnalyses <- function (datL1, allNam, doJK, na.rm, group.delimiter, type,
                            nBoot=nBoot,bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, pb=pb,
                            toCall=toCall, doJK=doJK, useWec=useWec, refGrp=refGrp, scale = scale, rscales = rscales, mse=mse, rho=rho, reihenfolge=reihenfolge, hetero=hetero,
                            se_type=se_type, useEffectLiteR=useEffectLiteR, crossDiffSE.engine=crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes,
-                           correct=correct, family=family)
+                           correct=correct, family=family, glmerFormula=glmerFormula, cWeights = cWeights,  center_group = center_group,  center_grand = center_grand,
+                           max_iteration = max_iteration, nQuad = nQuad,  acc0 = acc0,  keepAdapting =keepAdapting, nCores=nCores)
                    glms <- lapply(anaI, FUN = function ( x ) { x[["glms"]]})
                    nams <- lapply(anaI, FUN = function ( x ) { x[["nams"]]})
                    grps <- lapply(anaI, FUN = function ( x ) { x[["grps"]]})
@@ -1366,7 +1414,12 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                              datL  <- eval(parse(text=txt))
                         }
                         isUniq<- eatGADS::checkUniqueness2(datL, varName=gg, idVar=allNam[["ID"]], impVar="g")
-                        if(isUniq) { isImp <- FALSE}
+                        if(is.na(isUniq)) {
+                            warning("'eatGADS::checkUniqueness2' returns NA. TRUE/FALSE is expected.")
+                            isImp <- TRUE
+                        }  else  {
+                            if(isUniq) { isImp <- FALSE}
+                        }
                    }
                    if ( isFALSE(isImp) ) {
                         if ( "g" %in% colnames(datL) ) {
@@ -1405,28 +1458,48 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           if ( "g" %in% colnames(datL)) {datL <- datL[,-match("g", colnames(datL))]}
           return(datL)}
 
-checkForAdjustment <- function(datL, allNam, groupWasNULL) {
-          if(!is.null(allNam[["adjust"]])) {
-             chk <- lapply(allNam[["adjust"]], FUN = function ( v ) {
-                    if ( !inherits(datL[,v], c("numeric", "integer", "character", "factor"))) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric', 'integer', 'character', or 'factor'.\n")) }
-                    if ( length(which(is.na(datL[,v]))) >0 ) {stop(paste0("Adjusting variable '",v,"' has missing values."))}  })
-             fac <- sapply(allNam[["adjust"]], FUN = function ( v ) {inherits(datL[,v], c("factor", "character"))})
-             if (length(which(fac==TRUE))>0) {
-                 for ( g in which(fac==TRUE)) {
-                       newFr <- model.matrix( as.formula (paste("~",names(fac)[g],sep="")), data = datL)[,-1,drop=FALSE]
-                       message(paste("    Variable '",names(fac)[g],"' of class '",class(datL[,names(fac)[g]]),"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), "'.",sep=""))
-                       datL  <- data.frame(datL, newFr, stringsAsFactors=FALSE)
-                       allNam[["adjust"]] <- c(setdiff(allNam[["adjust"]],names(fac)[g]), colnames(newFr))
+checkForAdjustmentAndLmer <- function(datL, allNam, groupWasNULL, formula.random, formula.fixed) {
+          if(!is.null(allNam[["adjust"]]) || !is.null(formula.random) || !is.null(formula.fixed) ) {
+             vars<- rbind(data.frame (type = rep("adjust", length(allNam[["adjust"]])),vars = allNam[["adjust"]] , stringsAsFactors = FALSE),
+                          data.frame (type = rep("fixed", length(all.vars(formula.fixed))),vars = all.vars(formula.fixed) , stringsAsFactors = FALSE),
+                          data.frame (type = rep("random", length(all.vars(formula.random))),vars = all.vars(formula.random) , stringsAsFactors = FALSE))
+             for (v in unique(vars[,2])) {
+                if ( inherits(datL[,v], c("logical")) ) {
+                     message(paste0("Logical variable '",v,"' will be transformed into numeric."))
+                     datL[,v] <- as.numeric(datL[,v])
+                }
+                if ( !inherits(datL[,v], c("numeric", "integer", "character", "factor"))) {stop(paste0("Adjusting variable '",v,"' must be of class 'numeric', 'integer', 'character', or 'factor'.\n")) }
+                if ( length(which(is.na(datL[,v]))) >0 ) {stop(paste0("Adjusting variable '",v,"' has missing values."))}
+             }
+             vars[,"isFac"] <- sapply(vars[,2], FUN = function ( v ) {inherits(datL[,v], c("factor", "character"))})
+             if (length(which(vars[,"isFac"]==TRUE))>0) {
+                 for ( g in which(vars[,"isFac"]==TRUE)) {
+                       if (vars[g,"type"] == "adjust") {
+                            newFr <- model.matrix( as.formula (paste("~",vars[g,"vars"],sep="")), data = datL)[,-1,drop=FALSE]
+                            message(paste("    Adjusting variable '",vars[g,"vars"],"' of class '",class(datL[,vars[g,"vars"]]),"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), "'.",sep=""))
+                            datL  <- data.frame(datL, newFr, stringsAsFactors=FALSE)
+                            allNam[["adjust"]] <- c(setdiff(allNam[["adjust"]],vars[g,"vars"]), colnames(newFr))
+                       }
+                       if (vars[g,"type"] == "fixed") {
+                            if ( !vars[g,"vars"] %in% extractFactorVarsFromFormula(formula.fixed) && vars[g,"vars"] %in% all.vars(formula.fixed) ) {
+                                 stop(paste0("Variable '",vars[g,"vars"],"' of class '",class(datL[,vars[g,"vars"]]), "' should be specified with 'as.factor(",vars[g,"vars"],")' in the formula.fixed argument.\n  If '",vars[g,"vars"],"' should be modeled as numeric, please change variable class of '",vars[g,"vars"],"' in the data into numeric."))
+                            }
+                       }
+                       if (vars[g,"type"] == "random") {
+                            if ( !vars[g,"vars"] %in% extractFactorVarsFromFormula(formula.random) && vars[g,"vars"] %in% all.vars(formula.random) ) {
+                                 warning(paste0("Variable '",vars[g,"vars"],"' of class '",class(datL[,vars[g,"vars"]]), "' should be specified with 'as.factor(",vars[g,"vars"],")' in the formula.random argument.\n  If '",vars[g,"vars"],"' should be modeled as numeric, please change variable class of '",vars[g,"vars"],"' in the data into numeric."))
+                            }
+                       }
                  }
              }
-             if ( groupWasNULL) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
-             if ( length(allNam[["group"]])>1) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
-             if (!is.null(allNam[["group.differences.by"]])) {
+             if ( groupWasNULL && !is.null(allNam[["adjust"]])) {stop("When adjusted variables are defined, argument 'groups' must not be NULL.")}
+             if ( length(allNam[["group"]])>1  && !is.null(allNam[["adjust"]]) ) {stop("When adjusted variables are defined, to date, only one grouping variable is allowed.")}
+             if (!is.null(allNam[["group.differences.by"]]) && !is.null(allNam[["adjust"]])) {
                   message("Computation of group differences using 'group.differences.by' currently does not work for adjusted means.")
                   allNam[["group.differences.by"]] <- NULL
              }
           }
-          return(list(allNam=allNam, datL=datL))}
+          return(list(allNam=allNam, datL=datL, formula.random=formula.random, formula.fixed=formula.fixed))}
           
 checkNameConvention <- function( allNam) {
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "le")

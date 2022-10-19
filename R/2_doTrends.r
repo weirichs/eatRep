@@ -10,6 +10,9 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         if ( fun == "glm" ) {
             jk2_bind<- jk2_bind[which(!jk2_bind[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
         }
+        if ( fun == "lmer" ) {
+            jk2_bind<- jk2_bind[which(!jk2_bind[,"parameter"] %in% c("Nvalid", "R2_Lev2","R2_Lev1","R2_Total","ICC_Uncond","ICC_UncondWB", "ICC_Cond")),]
+        }
         jk2_bind<- jk2_bind[jk2_bind[["coefficient"]] %in% c("est", "se"), ]    ### drop significance
         jk2_wide<- reshape2::dcast ( jk2_bind, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
         lev     <- unique(jk2_bind[[tv]])                                       ### calculate trend

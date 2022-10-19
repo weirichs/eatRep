@@ -16,7 +16,7 @@ repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU =
         family=gaussian, forceSingularityTreatment = FALSE,
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE,
-        engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
+        scale = 1, rscales = 1, mse=TRUE,
         rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
         stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
@@ -118,9 +118,6 @@ Which pooling method should be used? The ``mice'' method is recommended.
 }
   \item{useWec}{
 Logical: use weighted effect coding? 
-}
-  \item{engine}{
-Which package should be used for estimation?
 }
   \item{scale}{
 scaling constant for variance, for details, see help page of \code{svrepdesign} from the \code{survey} package

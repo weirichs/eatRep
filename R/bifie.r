@@ -1,8 +1,12 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, type, verbose){
+doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs, formula, glmTransformation, toCall, modus, type, verbose, L1wgt, L2wgt,formula.fixed, formula.random){
       dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(allNam), colnames(dat.i))], from = "character", to = "factor")
-      dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)
-      dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")
-      dat2 <- dat2[order(dat2[,allNam[["ID"]]]), ]
+      dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)                  
+      dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")            
+      if ( toCall != "lmer") {
+           dat2 <- dat2[order(dat2[,allNam[["ID"]]]), ]                         
+      }  else  {
+           dat2 <- dat2[order(dat2[,allNam[["clusters"]]]), ]                   
+      }
       labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["dependent"]]),]
       datL <- by ( data = dat2, INDICES = dat2[,allNam[["imp"]]], FUN = function ( imp.i ) { return(imp.i)})
       jkt  <- car::recode(type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
@@ -18,6 +22,9 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
            resM[["stat"]][,"perc_p"] <- 2*(1-pnorm(resM[["stat"]][,"perc"] / resM[["stat"]][,"perc_SE"]))
            mv   <- c("Nweight", "Ncases", "perc", "perc_SE", "perc_p")          
       }                                                                         
+      if ( toCall == "lmer") {
+           resM <- BIFIE.twolevelreg( BIFIEobj=bo, dep=allNam[["dependent"]], formula.fixed=formula.fixed, formula.random=formula.random, idcluster=allNam[["clusters"]], wgtlevel2=allNam[["L2wgt"]], wgtlevel1=allNam[["L1wgt"]], group = allNam[["group"]])
+      }
       if(!is.null(allNam[["group.differences.by"]])) {                          
            liste<- data.frame ( merge(resM[["stat_M"]],resM[["stat_SD"]][,c(grep("^groupva", colnames(resM[["stat_SD"]]), value=TRUE), "SD", "SD_SE")],  by = grep("^groupva", colnames(resM[["stat_SD"]]), value=TRUE), all=TRUE, sort=FALSE), dp = resM[["parnames"]], groupvar0 = "wholePop", groupval0 = 0, stringsAsFactors = FALSE)
            if ( length(allNam[["group.differences.by"]]) == length(allNam[["group"]])) {
@@ -81,29 +88,53 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
            recs <- paste("'",labsD[,"value"] , "' = '" , labsD[,"valLabel"],"'",sep="", collapse="; ")
            resM[["stat"]][,"varval"] <- car::recode(resM[["stat"]][,"varval"], recs) 
       }
-      idv  <- c(grep("varval", colnames(resM[["stat"]]), value=TRUE), grep("groupval", colnames(resM[["stat"]]), value=TRUE))
-      resML<- eatTools::facToChar(reshape2::melt(data=resM[["stat"]], id.vars=idv, measure.vars=mv,  na.rm=TRUE))
-      resML[setdiff(1:nrow(resML), grep("_", resML[,"variable"])),"variable"] <- paste(resML[setdiff(1:nrow(resML), grep("_", resML[,"variable"])),"variable"], "est", sep="_")
-      resML<- data.frame ( resML, reshape2::colsplit(string = resML[,"variable"], pattern="_", names = c("parameter", "coefficient")),stringsAsFactors = FALSE)
-      if ( toCall == "table") {
-           resML <- resML[which(resML[,"parameter"] == "perc"),]
-           resML[,"parameter"] <- resML[,"varval"]
-           resML[,"variable"]  <- resML[,"varval"] <- NULL                      
-      }  else {
-           resML[,"parameter"] <- car::recode(resML[,"parameter"], "'M'='mean'; 'SD'='sd'; 'Nweight'='NcasesValid'; 'Ncases'='sampleSize'")
-           resML[,"variable"]  <- NULL
+      if(toCall != "lmer") {
+          idv  <- c(grep("varval", colnames(resM[["stat"]]), value=TRUE), grep("groupval", colnames(resM[["stat"]]), value=TRUE))
+          resML<- eatTools::facToChar(reshape2::melt(data=resM[["stat"]], id.vars=idv, measure.vars=mv,  na.rm=TRUE))
+          resML[setdiff(1:nrow(resML), grep("_", resML[,"variable"])),"variable"] <- paste(resML[setdiff(1:nrow(resML), grep("_", resML[,"variable"])),"variable"], "est", sep="_")
+          resML<- data.frame ( resML, reshape2::colsplit(string = resML[,"variable"], pattern="_", names = c("parameter", "coefficient")),stringsAsFactors = FALSE)
+          if ( toCall == "table") {
+               resML <- resML[which(resML[,"parameter"] == "perc"),]
+               resML[,"parameter"] <- resML[,"varval"]
+               resML[,"variable"]  <- resML[,"varval"] <- NULL                  
+          }  else {
+               resML[,"parameter"] <- car::recode(resML[,"parameter"], "'M'='mean'; 'SD'='sd'; 'Nweight'='NcasesValid'; 'Ncases'='sampleSize'")
+               resML[,"variable"]  <- NULL
+          }
+          resML[,"coefficient"] <- car::recode(resML[,"coefficient"], "'SE'='se'")
+          recs <- paste("'",grep("groupval", colnames(resML), value=TRUE) , "' = '" , allNam[["group"]],"'",sep="", collapse="; ")
+          colnames(resML) <- car::recode(colnames(resML), recs)
+          resML[,"modus"] <- paste(modus, "BIFIEsurvey", sep="__")
+          resML[,"depVar"]<- allNam[["dependent"]]
+          resML[,"comparison"] <- NA
+          if ( length(allNam[["group"]]) > 1) {
+               resML[,"group"] <- apply(resML[,allNam[["group"]]], MARGIN = 1, FUN = function ( z ) {paste(z, collapse="_")})
+          }
+          if ( length(allNam[["group"]]) == 1) { resML[,"group"] <- resML[,allNam[["group"]]]}
+          resML<- rbind(resML, grp)
+      }  else  {
+          if(!is.null(allNam[["group"]])) {
+              colnames(resM[["stat"]]) <- car::recode(colnames(resM[["stat"]]), paste0("'groupval1'='",allNam[["group"]],"'"))
+              resM[["stat"]][,"group"] <- resM[["stat"]][,allNam[["group"]]]
+          }  else  {
+              resM[["stat"]][,"group"] <- "wholeGroup"
+          }                                                                     
+          resL <- eatTools::facToChar(reshape2::melt(data=resM[["stat"]], id.vars=c("parameter", "group", allNam[["group"]]), measure.vars=c("est", "SE", "p"),  na.rm=TRUE))
+          if(!is.null(allNam[["group"]])) {
+              resML<- data.frame ( group=unique(resM[["stat"]][,"group"]),depVar = allNam[["dependent"]], modus=modus, parameter="Nvalid", coefficient="est",value=resM[["Npers"]],gruppenname = unique(resM[["stat"]][,allNam[["group"]]]), stringsAsFactors = FALSE)
+              rows <- grep("^beta_", resL[,"parameter"])
+              resML<- rbind(resML,data.frame ( group=resL[rows,"group"],depVar = allNam[["dependent"]], modus=modus, parameter=eatTools::removePattern(resL[rows,"parameter"],"beta_"), coefficient=tolower(resL[rows,"variable"]),value=resL[rows,"value"], gruppenname = resL[rows,allNam[["group"]]], stringsAsFactors = FALSE))
+              rows <- grep("^ICC_|^R2", resL[,"parameter"])
+              resML<- rbind(resML,data.frame ( group=resL[rows,"group"],depVar = allNam[["dependent"]], modus=modus, parameter=resL[rows,"parameter"], coefficient=tolower(resL[rows,"variable"]),value=resL[rows,"value"], gruppenname = resL[rows,allNam[["group"]]], stringsAsFactors = FALSE))
+              colnames(resML) <- car::recode(colnames(resML), paste0("'gruppenname'='",allNam[["group"]],"'"))
+          }  else  {
+              resML<- data.frame ( group="wholeGroup", depVar = allNam[["dependent"]], modus=modus, parameter="Nvalid",coefficient="est",value=resM[["N"]], stringsAsFactors = FALSE)
+              rows <- grep("^beta_", resL[,"parameter"])
+              resML<- rbind(resML,data.frame ( group=resL[rows,"group"],depVar = allNam[["dependent"]], modus=modus, parameter=eatTools::removePattern(resL[rows,"parameter"],"beta_"), coefficient=tolower(resL[rows,"variable"]),value=resL[rows,"value"],  stringsAsFactors = FALSE))
+              rows <- grep("^ICC_|^R2", resL[,"parameter"])
+              resML<- rbind(resML,data.frame ( group=resL[rows,"group"],depVar = allNam[["dependent"]], modus=modus, parameter=resL[rows,"parameter"], coefficient=tolower(resL[rows,"variable"]),value=resL[rows,"value"], stringsAsFactors = FALSE))
+          }
       }
-      resML[,"coefficient"] <- car::recode(resML[,"coefficient"], "'SE'='se'")
-      recs <- paste("'",grep("groupval", colnames(resML), value=TRUE) , "' = '" , allNam[["group"]],"'",sep="", collapse="; ")
-      colnames(resML) <- car::recode(colnames(resML), recs)
-      resML[,"modus"] <- paste(modus, "BIFIEsurvey", sep="__")
-      resML[,"depVar"]<- allNam[["dependent"]]
-      resML[,"comparison"] <- NA
-      if ( length(allNam[["group"]]) > 1) {
-           resML[,"group"] <- apply(resML[,allNam[["group"]]], MARGIN = 1, FUN = function ( z ) {paste(z, collapse="_")})
-      }
-      if ( length(allNam[["group"]]) == 1) { resML[,"group"] <- resML[,allNam[["group"]]]}
-      resML<- rbind(resML, grp)
       return(resML)}
 
 

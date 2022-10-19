@@ -13,7 +13,7 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
           grpv     <- setdiff(setdiff(colnames(jk2[[1]]), cols), c("comparison", "coefficient", "value", tv))
           grp_by   <- repFunOut[["allNam"]][["group.differences.by"]]
           cl_diffs <- repFunOut[["allNam"]][["cross.differences"]]
-          funs     <- c("mean", "table", "quantile", "glm")
+          funs     <- c("mean", "table", "quantile", "glm", "lmer")
           fun      <- funs [ which( unlist(lapply(funs, FUN = function ( f ) { length(grep(f, jk2[[1]][1,"modus"]))})) > 0) ]
     ### 2. cross-level diffs bestimmen: ueberschreibt bzw. erweitert das Objekt 'jk2' ... Achtung: sind nur fuer "mean" oder "table" erlaubt
           if ( is.list(cl_diffs) ) {
@@ -30,13 +30,13 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
     ### 2.b) SE correction durchfuehren (siehe Paper Weirich & Hecht)
           if(!is.null(repFunOut[["SE_correction"]]) && !is.null(repFunOut[["SE_correction"]][[1]])) {
     ### checks, ob Vergleiche dabei, fuer die keine Korrektur verfuehgbar ist
-            if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
-                warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
-            }
-            mult_hierarchy <- any(unlist(lapply(repFunOut$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
-            if(mult_hierarchy) warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")
+              if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
+                  warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
+              }
+              mult_hierarchy <- any(unlist(lapply(repFunOut$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
+              if(mult_hierarchy) warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")
     ### correction durchfuehren
-            jk2 <- lapply(jk2, function(jk2_single) { seCorrect(SE_correction = repFunOut[["SE_correction"]], jk2 = jk2_single, grpv = grpv)   })
+              jk2 <- lapply(jk2, function(jk2_single) { seCorrect(SE_correction = repFunOut[["SE_correction"]], jk2 = jk2_single, grpv = grpv)   })
           }
     ### 3. Trend bestimmen
           if ( !is.null(tv) ) {
