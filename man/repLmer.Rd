@@ -109,6 +109,7 @@ data(lsa)
 ### use only the first nest, use only reading
 btRead <- subset(lsa, nest==1 & domain=="reading")
 
+\donttest{
 ### random intercept model with groups
 mod1 <- repLmer(datL = btRead, ID = "idstud", wgt = "wgt", L1wgt="L1wgt", L2wgt="L2wgt",
         type = "jk2", PSU = "jkzone", repInd = "jkrep", imp = "imp",trend="year",group="country",
@@ -121,5 +122,5 @@ mod2 <- repLmer(datL = subset(btRead, country=="countryA" & year== 2010),
         PSU = "jkzone", repInd = "jkrep", imp = "imp", dependent="score",
         formula.fixed = ~as.factor(sex)*mig, formula.random=~mig, clusters="idclass")
 res2 <- report(mod2)
-}
+}}
 
