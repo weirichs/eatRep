@@ -958,7 +958,7 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                             }  else  {
                                  glm.ii <- test <- eval(parse(text = paste("glm(formula = formula, data = sub.dat, family = family, weights = ",allNam[["wgt"]],")",sep="")))
                             }
-                            singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
+                            singular       <- names(glm.ii[["coefficients"]])[which(is.na(glm.ii[["coefficients"]]))]
                             if(!is.null(repA)) {
                                 modus      <- paste(modus, "survey", sep="__")
                                 typeS      <- car::recode(type, "'JK2'='JKn'")
@@ -972,21 +972,21 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                             summaryGlm     <- summary(glm.ii)
                             if( inherits(family, "family" )) {
                                 if (  length(grep("binomial", eatTools::crop(capture.output(family)))) > 0 ) {
-                                      res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel", "deviance", "null.deviance", "AIC", "df.residual", "df.null"),
-                                                coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),rep("est", 7)),
-                                                value=c(r.squared[["N"]],r.squared[["N.valid"]],glm.ii$coefficient,NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]], test$deviance, test$null.deviance, test$aic, test$df.residual, test$df.null),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
+                                      res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","R2nagel", "deviance", "null.deviance", "AIC", "df.residual", "df.null"),
+                                                coefficient = c(rep(c("est","se"),each=2+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 7)),
+                                                value=c(r.squared[["N"]],r.squared[["N.valid"]],na.omit(glm.ii[["coefficients"]]),NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]], test$deviance, test$null.deviance, test$aic, test$df.residual, test$df.null),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                                 }   else  {
-                                      res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel"),
-                                                coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),rep("est", 2)),
-                                                value=c(r.squared[["N"]],r.squared[["N.valid"]],glm.ii$coefficient,NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
+                                      res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","R2nagel"),
+                                                coefficient = c(rep(c("est","se"),each=2+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 2)),
+                                                value=c(r.squared[["N"]],r.squared[["N.valid"]],na.omit(glm.ii[["coefficients"]]),NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                                 }
                             }  else  {
-                                res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel"),
-                                          coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),rep("est", 2)),
-                                          value=c(r.squared[["N"]],r.squared[["N.valid"]],glm.ii$coefficient,NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
+                                res.bl <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","R2nagel"),
+                                          coefficient = c(rep(c("est","se"),each=2+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 2)),
+                                          value=c(r.squared[["N"]],r.squared[["N.valid"]],na.omit(glm.ii[["coefficients"]]),NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                             }
                             if(!is.null(repA) || isTRUE(useWec) ) {             
-                                if(length(which(is.na(glm.ii$coefficients))) > 0 ) {
+                                if(length(which(is.na(glm.ii[["coefficients"]]))) > 0 ) {
                                    message("Singularity problem in regression estimation for ", length(singular)," coefficient(s): ",paste(singular, collapse = ", "),". Try workaround ... ")
                                 }
                                 if(isTRUE(forceSingularityTreatment) && isFALSE(useWec)) {
@@ -1261,7 +1261,7 @@ checkData <- function ( sub.dat, allNam, toCall, separate.missing.indicator, na.
         if(!is.null(allNam[["PSU"]])) {
             nJkZones <- length(table(as.character(sub.dat[,allNam[["PSU"]]])))
             if(nJkZones<2)  {
-               stop("Found group with less than 2 PSUs. Please check your data!\n")
+               warning("Found group(s) with less than 2 PSUs. Please check your data!")
             }
         }                                                                       
         if( (toCall == "table" & isFALSE(separate.missing.indicator)) | (toCall %in% c("mean", "quantile", "glm") & isFALSE(na.rm) ) )  {
