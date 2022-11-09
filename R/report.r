@@ -68,6 +68,10 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
                }
           }                                                                     ### was muss in die Spalten? das haengt davon ab, ob es einen Trend gibt
           frml     <- as.formula(paste0("... ~ ", paste(spltVar,collapse=" + ") ) )
+    ### Hotfix: wenn repTable ueber wiederholten Aufrufen von repMean gewrappt wurde, stehen die Ns mehrmals drin, naemlich fuer
+    ### jede Indikatorvariable einer mehrstufigen Faktorvariable separat. Sie sind aber immer gleich. Durch das Mehrmalsdrinstehen
+    ### misslingt das reshapen, deshalb muessen sie jetzt raus
+          if ( fun == "table") {jk2 <- reduceDoubleN(jk2)}
     ### Hotfix: damit fuer glm im Output die Koeffizienten immer zuerst und R2, R2nagel, Nvalid imer dahinter stehen, werden die jetzt voruebergehen umbenannt (hinterher wieder zurueck benannt)
           if ( fun == "glm") {jk2[,"parameter"] <- car::recode(jk2[,"parameter"], "'Nvalid'='zzzzNvalid'; 'R2'='zzzzR2'; 'R2nagel'='zzzzR2nagel'") }
           jk2wide  <- reshape2::dcast(data = jk2, formula = frml, value.var = "value")
@@ -218,6 +222,12 @@ compare_point_estimates <- function(old_est, new_est, param) {
   }
   return()
 }
+
+
+reduceDoubleN <- function(jk2){
+          cases <- unique(subset(jk2, parameter=="Ncases"))
+          jk2   <- rbind(subset(jk2,parameter != "Ncases"), cases)
+          return(jk2)}
 
 reshapeReport <- function(inp, tv, fun, repFunOut, target, wholeGroupName) {
     ### testweise initialisieren

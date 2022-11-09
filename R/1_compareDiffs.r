@@ -5,7 +5,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
        if ( fun == "mean" ) {
             jk2  <- jk2[which(jk2[,"parameter"] %in% c("mean", "sd")),]
        }
-       if ( fun == "glm" ) {
+       if ( fun %in% c("glm", "table") ) {
             jk2  <- jk2[which(!jk2[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
        }
     ### wenn die Funktions fuer TRends aufgerufen wird, gibt es nun mehrere trends (statt wie frueher bei 2 zeitpunkten nur einen)

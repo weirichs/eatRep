@@ -7,7 +7,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         if(identical(fun, "mean")) {
             jk2_bind<- jk2_bind[jk2_bind[["parameter"]] %in% c("mean", "sd"), ]
         }
-        if ( fun == "glm" ) {
+        if ( fun %in% c("glm", "table") ) {
             jk2_bind<- jk2_bind[which(!jk2_bind[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
         }
         if ( fun == "lmer" ) {
