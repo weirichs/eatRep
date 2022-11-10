@@ -323,16 +323,6 @@ repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2
                    imp = imp, groups =group, trend = trend, dependent=dependent, formula.fixed=formula.fixed, formula.random=formula.random,engine="BIFIEsurvey",
                    na.rm=na.rm, doCheck=doCheck, modus=modus, verbose=verbose, clusters=clusters)}
 
-timeFormat <- function(timediff, digits) {
-          if(missing(digits)) {
-             if(as.numeric(timediff) < 0.05 ) {
-                digits <- 3
-             }  else  {
-                digits <- 1
-             }
-          }
-          paste(round(as.numeric(timediff), digits = digits), attr(timediff, "units"), sep=" ")}
-
 eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
           toCall = c("mean", "table", "quantile", "glm", "cov", "lmer", "glmer"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, useEffectLiteR = TRUE, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
@@ -342,9 +332,9 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           datL  <- eatTools::makeDataFrame(datL, name = "datL")
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           if (is.null(fc) && isFALSE(onlyCheck)) {                              
-               beg   <- Sys.time()
+#               beg   <- Sys.time()
                fc    <- identifyFunctionCall()
-               message(paste0("Identify function call: ", timeFormat(Sys.time() - beg)))
+#               message(paste0("Identify function call: ", timeFormat(Sys.time() - beg)))
           }
           toCall<- match.arg(toCall)                                            
           type  <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -377,9 +367,9 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           foo   <- checkJK.arguments(type=type, repWgt=repWgt, PSU=PSU, repInd=repInd)
           auchUV<- checkWecForUV(dat=datL, allNam = allNam)
           if (isFALSE(isRecursive)) {                                           
-              beg   <- Sys.time()
+#              beg   <- Sys.time()
               datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
-              message(paste0("checkGroupVars: ", timeFormat(Sys.time() - beg)))
+#              message(paste0("checkGroupVars: ", timeFormat(Sys.time() - beg)))
           }
           datNam<- checkForAdjustmentAndLmer (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL, formula.random=formula.random, formula.fixed=formula.fixed)
           formula.fixed <- datNam[["formula.fixed"]]                            
@@ -421,9 +411,9 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
                   if(verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))}
                   ret   <- createAnalysisInfTable(toAppl=toAppl, verbose=verbose, allNam=datNam[["allNam"]])
                   allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=datNam[["allNam"]], group.splits=group.splits)
-                  beg   <- Sys.time()                                           
+#                  beg   <- Sys.time()
                   cls   <- createLoopStructure(datL = datNam[["datL"]], allNam = allNam, verbose=verbose)
-                  message(paste0("createLoopStructure: ", timeFormat(Sys.time() - beg)))
+#                  message(paste0("createLoopStructure: ", timeFormat(Sys.time() - beg)))
                   if(!is.null(cls[["allNam"]][["cross.differences"]])) {
                       if(length(cls[["allNam"]][["group"]])>1) {
                          lev <- unlist(lapply(cls[["allNam"]][["group"]], FUN = function ( v ) { unique(as.character(cls[["datL"]][,v]))}))
@@ -488,9 +478,9 @@ innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indic
                 noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
                 miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
                 if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
-                beg   <- Sys.time()
+#                beg   <- Sys.time()
                 datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
-                message(paste0("checkImpNest: ", timeFormat(Sys.time() - beg)))
+#                message(paste0("checkImpNest: ", timeFormat(Sys.time() - beg)))
                 pev   <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
                 if ( engine=="survey" || isFALSE(doJK)) {
                 anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
