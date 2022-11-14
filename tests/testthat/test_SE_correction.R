@@ -141,7 +141,7 @@ test_that("Point estiamates for BRR are ok", {
 
 test_that("Old method still works", {
   old_rep <- report(m_old)
-  expect_equal(nrow(old_rep), 10)
+  expect_equal(nrow(old_rep), 13)
   expect_equal(length(which(old_rep$comparison == "crossDiff")), 4)
   expect_equal(old_rep[which(old_rep$comparison == "crossDiff"), "group"], c("female.vs.wholeGroup", "female.vs.wholeGroup", "male.vs.wholeGroup", "male.vs.wholeGroup"))
 })

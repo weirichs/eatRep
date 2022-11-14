@@ -112,8 +112,9 @@ btRead <- subset(lsa, nest==1 & domain=="reading")
 \donttest{
 ### random intercept model with groups
 mod1 <- repLmer(datL = btRead, ID = "idstud", wgt = "wgt", L1wgt="L1wgt", L2wgt="L2wgt",
-        type = "jk2", PSU = "jkzone", repInd = "jkrep", imp = "imp",trend="year",group="country",
-        dependent="score", formula.fixed = ~as.factor(sex)+mig, formula.random=~1, clusters="idclass")
+        type = "jk2", PSU = "jkzone", repInd = "jkrep", imp = "imp",trend="year",
+        group="country", dependent="score", formula.fixed = ~as.factor(sex)+mig,
+        formula.random=~1, clusters="idclass")
 res1 <- report(mod1)
 
 ### random slope without groups and without trend

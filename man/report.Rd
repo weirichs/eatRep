@@ -12,7 +12,7 @@ results.
 
 \usage{
 report(repFunOut, trendDiffs = FALSE, add = list(),
-      exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE,
+      exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
       round = TRUE, digits = 3, printDeviance = FALSE,
       target = c("default", "BT2021", "BT2021.table"),
       wholeGroupName = "Deutschland")

@@ -561,48 +561,46 @@ createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc,
 
 conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, probs, nBoot,bootMethod, modus) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
-                              if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      
+                              if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      ### alle Gewichte sind 1 bzw. gleich
                                  ret   <- Hmisc::hdquantile(x = sub.dat[,allNam[["dependent"]]], se = TRUE, probs = probs,na.rm=na.rm )
-                                 ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = modus, parameter = rep(names(ret),2), coefficient = rep(c("est","se"),each=length(ret)),value = c(ret,attr(ret,"se")),sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
-                              } else {                                          
+                                 ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["dependent"]], modus = modus, parameter = rep(names(ret),2), coefficient = rep(c("est","se"),each=length(ret)),value = c(ret,attr(ret,"se")),sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+                              } else {                                          ### wenn Gewichte gefordert, koennen SEs ueber Bootstrap bestimmt werden
                                  if(!is.null(nBoot)) {
                                      if(nBoot<5) {nBoot <- 5}
-                                     if(bootMethod == "wQuantiles") {           
+                                     if(bootMethod == "wQuantiles") {           ### Variante 1
                                          x     <- sub.dat[,allNam[["dependent"]]]
                                          ret   <- boot::boot(data = x, statistic = function ( x, i) {Hmisc::wtd.quantile(x = x[i], weights = sub.dat[i,allNam[["wgt"]]], probs = probs,na.rm=na.rm )}, R=nBoot)
-                                         ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret$t0, sapply(data.frame(ret$t), sd)), sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
-                                     } else {                                   
+                                         ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["dependent"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret$t0, sapply(data.frame(ret$t), sd)), sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+                                     } else {                                   ### Variante 2
                                          ret   <- do.call("rbind", lapply(1:nBoot, FUN = function (b){
                                                   y   <- sample(x = sub.dat[,allNam[["dependent"]]], size = length(sub.dat[,allNam[["dependent"]]]), replace = TRUE, prob = sub.dat[,allNam[["wgt"]]]/sum(sub.dat[,allNam[["wgt"]]]))
                                                   ret <- Hmisc::hdquantile(x = y, se = FALSE, probs = probs,na.rm=na.rm )
                                                   return(ret)}))
-                                         ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(Hmisc::wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm ), sapply(data.frame(ret),sd)) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+                                         ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["dependent"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(Hmisc::wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm ), sapply(data.frame(ret),sd)) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                                      }
                                  } else {
                                      ret   <- Hmisc::wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm )
-                                     ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret, rep(NA, length(probs))) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+                                     ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["dependent"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret, rep(NA, length(probs))) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                                  }
                               }
                               return(ret)}))
                       ret[,"comparison"] <- NA
                       return(eatTools::facToChar(ret))}
 
-
 jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group.delimiter, modus, scale , rscales, mse, rho) {
-                      typeS          <- car::recode(type, "'JK2'='JKn'")        
+                      typeS          <- car::recode(type, "'JK2'='JKn'")        ### typeS steht fuer type_Survey
                       design         <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                       formel         <- as.formula(paste("~ ",allNam[["dependent"]], sep = "") )
+    ### Hotfix: return.replicates = FALSE gesetzt, weil es sonst ab survey version 4.1-1 eine fehlermeldung gibt ... weiss nicht, ob man die replicates spaeter nochmal braucht, ich glaube nicht
                       quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(allNam[["group"]], collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = FALSE, na.rm = na.rm)
                       molt           <- eatTools::facToChar(reshape2::melt(data=quantile.imp, id.vars=allNam[["group"]], na.rm=FALSE))
-                      molt[,"probs"] <- rep(as.character(probs), times = 2)
+                      molt[,"parameter"]  <- eatTools::crop(eatTools::removePattern(eatTools::removePattern(molt[,"variable"],paste0("se.", allNam[["dependent"]])),allNam[["dependent"]]), char=".")
                       molt           <- do.call("rbind", plyr::alply(molt, .margins = 1, .fun = function (zeile) {
-                                        stopifnot(grep(pattern = paste(zeile[["probs"]], "$", sep=""), zeile[["variable"]])==1)
-                                        zeile[["parameter"]]  <- zeile[["probs"]]
-                                        zeile[["coefficient"]]<- substr(zeile[["variable"]], 1, nchar(zeile[["variable"]])-nchar(zeile[["probs"]]))
-                                        recStr   <- paste("'",c(paste(allNam[["dependent"]],".", sep=""), paste("se.", allNam[["dependent"]],".", sep="")) , "' = '" , c("est", "se"),"'",sep="", collapse="; ")
-                                        zeile[["coefficient"]]<- car::recode(zeile[["coefficient"]],recStr)
+                                        coef <- eatTools::removePattern(eatTools::crop(eatTools::removePattern(zeile[["variable"]], zeile[["parameter"]]), "."), allNam[["dependent"]])
+                                        if ( coef=="") {coef <- "est"} else {stopifnot(coef == "se."); coef <- "se"}
+                                        zeile[["coefficient"]] <- coef
                                         return(zeile)}))
-                      return(eatTools::facToChar(data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["group"]], modus = paste(modus,"survey", sep="__"), comparison = NA, molt[,c("parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE))) }
+                      return(eatTools::facToChar(data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = paste(modus,"survey", sep="__"), comparison = NA, molt[,c("parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE))) }
 
 
 conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.missing.indicator , correct, expected.values, modus) {
@@ -1165,7 +1163,7 @@ clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
                  stopifnot ( all(repTable.output[,"parameter"] %in% c("meanGroupDiff", "wholePopDiff") == FALSE))
                  jk2 <- repTable.output[which(repTable.output[,"parameter"] == "mean"),]
                  stopifnot(length(unique(jk2[,"depVar"]))==1)                   
-                 Nc  <- subset(repTable.output, parameter =="Ncases" & coefficient=="est")
+                 Nc <- repTable.output[intersect(which(repTable.output[,"parameter"] == "Ncases"),  which(repTable.output[,"coefficient"] == "est")),]
                  if(!is.null(depVarOri)) {
                      prm <- datL[which(datL[,as.character(jk2[1,"depVar"])]==1),depVarOri]
                      stopifnot(length(unique(prm))==1)

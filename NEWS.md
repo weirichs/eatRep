@@ -1,9 +1,11 @@
-# eatRep 0.14.5.9000
+# eatRep 0.14.6
 
 * add function `repLmer()` for replication methods for linear multilevel models (wrapper to `BIFIEsurvey::BIFIE.twolevelreg()`)
 * bug fix in internally used check function whether levels of grouping variable(s) are equal across assessment cycles (trend groups)
 * bug fix in singularity treatment of `repGlm()`
+* bug fix in `repQuantile()`
 * add Ns (sample size) to the output of `repTable()` function
+* add tests for `repQuantile()` and `repLmer()`
 
 # eatRep 0.14.5
 

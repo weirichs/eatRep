@@ -1,4 +1,4 @@
-report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncases", "NcasesValid", "var", "sampleSize"), printGlm = FALSE,
+report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
                      round = TRUE, digits = 3, printDeviance = FALSE, target = c("default", "BT2021", "BT2021.table"), wholeGroupName = "Deutschland" ) {
           if(is.null(repFunOut)) {return(NULL)}
           target   <- match.arg(target, choices = c("default", "BT2021", "BT2021.table"))
@@ -224,9 +224,11 @@ compare_point_estimates <- function(old_est, new_est, param) {
 }
 
 
+### Hier kann man nicht subset() nehmen, weil es sonst Warnungen beim Paketebauen gibt,
+### da subset() die Spaltennamen unquoted haben will
 reduceDoubleN <- function(jk2){
-          cases <- unique(subset(jk2, parameter=="Ncases"))
-          jk2   <- rbind(subset(jk2,parameter != "Ncases"), cases)
+          cases <- unique(jk2[which(jk2[,"parameter"] == "Ncases"),])
+          jk2   <- rbind(jk2[which(jk2[,"parameter"] != "Ncases"),], cases)
           return(jk2)}
 
 reshapeReport <- function(inp, tv, fun, repFunOut, target, wholeGroupName) {
