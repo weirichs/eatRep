@@ -16,8 +16,8 @@ repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU =
         family=gaussian, forceSingularityTreatment = FALSE,
         glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE,
         poolMethod = c("mice", "scalar"), useWec = FALSE,
-        scale = 1, rscales = 1, mse=TRUE,
-        rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
+        scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE,
+        se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
         stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
@@ -145,11 +145,11 @@ should be performed using heteroscedastic variances. See the help page of \code{
 from the \code{estimatr} package for further details.
 }
   \item{crossDiffSE.engine}{
-Sort of estimator which should be used for using weighted effect coding in cross-level differences. Note: To date,
-only lavaan allows for stochastic group sizes.
+Optional: Sort of estimator which should be used for standard error estimation in weighted effect coding regression.
+Only applies if \code{useWec == TRUE}. To date, only lavaan allows for stochastic group sizes.
 }
   \item{stochasticGroupSizes}{
-Logical: Assume stochastic group sizes for using weighted effect coding in cross-level differences? Note: To date,
+Logical: Assume stochastic group sizes for using weighted effect coding regression with categorical predictors? Note: To date,
 only lavaan allows for stochastic group sizes. Stochastic group sizes cannot be assumed if any replication method
 (jackknife, BRR) is applied.
 }
