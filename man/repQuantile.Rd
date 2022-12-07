@@ -15,18 +15,18 @@ repQuantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             probs = c(0.25, 0.50, 0.75),  na.rm = FALSE, nBoot = NULL,
             bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE,
-            engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
+            scale = 1, rscales = 1, mse=TRUE,
             rho=NULL, verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
 %%     ~~Describe \code{file} here~~
-Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all 
+Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all
 variables for analysis.
 }
   \item{ID}{
 %%     ~~Describe \code{dif.term} here~~
-Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values. 
+Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values.
 }
   \item{wgt}{
 %%     ~~Describe \code{split.dif} here~~
@@ -40,13 +40,13 @@ arguments must be specified (e.g., \code{PSU} and/or \code{repInd} or \code{repW
 }
   \item{PSU}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied, 
+Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied,
 the PSU is the jackknife zone variable. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
   \item{repInd}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
+Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
   \item{repWgt}{
@@ -54,13 +54,13 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 Normally, replicate weights are created by \code{repQuantile} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
-  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
+  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.
 }
-  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.  
+  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.
 }
   \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: vector of names or column numbers of one or more grouping variables. 
+Optional: vector of names or column numbers of one or more grouping variables.
 }
   \item{group.splits}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -79,13 +79,13 @@ Character string which separates the group names in the output frame.
 }
   \item{trend}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
 }
   \item{linkErr}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
-Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). 
+Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225').
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -116,9 +116,6 @@ weighted quantiles are computed.
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
 analysis to prevent subsequent functions from crashing.
-}
-  \item{engine}{
-Which package should be used for estimation?
 }
   \item{scale}{
 scaling constant for variance, for details, see help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package

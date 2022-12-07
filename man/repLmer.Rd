@@ -9,7 +9,7 @@ that the function is not suitable for logistic logit/probit models.
 }
 \usage{
 repLmer(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2", "JK1"),
-            PSU = NULL, repInd = NULL, imp=NULL, group = NULL, trend = NULL,
+            PSU = NULL, repInd = NULL, jkfac = NULL, imp=NULL, group = NULL, trend = NULL,
             dependent, formula.fixed, formula.random,
             doCheck = TRUE, na.rm = FALSE, clusters, verbose = TRUE)}
 \arguments{
@@ -37,14 +37,18 @@ arguments must be specified (e.g., \code{PSU} and/or \code{repInd} or \code{repW
 }
   \item{PSU}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied, 
+Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied,
 the PSU is the jackknife zone variable. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
   \item{repInd}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
+Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
+}
+  \item{jkfac}{
+Argument is passed to \code{\link[BIFIEsurvey]{BIFIE.data.jack}} and specifies the factor for multiplying jackknife replicate
+weights. If \code{NULL}, the defaults are 2 for \code{type = "JK2"} and \eqn{(N_{cluster} - 1) \times N_{cluster}^{-1}} for \code{type = "JK1"}
 }
 \item{imp}{Name or column number of the imputation variable.
 }
@@ -54,7 +58,7 @@ Optional: column number or name of one grouping variable. Note: in contrast to \
 }
   \item{trend}{
 Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
 }
   \item{dependent}{
 Name or column number of the dependent variable

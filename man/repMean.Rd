@@ -11,50 +11,48 @@ for imputed data and Rubin (2003) for nested imputed data. Conceptually, the fun
 methods and methods for multiple imputed data. Trend estimation as usual in large-scale assessments is supported as well.
 Technically, this is a wrapper for the \code{\link[survey]{svymean}} and \code{\link[survey]{svyvar}} functions of the \code{survey} package.}
 \usage{
-repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
-         PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
-         groups = NULL, group.splits = length(groups), group.differences.by = NULL,
+repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
+         repInd = NULL, jkfac=NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+         group.splits = length(groups), group.differences.by = NULL,
          cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
          adjust = NULL, useEffectLiteR = FALSE, nBoot = 100, group.delimiter = "_",
          trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE,
          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
          rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
-         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
-         stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
+         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE,
+         verbose = TRUE, progress = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
-%%     ~~Describe \code{file} here~~
-Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all 
+Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all
 variables for analysis.
 }
   \item{ID}{
-%%     ~~Describe \code{dif.term} here~~
-Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values. 
+Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values.
 }
   \item{wgt}{
-%%     ~~Describe \code{split.dif} here~~
 Optional: Variable name or column number of weighting variable. If no weighting variable is specified,
 all cases will be equally weighted.
 }
   \item{type}{
-%%     ~~Describe \code{abs.dif.bound} here~~
 Defines the replication method for cluster replicates which is to be applied. Depending on \code{type}, additional
 arguments must be specified (e.g., \code{PSU} and/or \code{repInd} or \code{repWgt}).
 }
   \item{PSU}{
-%%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied, 
+Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied,
 the PSU is the jackknife zone variable. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
   \item{repInd}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
+Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
+  \item{jkfac}{
+Only applies if \code{engine = "BIFIEsurvey"}. Argument is passed to \code{\link[BIFIEsurvey]{BIFIE.data.jack}} and specifies
+the factor for multiplying jackknife replicate weights. If \code{NULL}, the defaults are 2 for \code{type = "JK2"}
+and \eqn{(N_{cluster} - 1) \times N_{cluster}^{-1}} for \code{type = "JK1"}
+}
   \item{repWgt}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Normally, replicate weights are created by \code{repMean} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
@@ -63,40 +61,33 @@ if replicate weights are included in the data.frame, specify the variable names 
 \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.
 }
 \item{groups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: vector of names or column numbers of one or more grouping variables. 
+Optional: vector of names or column numbers of one or more grouping variables.
 }
   \item{group.splits}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
 in the whole group or overlying groups. See examples for more details.
 }
   \item{group.differences.by}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: Specifies variable group differences should be computed for. The corresponding variable must be included in 
-the \code{groups} statement. Exception: choose 'wholePop' if you want to estimate each's group difference from the 
+Optional: Specifies variable group differences should be computed for. The corresponding variable must be included in
+the \code{groups} statement. Exception: choose 'wholePop' if you want to estimate each's group difference from the
 overall sample mean. See examples for further details.
 }
   \item{cross.differences}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
-Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
+Alternatively, if \code{TRUE}, cross-level differences for all pairs of levels are computed. If \code{FALSE}, no cross-level
 differences are computed. (see example 2a, 3, and 4)
 }
   \item{crossDiffSE}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Method for standard error estimation for cross level differences, where groups are dependent.
-\code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to 
+\code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to
 estimate the standard error between the total mean and group-specific means. \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
   \item{adjust}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of variable(s) for which adjusted means should be computed. Non-numeric variables (factors) will
 be converted to 0/1 dichotomous variables.
 }
   \item{useEffectLiteR}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Logical: use the \code{lavaan}-wrapper \code{EffectLiteR} to compute adjusted means? Alternatively, adjusted means
 are computed by applying a simple linear regression model in each group, using the variables in \code{adjust} as
 independent variables. Afterwards, the coefficients are weighted with the (weighted) means of the independent
@@ -107,20 +98,17 @@ replication methods are used (jackknife-1, jackknife-2, BRR), we recommend to se
 because otherwise the estimation is very slow.
 }
   \item{nBoot}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Without replicates (i.e., for completely random samples), the \code{rep} method for standard error estimation for 
-cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
-This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none of the replicate methods 
+Without replicates (i.e., for completely random samples), the \code{rep} method for standard error estimation for
+cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples.
+This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none of the replicate methods
 (JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
 }
   \item{group.delimiter}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
 }
   \item{trend}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
 }
   \item{linkErr}{
 Optional: Either the name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
@@ -136,7 +124,6 @@ error belongs to. Column \code{linkingError} includes the linking error value. P
 more than two measurement occasions. See the example 3a for further details.
 }
   \item{dependent}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of the dependent variable.
 }
   \item{na.rm}{

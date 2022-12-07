@@ -28,7 +28,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
    ### check for missing LEs
                miss    <- which(is.na(jk2_wide[,"le"]))
                if ( length(miss)>0){
-                    warning(paste0("Found ",length(miss)," missing linking errors for dependent variable '",unique(jk2_wide[,"depVar"]),"' and parameter(s) '",paste(unique(jk2_wide[which(is.na(jk2_wide[,"le"])),"parameter"])),"'. Assume linking error of 0 for these cases."))
+                    warning(paste0("Found ",length(miss)," missing linking errors for dependent variable '",unique(jk2_wide[,"depVar"]),"' and parameter(s) '",paste(unique(jk2_wide[which(is.na(jk2_wide[,"le"])),"parameter"]), collapse="', '"),"'. Assume linking error of 0 for these cases."))
                     jk2_wide[which(is.na(jk2_wide[,"le"])),"le"] <- 0
                }
    ### calculate trend SEs and p values

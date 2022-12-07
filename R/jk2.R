@@ -59,7 +59,7 @@ generateRandomJk1Zones <- function (datL, unit, nZones, name = "randomCluster") 
        mdat  <- merge(datL, zones, by.x = allNam, by.y = "ID", all = TRUE)
        return(mdat)}
 
-repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, jkfac = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
             group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"), adjust = NULL, useEffectLiteR = FALSE, nBoot = 100,
             group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
             clusters =NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE) {
@@ -83,7 +83,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             }  else  {
                   modus <- attr(datL, "modus")
             }
-            ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "mean",
+            ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "mean",jkfac = jkfac,
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by,
                    cross.differences = cross.differences, adjust=adjust, useEffectLiteR = useEffectLiteR, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck, modus = modus, engine=engine,
                    scale = scale, rscales = rscales, mse=mse, rho=rho, crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, clusters=clusters, fc=fc, depOri=depO)
@@ -186,7 +186,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                                                   scale = scale, rscales = rscales, mse=mse, rho=rho, hetero=hetero, se_type=se_type , crossDiffSE.engine= crossDiffSE.engine, stochasticGroupSizes=stochasticGroupSizes,
                                                   verbose=verbose, progress=progress, clusters=clusters)
                                 }  else  {                                      
-                                     b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], toCall = "cov",nBoot=nBoot,
+                                     b <- eatRep(datL =d, ID=ret[["allNam"]][["ID"]], wgt = gew, type=type, PSU = ret[["allNam"]][["PSU"]], repInd = ret[["allNam"]][["repInd"]], jkfac =jkfac , toCall = "cov",nBoot=nBoot,
                                           nest=ne, imp=im, groups = grp, refGrp = rg, trend = trend, dependent = ret[["allNam"]][["dependent"]], na.rm=na.rm, doCheck=FALSE, engine="survey", modus=modus,scale = scale,
                                           rscales = rscales, mse=mse, rho=rho, reihenfolge = ret[["allNam"]][["group"]], verbose=verbose, progress=progress, clusters=clusters, fc=fc)
                                 }
@@ -203,28 +203,28 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             return(ret)}
 
 repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
-            PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
+            PSU = NULL, repInd = NULL, jkfac = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.differences.by = NULL, cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
             nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
             engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE ) {
             crossDiffSE <- "old"                                                
             if(isFALSE(cross.differences) == FALSE) {message("To date, only method 'old' is applicable for cross level differences in frequency tables.")}
             modus <- identifyMode ( name = "table", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             datL  <- eatTools::makeDataFrame ( datL)
-            chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
+            chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",jkfac = jkfac , 
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                      expected.values=expected.values, na.rm=na.rm, doCheck=FALSE, onlyCheck= TRUE, modus = modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL, fc="repTable")
             if ( length(unique(datL[,chk1[["dependent"]]])) == 2 && isTRUE(all(sort(unique(datL[,chk1[["dependent"]]])) == 0:1)) && isFALSE(forceTable)) {
                  attr(datL, "modus") <- modus
                  attr(datL,"fc") <- "repTable"
-                 ret <- repMean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], repWgt = repWgt,
+                 ret <- repMean ( datL = datL, ID=chk1[["ID"]], wgt=chk1[["wgt"]], type = type, PSU = chk1[["PSU"]], repInd = chk1[["repInd"]], jkfac = jkfac, repWgt = repWgt,
                         nest = chk1[["nest"]], imp = chk1[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                         crossDiffSE = crossDiffSE, nBoot = nBoot, group.delimiter =group.delimiter, trend = chk1[["trend"]], linkErr = chk1[["linkErr"]], dependent = chk1[["dependent"]],
                         na.rm=na.rm,doCheck = doCheck, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters = NULL)
                  return(ret)
             }  else  {
                  if ( !is.null(group.differences.by) && isFALSE(chiSquare)) {
-                    chk <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
+                    chk <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",jkfac = jkfac, 
                            nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                            trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                            expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, onlyCheck= TRUE, modus = modus, engine=engine, scale = scale, rscales = rscales,
@@ -255,7 +255,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                            attr(datL, "modus") <- modus
                            attr(datL,"depOri") <- chk[["dependent"]]
                            attr(datL,"fc") <- "repTable"
-                           res <- repMean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt,
+                           res <- repMean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt,jkfac = jkfac, 
                                              nest = chk[["nest"]], imp = chk[["imp"]], groups = groups, group.splits = group.splits, group.differences.by=group.differences.by, cross.differences=cross.differences,
                                              crossDiffSE = crossDiffSE, nBoot = nBoot, group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,
                                              doCheck = doCheck, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters = NULL)
@@ -273,7 +273,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                     }
                     return(ret)
                  }  else  {
-                    ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
+                    ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",jkfac = jkfac, 
                            nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                            trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
                            expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, modus=modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho,
@@ -285,14 +285,14 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
 repQuantile<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, probs = c(0.25, 0.50, 0.75),  na.rm = FALSE,
-            nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE, engine = c("survey", "BIFIEsurvey"), 
+            nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE, 
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE)  {
             modus      <- identifyMode ( name = "quantile", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             bootMethod <- match.arg ( bootMethod )
             datL       <- eatTools::makeDataFrame ( datL)
-            eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile",
+            eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile", engine="survey",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, cross.differences=cross.differences, trend = trend, linkErr = linkErr, dependent = dependent,
-                   group.delimiter=group.delimiter, probs=probs, na.rm=na.rm, nBoot=nBoot, bootMethod=bootMethod, doCheck=doCheck, modus=modus, engine=engine, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL)}
+                   group.delimiter=group.delimiter, probs=probs, na.rm=na.rm, nBoot=nBoot, bootMethod=bootMethod, doCheck=doCheck, modus=modus, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL)}
 
 
 repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
@@ -315,15 +315,15 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
                    stochasticGroupSizes=stochasticGroupSizes, verbose=verbose, progress=progress, clusters=clusters, engine="survey")}
 
 repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2", "JK1"),
-            PSU = NULL, repInd = NULL, imp=NULL, group=NULL, trend = NULL,  dependent, formula.fixed, formula.random,
+            PSU = NULL, repInd = NULL, jkfac = NULL, imp=NULL, group=NULL, trend = NULL,  dependent, formula.fixed, formula.random,
             doCheck = TRUE, na.rm = FALSE, clusters, verbose = TRUE) {
             datL   <- eatTools::makeDataFrame ( datL)
             modus  <- identifyMode ( name = "lmer", type = car::recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1")), "'FAY'='Fay'") )
-            eatRep(datL =datL, ID=ID , wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, type=type, PSU = PSU, repInd = repInd, toCall = "lmer",
+            eatRep(datL =datL, ID=ID , wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, type=type, PSU = PSU, repInd = repInd, jkfac = jkfac, toCall = "lmer",
                    imp = imp, groups =group, trend = trend, dependent=dependent, formula.fixed=formula.fixed, formula.random=formula.random,engine="BIFIEsurvey",
                    na.rm=na.rm, doCheck=doCheck, modus=modus, verbose=verbose, clusters=clusters)}
 
-eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL,
+eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, jkfac = NULL, repWgt = NULL, nest=NULL, imp=NULL,
           toCall = c("mean", "table", "quantile", "glm", "cov", "lmer", "glmer"), groups = NULL, refGrp = NULL, group.splits = length(groups), group.differences.by = NULL,
           cross.differences = FALSE, group.delimiter = "_", adjust=NULL, useEffectLiteR = TRUE, trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, formula.fixed=NULL, formula.random=NULL,
@@ -332,9 +332,7 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           datL  <- eatTools::makeDataFrame(datL, name = "datL")
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           if (is.null(fc) && isFALSE(onlyCheck)) {                              
-#               beg   <- Sys.time()
                fc    <- identifyFunctionCall()
-#               message(paste0("Identify function call: ", timeFormat(Sys.time() - beg)))
           }
           toCall<- match.arg(toCall)                                            
           type  <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -367,9 +365,7 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           foo   <- checkJK.arguments(type=type, repWgt=repWgt, PSU=PSU, repInd=repInd)
           auchUV<- checkWecForUV(dat=datL, allNam = allNam)
           if (isFALSE(isRecursive)) {                                           
-#              beg   <- Sys.time()
               datL  <- checkGroupVars ( datL = datL, allNam = allNam, auchUV = auchUV)
-#              message(paste0("checkGroupVars: ", timeFormat(Sys.time() - beg)))
           }
           datNam<- checkForAdjustmentAndLmer (datL=datL, allNam=allNam, groupWasNULL=groupWasNULL, formula.random=formula.random, formula.fixed=formula.fixed)
           formula.fixed <- datNam[["formula.fixed"]]                            
@@ -411,9 +407,7 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
                   if(verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))}
                   ret   <- createAnalysisInfTable(toAppl=toAppl, verbose=verbose, allNam=datNam[["allNam"]])
                   allNam<- setCrossDifferences (cross.differences=cross.differences, allNam=datNam[["allNam"]], group.splits=group.splits)
-#                  beg   <- Sys.time()
                   cls   <- createLoopStructure(datL = datNam[["datL"]], allNam = allNam, verbose=verbose)
-#                  message(paste0("createLoopStructure: ", timeFormat(Sys.time() - beg)))
                   if(!is.null(cls[["allNam"]][["cross.differences"]])) {
                       if(length(cls[["allNam"]][["group"]])>1) {
                          lev <- unlist(lapply(cls[["allNam"]][["group"]], FUN = function ( v ) { unique(as.character(cls[["datL"]][,v]))}))
@@ -429,7 +423,7 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
                   allRes<- innerLoop(toAppl=toAppl, ret=ret, toCall=toCall, allNam=cls[["allNam"]], datL=cls[["datL"]], separate.missing.indicator=separate.missing.indicator,
                            na.rm=na.rm, expected.values=expected.values, group.delimiter=group.delimiter,type=type, repA=repA, modus=modus,probs=probs, nBoot=nBoot,
                            bootMethod=bootMethod, formula=formula, forceSingularityTreatment=forceSingularityTreatment,glmTransformation=glmTransformation,doJK=doJK,
-                           poolMethod=poolMethod, useWec=useWec,refGrp=refGrp, scale = scale,rscales = rscales, mse=mse, rho=rho,reihenfolge=reihenfolge, hetero=hetero, se_type=se_type,
+                           poolMethod=poolMethod, useWec=useWec,refGrp=refGrp, jkfac = jkfac, scale = scale,rscales = rscales, mse=mse, rho=rho,reihenfolge=reihenfolge, hetero=hetero, se_type=se_type,
                            useEffectLiteR=useEffectLiteR,crossDiffSE.engine=crossDiffSE.engine,stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct,family=family,
                            verbose=verbose, doCheck=doCheck, engine=engine, L1wgt=L1wgt, L2wgt=L2wgt,formula.fixed=formula.fixed, formula.random=formula.random )
                   if(verbose){cat("\n")}
@@ -463,7 +457,7 @@ createAnalysisInfTable <- function(toAppl, verbose, allNam) {
          return(ret)}
 
 innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indicator, na.rm, expected.values, group.delimiter,type, repA, modus,probs,nBoot,bootMethod, formula, forceSingularityTreatment,
-                      glmTransformation,doJK, poolMethod, useWec,refGrp, scale,rscales, mse, rho,reihenfolge, hetero, se_type, useEffectLiteR,crossDiffSE.engine,stochasticGroupSizes, progress, correct,
+                      glmTransformation,doJK, poolMethod, useWec,refGrp,  jkfac, scale,rscales, mse, rho,reihenfolge, hetero, se_type, useEffectLiteR,crossDiffSE.engine,stochasticGroupSizes, progress, correct,
                       family, verbose, doCheck, engine, L1wgt, L2wgt,formula.fixed, formula.random)  {
        allRes<- do.call(plyr::rbind.fill, lapply( names(toAppl), FUN = function ( gr ) {
                 str1  <- createInfoString (ai = ret, toCall=toCall, gr=gr, toAppl=toAppl)
@@ -478,9 +472,7 @@ innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indic
                 noMis <- unlist ( c ( allNam[-na.omit(match(c("group", "dependent", "cross.differences"), names(allNam)))], toAppl[gr]) )
                 miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
                 if(length(miss)>0) { warning("Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".")}
-#                beg   <- Sys.time()
                 datL  <- checkImpNest(datL = datL, doCheck=doCheck, toAppl = toAppl, gr=gr, allNam = allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm)
-#                message(paste0("checkImpNest: ", timeFormat(Sys.time() - beg)))
                 pev   <- prepExpecVal (toCall = toCall, expected.values=expected.values, separate.missing.indicator=separate.missing.indicator, allNam=allNam, datL = datL)
                 if ( engine=="survey" || isFALSE(doJK)) {
                 anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doSurveyAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
@@ -491,7 +483,7 @@ innerLoop <- function (toAppl, ret, toCall, allNam, datL, separate.missing.indic
                        stochasticGroupSizes=stochasticGroupSizes, progress=progress, correct=correct, family=family, str1=str1))
                 }  else  {                                                      
                        anaA<- do.call("rbind", by(data = pev[["datL"]], INDICES = pev[["datL"]][,"isClear"], FUN = doBifieAnalyses, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter,
-                              separate.missing.indicator = separate.missing.indicator, expected.values=pev[["expected.values"]], probs=probs, formula=formula, glmTransformation=glmTransformation,
+                              separate.missing.indicator = separate.missing.indicator, expected.values=pev[["expected.values"]], probs=probs,  jkfac = jkfac, formula=formula, glmTransformation=glmTransformation,
                               toCall=toCall, modus=modus, type=type, verbose=verbose, L1wgt=L1wgt, L2wgt=L2wgt,formula.fixed=formula.fixed, formula.random=formula.random))
                 }
                 if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
@@ -561,17 +553,17 @@ createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc,
 
 conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, probs, nBoot,bootMethod, modus) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
-                              if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      ### alle Gewichte sind 1 bzw. gleich
+                              if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      
                                  ret   <- Hmisc::hdquantile(x = sub.dat[,allNam[["dependent"]]], se = TRUE, probs = probs,na.rm=na.rm )
                                  ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["dependent"]], modus = modus, parameter = rep(names(ret),2), coefficient = rep(c("est","se"),each=length(ret)),value = c(ret,attr(ret,"se")),sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
-                              } else {                                          ### wenn Gewichte gefordert, koennen SEs ueber Bootstrap bestimmt werden
+                              } else {                                          
                                  if(!is.null(nBoot)) {
                                      if(nBoot<5) {nBoot <- 5}
-                                     if(bootMethod == "wQuantiles") {           ### Variante 1
+                                     if(bootMethod == "wQuantiles") {           
                                          x     <- sub.dat[,allNam[["dependent"]]]
                                          ret   <- boot::boot(data = x, statistic = function ( x, i) {Hmisc::wtd.quantile(x = x[i], weights = sub.dat[i,allNam[["wgt"]]], probs = probs,na.rm=na.rm )}, R=nBoot)
                                          ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["dependent"]], modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret$t0, sapply(data.frame(ret$t), sd)), sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
-                                     } else {                                   ### Variante 2
+                                     } else {                                   
                                          ret   <- do.call("rbind", lapply(1:nBoot, FUN = function (b){
                                                   y   <- sample(x = sub.dat[,allNam[["dependent"]]], size = length(sub.dat[,allNam[["dependent"]]]), replace = TRUE, prob = sub.dat[,allNam[["wgt"]]]/sum(sub.dat[,allNam[["wgt"]]]))
                                                   ret <- Hmisc::hdquantile(x = y, se = FALSE, probs = probs,na.rm=na.rm )
@@ -587,11 +579,11 @@ conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, probs, 
                       ret[,"comparison"] <- NA
                       return(eatTools::facToChar(ret))}
 
+
 jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group.delimiter, modus, scale , rscales, mse, rho) {
-                      typeS          <- car::recode(type, "'JK2'='JKn'")        ### typeS steht fuer type_Survey
+                      typeS          <- car::recode(type, "'JK2'='JKn'")        
                       design         <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                       formel         <- as.formula(paste("~ ",allNam[["dependent"]], sep = "") )
-    ### Hotfix: return.replicates = FALSE gesetzt, weil es sonst ab survey version 4.1-1 eine fehlermeldung gibt ... weiss nicht, ob man die replicates spaeter nochmal braucht, ich glaube nicht
                       quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(allNam[["group"]], collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = FALSE, na.rm = na.rm)
                       molt           <- eatTools::facToChar(reshape2::melt(data=quantile.imp, id.vars=allNam[["group"]], na.rm=FALSE))
                       molt[,"parameter"]  <- eatTools::crop(eatTools::removePattern(eatTools::removePattern(molt[,"variable"],paste0("se.", allNam[["dependent"]])),allNam[["dependent"]]), char=".")
@@ -1164,7 +1156,7 @@ clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
                  jk2 <- repTable.output[which(repTable.output[,"parameter"] == "mean"),]
                  stopifnot(length(unique(jk2[,"depVar"]))==1)                   
                  Nc <- repTable.output[intersect(which(repTable.output[,"parameter"] == "Ncases"),  which(repTable.output[,"coefficient"] == "est")),]
-                 if(!is.null(depVarOri)) {
+                 if(!is.null(depVarOri)) {                                      
                      prm <- datL[which(datL[,as.character(jk2[1,"depVar"])]==1),depVarOri]
                      stopifnot(length(unique(prm))==1)
                      jk2[,"depVar"]   <- depVarOri
@@ -1629,7 +1621,7 @@ checkImpNest <- function (datL, doCheck, toAppl, gr, allNam, toCall, separate.mi
              impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE)
              laenge<- which(sapply(impNes, length) == 0)
              if ( length(laenge ) > 0 ) {
-                  warning(length(laenge), " combination(s) of groups without any observations. Analysis most probably will crash.")
+                  warning(length(laenge), " combination(s) of groups without any observations. Analysis might crash.")
              }
              impNes<- table(impNes[setdiff (1:length(impNes), laenge)])
              if(length(impNes) != 1 ) {warning("Number of imputations differ across nests and/or groups!\n", eatTools::print_and_capture(impNes, 3))}

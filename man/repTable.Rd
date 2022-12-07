@@ -12,7 +12,7 @@ methods. Technically, this is a wrapper for the \code{\link[survey]{svymean}} fu
 }
 \usage{
 repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL,
-          repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
+          repInd = NULL, jkfac=NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL,
           group.splits = length(groups), group.differences.by = NULL,
           cross.differences = FALSE, crossDiffSE = c("wec", "rep","old"),
           nBoot = 100, chiSquare = FALSE, correct = TRUE, group.delimiter = "_",
@@ -23,100 +23,89 @@ repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
-%%     ~~Describe \code{file} here~~
-Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all 
+Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all
 variables for analysis.
 }
   \item{ID}{
-%%     ~~Describe \code{dif.term} here~~
-Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values. 
+Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values.
 }
   \item{wgt}{
-%%     ~~Describe \code{split.dif} here~~
 Optional: Variable name or column number of weighting variable. If no weighting variable is specified,
 all cases will be equally weighted.
 }
   \item{type}{
-%%     ~~Describe \code{abs.dif.bound} here~~
 Defines the replication method for cluster replicates which is to be applied. Depending on \code{type}, additional
 arguments must be specified (e.g., \code{PSU} and/or \code{repInd} or \code{repWgt}).
 }
   \item{PSU}{
-%%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied, 
+Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied,
 the PSU is the jackknife zone variable. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
   \item{repInd}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
+Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
+  \item{jkfac}{
+Only applies if \code{engine = "BIFIEsurvey"}. Argument is passed to \code{\link[BIFIEsurvey]{BIFIE.data.jack}} and specifies
+the factor for multiplying jackknife replicate weights. If \code{NULL}, the defaults are 2 for \code{type = "JK2"}
+and \eqn{(N_{cluster} - 1) \times N_{cluster}^{-1}} for \code{type = "JK1"}
+}
   \item{repWgt}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Normally, replicate weights are created by \code{repTable} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
   \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.
 }
-  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.  
+  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.
 }
   \item{groups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: vector of names or column numbers of one or more grouping variables. 
+Optional: vector of names or column numbers of one or more grouping variables.
 }
   \item{group.splits}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
 in the whole group or overlying groups. See examples for more details.
 }
   \item{group.differences.by}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: Specifies one grouping variable for which a chi-square test should be applied. 
-The corresponding variable must be included in the \code{groups} statement. If specified, the 
-distribution of the dependent variable is compared between the groups. See examples for 
+Optional: Specifies one grouping variable for which a chi-square test should be applied.
+The corresponding variable must be included in the \code{groups} statement. If specified, the
+distribution of the dependent variable is compared between the groups. See examples for
 further details.
 }
   \item{cross.differences}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
 differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{repMean} function)
 }
   \item{crossDiffSE}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Method for standard error estimation for cross level differences, where groups are dependent.
-\code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to 
+\code{wec} uses weighted effect coding, \code{rep} uses replication methods (bootstrap or jackknife) to
 estimate the standard error between the total mean and group-specific means. \code{old} does not account for dependent
 groups and treat the groups as if they were independent from each other.
 }
   \item{nBoot}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Without replicates (i.e., for completely random samples), the \code{rep} method for standard error estimation for 
-cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples. 
-This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none of the replicate methods 
+Without replicates (i.e., for completely random samples), the \code{rep} method for standard error estimation for
+cross level differences needs a bootstrap. \code{nBoot} therefore specifies the number of bootstrap samples.
+This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none of the replicate methods
 (JK1, JK2, or BRR) is applied. Otherwise, \code{nBoot} will be ignored.
 }
   \item{chiSquare}{
-Logical. Applies only if \code{group.differences.by} was specified. Defines whether 
-group differences should be represented in a chi square test or in (mean) differences of each 
+Logical. Applies only if \code{group.differences.by} was specified. Defines whether
+group differences should be represented in a chi square test or in (mean) differences of each
 group's relative frequency. Note: To date, chi square test is not available for \code{engine = "BIFIEsurvey"}.
 }
   \item{correct}{
-Logical. Applies only if 'group.differences.by' is requested without cluster replicates. A logical indicating whether to apply 
-continuity correction when computing the test statistic for 2 by 2 tables. See help page of 'chisq.test' for further details. 
+Logical. Applies only if 'group.differences.by' is requested without cluster replicates. A logical indicating whether to apply
+continuity correction when computing the test statistic for 2 by 2 tables. See help page of 'chisq.test' for further details.
 }
   \item{group.delimiter}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
 }
   \item{trend}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
 }
   \item{linkErr}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: Either the name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
 Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). Alternatively, linking errors may be
 given as data.frame with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
@@ -130,11 +119,9 @@ error belongs to. Column \code{linkingError} includes the linking error value. P
 more than two measurement occasions. See the fourth example below for further details.
 }
   \item{dependent}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of the dependent variable.
 }
   \item{separate.missing.indicator}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Logical. Should frequencies of missings in dependent variable be integrated? Note: That is only useful if missing occur as \code{NA}. If the dependent variable
 is coded as character, for example \code{'male', 'female', 'missing'}, separate missing indicator is not necessary.
 }
@@ -142,7 +129,6 @@ is coded as character, for example \code{'male', 'female', 'missing'}, separate 
 Logical: Should cases with missing values be dropped?
 }
   \item{expected.values}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional. A vector of values expected in dependent variable. Recommend to left this argument empty.
 }
   \item{doCheck}{
@@ -180,7 +166,6 @@ Logical: Show progress bar on console?
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{\link[survey]{svymean}} called by \code{\link[survey]{svyby}} implemented in the \code{survey} package.
