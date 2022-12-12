@@ -9,8 +9,8 @@ that the function is not suitable for logistic logit/probit models.
 }
 \usage{
 repLmer(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2", "JK1"),
-            PSU = NULL, repInd = NULL, jkfac = NULL, imp=NULL, group = NULL, trend = NULL,
-            dependent, formula.fixed, formula.random,
+            PSU = NULL, repInd = NULL, jkfac = NULL, rho = NULL, imp=NULL,
+            group = NULL, trend = NULL, dependent, formula.fixed, formula.random,
             doCheck = TRUE, na.rm = FALSE, clusters, verbose = TRUE)}
 \arguments{
   \item{datL}{
@@ -48,7 +48,14 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 }
   \item{jkfac}{
 Argument is passed to \code{\link[BIFIEsurvey]{BIFIE.data.jack}} and specifies the factor for multiplying jackknife replicate
-weights. If \code{NULL}, the defaults are 2 for \code{type = "JK2"} and \eqn{(N_{cluster} - 1) \times N_{cluster}^{-1}} for \code{type = "JK1"}
+weights.
+}
+  \item{rho}{
+Fay factor for statistical inference. The argument is passed to the \code{fayfac} argument of the
+\code{\link[BIFIEsurvey]{BIFIE.data.jack}} function from the \code{BIFIEsurvey} package. See the
+corresponding help page for further details. For convenience, if \code{rho = NULL} (the default)
+and \code{type = "JK1"}, \code{\link[BIFIEsurvey]{BIFIE.data.jack}} is called with
+\code{jktype="JK_GROUP"} and \code{fayfac = rho}, where \eqn{\rho = (N_{cluster} - 1) \times N_{cluster}^{-1}}
 }
 \item{imp}{Name or column number of the imputation variable.
 }

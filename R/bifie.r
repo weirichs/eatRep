@@ -1,4 +1,4 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs,  jkfac, formula, glmTransformation, toCall, modus, type, verbose, L1wgt, L2wgt,formula.fixed, formula.random){
+doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs,  jkfac, fayfac, formula, glmTransformation, toCall, modus, type, verbose, L1wgt, L2wgt,formula.fixed, formula.random){
       dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(allNam), colnames(dat.i))], from = "character", to = "factor")
       dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)                  
       dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")            
@@ -6,8 +6,8 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
       labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["dependent"]]),]
       datL <- by ( data = dat2, INDICES = dat2[,allNam[["imp"]]], FUN = function ( imp.i ) { return(imp.i)})
       jkt  <- car::recode(type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
-	    if(is.null(jkfac)) {if(jkt == "JK_GROUP") {jkfac <- (length(unique(dat.i[, allNam[["PSU"]]]))-1)/length(unique(dat.i[, allNam[["PSU"]]]))   }}
-      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = allNam[["PSU"]], jkrep = allNam[["repInd"]], jkfac=jkfac, cdata=FALSE))
+	    if(is.null(fayfac)) {if(jkt == "JK_GROUP") {fayfac <- (length(unique(dat.i[, allNam[["PSU"]]]))-1)/length(unique(dat.i[, allNam[["PSU"]]]))   }}
+      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = allNam[["PSU"]], jkrep = allNam[["repInd"]], jkfac=jkfac, fayfac=fayfac, cdata=FALSE))
       if ( isTRUE(verbose)) { cat("\n"); print(bo)}
       attributes(allNam[["group"]]) <- NULL                                     
       if ( toCall == "mean") {

@@ -49,8 +49,7 @@ variable. If \code{NULL}, no cluster structure is assumed and standard errors ar
 }
   \item{jkfac}{
 Only applies if \code{engine = "BIFIEsurvey"}. Argument is passed to \code{\link[BIFIEsurvey]{BIFIE.data.jack}} and specifies
-the factor for multiplying jackknife replicate weights. If \code{NULL}, the defaults are 2 for \code{type = "JK2"}
-and \eqn{(N_{cluster} - 1) \times N_{cluster}^{-1}} for \code{type = "JK1"}
+the factor for multiplying jackknife replicate weights.
 }
   \item{repWgt}{
 Normally, replicate weights are created by \code{repMean} directly from \code{PSU} and \code{repInd} variables. Alternatively,
@@ -147,7 +146,13 @@ Logical: If \code{TRUE}, compute variances based on sum of squares around the po
 See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{rho}{
-Shrinkage factor for weights in Fay's method. See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
+Shrinkage factor for weights in Fay's method. If code{engine = "survey"]}, argument is passed to the \code{rho} argument of
+the \code{\link[survey]{svrepdesign}} function from the \code{survey} package. See the corresponding help page for further
+details. If code{engine = "BIFIEsurvey"]}, argument is passed to the \code{fayfac} argument of the
+\code{\link[BIFIEsurvey]{BIFIE.data.jack}} function from the \code{BIFIEsurvey} package. See the
+corresponding help page for further details. For convenience, if \code{rho = NULL} (the default)
+and code{engine = "BIFIEsurvey"]} and \code{type = "JK1"}, \code{\link[BIFIEsurvey]{BIFIE.data.jack}}
+is called with \code{jktype="JK_GROUP"} and \code{fayfac = rho}, where \eqn{\rho = (N_{cluster} - 1) \times N_{cluster}^{-1}}
 }
   \item{hetero}{
 Logical: Assume heteroscedastic variance for weighted effect coding?
