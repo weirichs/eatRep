@@ -445,7 +445,7 @@ checkFactorLevels <- function(datL, allNam) {
                     ch1<- all(unlist(lapply(cmb,FUN = function (y) {all ( names(ch[[y[1]]]) == names(ch[[y[2]]]))})))
                     if(!ch1) {
                         tab <- table(datL[,c(gr,allNam[["trend"]])])
-                        stop(paste0("Levels of grouping variable '",gr,"' do not match between trend groups: \n", eatTools::print_and_capture(tab, 5) ))
+                        warning(paste0("Levels of grouping variable '",gr,"' do not match between trend groups: \n", eatTools::print_and_capture(tab, 5) ))
                     }})}}
 
 createAnalysisInfTable <- function(toAppl, verbose, allNam) {
@@ -1501,7 +1501,7 @@ checkForAdjustmentAndLmer <- function(datL, allNam, groupWasNULL, formula.random
           
 checkNameConvention <- function( allNam) {
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "le")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}

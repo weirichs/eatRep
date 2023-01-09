@@ -1,30 +1,33 @@
 computeTrend <- function(jk2, tv, repFunOut, fun) {
-        jk2_all <- do.call("rbind", jk2)                                        ### bind yearwise results
-        jk2_bind<- jk2_all
-   ### checks: die selben Zeilen in allen Jahren?? (fuer GLMs insbesondere testen!)
-        jk2_bind<- check1(jk2=jk2, jk2_bind=jk2_bind, jk2_all=jk2_all, tv=tv)
+        jk2_bind<- do.call("rbind", jk2)                                        ### bind yearwise results
    ### special for mean: select only mean and sd, reshape le
-        if(identical(fun, "mean")) {
-            jk2_bind<- jk2_bind[jk2_bind[["parameter"]] %in% c("mean", "sd"), ]
+        if(identical(fun, "mean")) {                                            ### nur fuer die Falle, fuer die splitVar = TRUE ist, werden Trends berechnet!
+            jk2_bind[,"splitVar"] <- jk2_bind[["parameter"]] %in% c("mean", "sd")
         }
         if ( fun %in% c("glm", "table") ) {
-            jk2_bind<- jk2_bind[which(!jk2_bind[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
+            jk2_bind[,"splitVar"] <- !jk2_bind[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")
         }
-        if ( fun == "lmer" ) {
-            jk2_bind<- jk2_bind[which(!jk2_bind[,"parameter"] %in% c("Nvalid", "R2_Lev2","R2_Lev1","R2_Total","ICC_Uncond","ICC_UncondWB", "ICC_Cond")),]
+        if ( identical(fun, "lmer") ) {
+            jk2_bind[,"splitVar"] <- !jk2_bind[,"parameter"] %in% c("Nvalid", "R2_Lev2","R2_Lev1","R2_Total","ICC_Uncond","ICC_UncondWB", "ICC_Cond")
+        }                                                                       ### nur fuer diese Koeffizienten werden trends berechnet
+        if ( identical(fun, "quantile") ) {
+            jk2_bind[,"splitVar"] <- TRUE
         }
-        jk2_bind<- jk2_bind[jk2_bind[["coefficient"]] %in% c("est", "se"), ]    ### drop significance
-        jk2_wide<- reshape2::dcast ( jk2_bind, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
-        lev     <- unique(jk2_bind[[tv]])                                       ### calculate trend
+        jk2_bind[setdiff(1:nrow(jk2_bind), which(jk2_bind[,"coefficient"] %in% c("est", "se"))),"splitVar"] <- FALSE
+        lev     <- unique(jk2_bind[,tv])                                        ### calculate trend
         le      <- check2(repFunOut=repFunOut, jk2=jk2_bind, fun=fun)
    ### calculate all trends!
         vgl <- combinat::combn(names(jk2),2, simplify=FALSE)                    ### untere Zeile: Zusaetze fuer alle trendvergleiche (1 vs. 2; 2 vs. 3; 1 vs. 3) machen
-        adds<- lapply( 1:length(vgl), FUN = function ( comp) {                  ### untere Zeile: merge linking errors ... muss angepasst werden!
+        adds<- do.call("rbind", lapply( 1:length(vgl), FUN = function ( comp) { ### untere Zeile: merge linking errors ... muss angepasst werden!
+   ### checks: die selben Zeilen in den paarweise zu vergleichenden Jahren? (fuer GLMs insbesondere testen!)
+               jk2_binS<- check1(jk2=jk2[vgl[[comp]]], jk2_bind=jk2_bind[intersect(which(jk2_bind[,"splitVar"] == TRUE), which(jk2_bind[,tv] %in% vgl[[comp]])),], jk2_all=jk2_all[which(jk2_all[,tv] %in% vgl[[comp]]),], tv=tv)
+               jk2_wide<- reshape2::dcast ( jk2_binS, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
                jk2_wide[,paste0("est_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2])] <- jk2_wide[,paste("est_",vgl[[comp]][2],sep="")] - jk2_wide[,paste("est_",vgl[[comp]][1],sep="")]
+               le_S    <- le[intersect(which(le[,"trendLevel1"] %in% vgl[[comp]]), which(le[,"trendLevel2"] %in% vgl[[comp]])),]
+   ### pro Kombination aus parameter und depVar darf es nur einen Linkingfehler geben!
+               stopifnot(all(as.vector(unlist(by(le_S, INDICES = le_S[,c("parameter", "depVar")], nrow))) == 1))
    ### merge linking errors ... aus 'le' die relevanten Jahre auswaehlen: wenn der user die in umgekehrter Reihenfolge, also 2015 in die erste, und 2010 in die zweite Spalte geschrieben hat, muss das jetzt homogenisiert werden
-               years.c <- unlist(apply(le, MARGIN = 1, FUN = function (zeile) {paste(c(zeile[["trendLevel1"]], zeile[["trendLevel2"]]), collapse="_")}))
-               le.years<- le[which(years.c == paste(sort(vgl[[comp]]), collapse="_")),]
-               jk2_wide<- merge(jk2_wide, le.years[,-na.omit(match(c("trendLevel1", "trendLevel2", "domain"), colnames(le.years)))], by = c("parameter", "depVar"), all = TRUE)
+               jk2_wide<- merge(jk2_wide, le_S[,-na.omit(match(c("trendLevel1", "trendLevel2", "domain"), colnames(le_S)))], by = c("parameter", "depVar"), all = TRUE)
    ### check for missing LEs
                miss    <- which(is.na(jk2_wide[,"le"]))
                if ( length(miss)>0){
@@ -35,12 +38,13 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                jk2_wide[,paste0("se_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])] <- sqrt(jk2_wide[, paste("se_",vgl[[comp]][1],sep="")]^2 + jk2_wide[, paste("se_",vgl[[comp]][2],sep="")]^2 + jk2_wide[, "le"]^2)
                jk2_wide[,paste0("sig_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])]<- 2*pnorm(abs(jk2_wide[, paste0("est_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2])]/jk2_wide[, paste0("se_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])]), lower.tail=FALSE)
    ### Effect size for means (only for jk2.mean)
-               existSD <- "sd" %in% jk2_bind[,"parameter"]                      ### nur wenn standardabweichungen drin stehen, koennen effektstaerken berechnet werden ... Message wird nur fuer ersten Schleifendurchlauf ausgegeben (redundanz vermeiden)
+               existSD <- "sd" %in% jk2_binS[,"parameter"]                      ### nur wenn standardabweichungen drin stehen, koennen effektstaerken berechnet werden ... Message wird nur fuer ersten Schleifendurchlauf ausgegeben (redundanz vermeiden)
                es  <- character(0)
                if(fun == "mean" && !existSD && comp == 1) {message("Cannot find standard deviations in output. Skip computation of effect sizes.")}
                if (  fun == "mean" && existSD) {                                ### not for groupDiffs as no SD is provided by eatRep, split up data frame and rbind later
-                   jk2_wide[, paste0("es_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])]  <- NA
+                   jk2_wide[,"rowNr"] <- 1:nrow(jk2_wide)
                    jk2_wideS<- jk2_wide[!jk2_wide[, "comparison"] %in% c("crossDiff_of_groupDiff", "groupDiff") | is.na(jk2_wide[, "comparison"]), ]
+                   if ( nrow(jk2_wide) == nrow(jk2_wideS) ) {jk2_wide <- NULL} else { jk2_wide <- jk2_wide[setdiff(jk2_wide[,"rowNr"], jk2_wideS[,"rowNr"]),] }
                    tabs     <- table(jk2_wideS[,c("parameter", "group")])
                    if ( !all ( tabs == 1) ) {                                   ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen ... sonst Effektstaerkebestimmug ueberspringen
                         message("Cannot find standard deviations of following groups: \n",eatTools::print_and_capture(tabs, 5),"\nSkip computation of effect sizes.")
@@ -48,37 +52,29 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                         jk2_wideS<- jk2_wideS[with(jk2_wideS, order(parameter, group)),]
                         pooledSD <- sqrt(0.5 * (jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",vgl[[comp]][1], sep="")]^2 + jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",vgl[[comp]][2], sep="")]^2))
                         jk2_wideS[jk2_wideS[, "parameter"] == "mean", paste0("es_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])]  <- jk2_wideS[jk2_wideS[, "parameter"] == "mean", paste0("est_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2])] / pooledSD
-                        es       <- c(es, paste0("es_trend_", vgl[[comp]][1],".vs.",vgl[[comp]][2]))
-                        jk2_wide <- unique(rbind(jk2_wide, jk2_wideS))          ### add es to reshaping!
+                        jk2_wide <- plyr::rbind.fill(jk2_wide, jk2_wideS)       ### add es to reshaping!
                    }
-               }
-   ### reshape back to standard format
-               jk2_add <- reshape2::melt ( jk2_wide, measure.vars = c(paste("est", unique(unlist(vgl)), sep="_"),  paste("se", unique(unlist(vgl)), sep="_"),  paste0("est_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2]), paste0("se_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2]), paste0("sig_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2]), es), na.rm = FALSE)
-               jk2_add <- jk2_add[!is.na(jk2_add[, "value"]), ]                  ### drop missing rows (e.g. for SD, as no es can be calc)
-   ### split up variable column into coef and trend variable ... an ERSTEM Unterstrich splitten
-               zusatz  <- data.frame ( eatTools::halveString (string = as.character(jk2_add[,"variable"]), pattern = "_", first = TRUE ), stringsAsFactors = FALSE)
-               colnames(zusatz) <- c("coefficient", tv)
-               jk2_add <- data.frame ( jk2_add[,-match("variable", colnames(jk2_add))], zusatz, stringsAsFactors = FALSE)
-   ### return additional results (drops le)
-               return(jk2_add[, names(jk2_all)])})
-   ### Originaloutput und Zusatz untereinanderbinden, nur das unique behalten
-        jk2 <- unique(rbind(jk2_all, do.call("rbind", adds)))
-        return(jk2) }
+               }                                                                ### untere zeile: measure vars fuers reshapen
+               mv  <- unlist(lapply(c("^est_", "^se_", "^sig", "^es_"), FUN = function ( v ) {grep(v, colnames(jk2_wide), value=TRUE)}))
+               jkl <- reshape2::melt(jk2_wide[,-na.omit(match(c("le", "rowNr"), colnames(jk2_wide)))], measure.vars = mv, na.rm=TRUE)
+               return(jkl)}))
+   ### 'reshape'-Variable 'variable' nach coefficient und year aufsplitten
+        adds<- data.frame ( adds[,-match(c("splitVar", "variable"), colnames(adds))], eatTools::halveString(as.character(adds[,"variable"]), pattern="_", first=TRUE, colnames=c("coefficient", "year")), stringsAsFactors = FALSE)
+        adds<- eatTools::rbind_common(jk2_bind[which(jk2_bind[,"splitVar"] == FALSE),], adds)
+        return(adds) }                                                          ### obere Zeile: Originaloutput und Zusatz untereinanderbinden, spalte 'splitVar' droppen
 
 check1 <- function(jk2, jk2_bind, jk2_all, tv) {
     ### alles gegen alles vergleichen
-       vgl <- combinat::combn(1:length(jk2),2, simplify=FALSE)
-       chks<- sapply(vgl, FUN = function ( x ) { length(unique(jk2[[x[1]]]$group)) != length(unique(jk2[[x[2]]]$group)) || suppressWarnings(!all(sort(unique(jk2[[x[1]]]$group)) == sort(unique(jk2[[x[1]]]$group))))})
-       if(sum(chks)>0) {                                                        ### wenn wenigstens ein check TRUE ist, soll das gemacht werden
-           weg <- unique(unlist(lapply(vgl, FUN = function ( v ) {              ### remove rows which are not in all years (trend only for rows which are in both data sets)
-                  uneven1 <- setdiff(unique(jk2[[v[1]]]$group), unique(jk2[[v[2]]]$group))
-                  uneven2 <- setdiff(unique(jk2[[v[2]]]$group), unique(jk2[[v[1]]]$group))
-                  if(length(uneven1) > 0) {cat("Categories", uneven1, "are missing in year", jk2[[2]][1, tv] ,". \n")}
-                  if(length(uneven2) > 0) {cat("Categories", uneven2, "are missing in year", jk2[[1]][1, tv] ,". \n")}
-                  weg1    <- which( jk2_all$group %in% c(uneven1, uneven2))
-                  return(weg1)})))
-           if ( length(weg)>0) {
-                jk2_bind <- jk2_all[-weg,]
+       stopifnot(length(jk2) == 2)
+       chks<- length(unique(jk2[[1]]$group)) != length(unique(jk2[[2]]$group)) || suppressWarnings(!all(sort(unique(jk2[[1]]$group)) == sort(unique(jk2[[2]]$group))))
+       if(chks) {                                                               ### wenn oberer check TRUE ist, soll das gemacht werden: remove rows which are not in all years (trend only for rows which are in both data sets)
+          uneven1 <- setdiff(unique(jk2[[1]]$group), unique(jk2[[2]]$group))
+          uneven2 <- setdiff(unique(jk2[[2]]$group), unique(jk2[[1]]$group))
+          if(length(uneven1) > 0) {message(paste0("Categories '", paste(unique(uneven1),collapse="', '"), "' are missing in year", jk2[[2]][1, tv] ,"."))}
+          if(length(uneven2) > 0) {message(paste0("Categories '", paste(unique(uneven2),collapse="', '"), "' are missing in year", jk2[[1]][1, tv] ,"."))}
+          weg     <- which( jk2_bind$group %in% c(uneven1, uneven2))
+          if ( length(weg)>0) {
+                jk2_bind <- jk2_bind[-weg,]
            }
        }
        return(jk2_bind)}

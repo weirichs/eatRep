@@ -105,8 +105,8 @@ Optional: name or column number of the trend variable. Note: Trend variable must
 grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
 }
   \item{linkErr}{
-Optional: Either the name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
-Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). Alternatively, linking errors may be
+Optional: Either the name or column number of the linking error variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.
+Alternatively, the linking error may be given as a single scalar value (i.e. \code{linkErr = 1.225}). Alternatively, linking errors may be
 given as data.frame with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
 levels of the trend variable. The contrasts between both values indicates which trend is meant. For only two measurement occasions, i.e.
 2010 and 2015, \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be \code{2015}. For three measurement occasions,
@@ -155,12 +155,12 @@ Logical: If \code{TRUE}, compute variances based on sum of squares around the po
 See help page of \code{\link[survey]{svrepdesign}} from the \code{survey} package for further details.
 }
   \item{rho}{
-Shrinkage factor for weights in Fay's method. If code{engine = "survey"]}, argument is passed to the \code{rho} argument of
+Shrinkage factor for weights in Fay's method. If \code{engine = "survey"}, argument is passed to the \code{rho} argument of
 the \code{\link[survey]{svrepdesign}} function from the \code{survey} package. See the corresponding help page for further
-details. If code{engine = "BIFIEsurvey"]}, argument is passed to the \code{fayfac} argument of the
+details. If \code{engine = "BIFIEsurvey"}, argument is passed to the \code{fayfac} argument of the
 \code{\link[BIFIEsurvey]{BIFIE.data.jack}} function from the \code{BIFIEsurvey} package. See the
 corresponding help page for further details. For convenience, if \code{rho = NULL} (the default)
-and code{engine = "BIFIEsurvey"]} and \code{type = "JK1"}, \code{\link[BIFIEsurvey]{BIFIE.data.jack}}
+and \code{engine = "BIFIEsurvey"} and \code{type = "JK1"}, \code{\link[BIFIEsurvey]{BIFIE.data.jack}}
 is called with \code{jktype="JK_GROUP"} and \code{fayfac = rho}, where \eqn{\rho = (N_{cluster} - 1) \times N_{cluster}^{-1}}
 }
   \item{verbose}{
