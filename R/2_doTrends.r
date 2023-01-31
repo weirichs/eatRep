@@ -15,15 +15,17 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         }
         jk2_bind[setdiff(1:nrow(jk2_bind), which(jk2_bind[,"coefficient"] %in% c("est", "se"))),"splitVar"] <- FALSE
         lev     <- unique(jk2_bind[,tv])                                        ### calculate trend
-        le      <- check2(repFunOut=repFunOut, jk2=jk2_bind, fun=fun)
+        le      <- check2(repFunOut=repFunOut, jk2=jk2_bind, fun=fun, lev=lev)
    ### calculate all trends!
         vgl <- combinat::combn(names(jk2),2, simplify=FALSE)                    ### untere Zeile: Zusaetze fuer alle trendvergleiche (1 vs. 2; 2 vs. 3; 1 vs. 3) machen
-        adds<- do.call("rbind", lapply( 1:length(vgl), FUN = function ( comp) { ### untere Zeile: merge linking errors ... muss angepasst werden!
+        adds<- unique(do.call("rbind", lapply( 1:length(vgl), FUN = function ( comp) { ### untere Zeile: merge linking errors ... muss angepasst werden!
    ### checks: die selben Zeilen in den paarweise zu vergleichenden Jahren? (fuer GLMs insbesondere testen!)
                jk2_binS<- check1(jk2=jk2[vgl[[comp]]], jk2_bind=jk2_bind[intersect(which(jk2_bind[,"splitVar"] == TRUE), which(jk2_bind[,tv] %in% vgl[[comp]])),], jk2_all=jk2_all[which(jk2_all[,tv] %in% vgl[[comp]]),], tv=tv)
                jk2_wide<- reshape2::dcast ( jk2_binS, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
                jk2_wide[,paste0("est_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2])] <- jk2_wide[,paste("est_",vgl[[comp]][2],sep="")] - jk2_wide[,paste("est_",vgl[[comp]][1],sep="")]
-               le_S    <- le[intersect(which(le[,"trendLevel1"] %in% vgl[[comp]]), which(le[,"trendLevel2"] %in% vgl[[comp]])),]
+               ind     <- intersect(which(le[,"trendLevel1"] %in% vgl[[comp]]), which(le[,"trendLevel2"] %in% vgl[[comp]]))
+               stopifnot(length(ind)>0)
+               le_S    <- le[ind,]
    ### pro Kombination aus parameter und depVar darf es nur einen Linkingfehler geben!
                stopifnot(all(as.vector(unlist(by(le_S, INDICES = le_S[,c("parameter", "depVar")], nrow))) == 1))
    ### merge linking errors ... aus 'le' die relevanten Jahre auswaehlen: wenn der user die in umgekehrter Reihenfolge, also 2015 in die erste, und 2010 in die zweite Spalte geschrieben hat, muss das jetzt homogenisiert werden
@@ -57,7 +59,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                }                                                                ### untere zeile: measure vars fuers reshapen
                mv  <- unlist(lapply(c("^est_", "^se_", "^sig", "^es_"), FUN = function ( v ) {grep(v, colnames(jk2_wide), value=TRUE)}))
                jkl <- reshape2::melt(jk2_wide[,-na.omit(match(c("le", "rowNr"), colnames(jk2_wide)))], measure.vars = mv, na.rm=TRUE)
-               return(jkl)}))
+               return(jkl)})))
    ### 'reshape'-Variable 'variable' nach coefficient und year aufsplitten
         adds<- data.frame ( adds[,-match(c("splitVar", "variable"), colnames(adds))], eatTools::halveString(as.character(adds[,"variable"]), pattern="_", first=TRUE, colnames=c("coefficient", "year")), stringsAsFactors = FALSE)
         adds<- eatTools::rbind_common(jk2_bind[which(jk2_bind[,"splitVar"] == FALSE),], adds)
@@ -79,7 +81,7 @@ check1 <- function(jk2, jk2_bind, jk2_all, tv) {
        }
        return(jk2_bind)}
 
-check2 <- function(repFunOut, jk2, fun){
+check2 <- function(repFunOut, jk2, fun, lev){
     ### wenn linking error objekt urspruenglich kein data.frame, dann hier einfach durchschleifen
        wdf <- attr(repFunOut[["le"]], "linkingErrorFrame")                      ### was data.frame?
        if(is.null(wdf)) {

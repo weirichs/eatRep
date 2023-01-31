@@ -524,40 +524,53 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          } })   }                                               
 
 createLinkingError <- function  ( allNam = allNam, resT = resT, datL = datL, fc, toCall) {
-          if (length(allNam[["linkErr"]]) > 1) {                                
+    ### erstmal checken, ob linkingfehler als scalar oder als data.frame uebergeben wurden ... im zweiten Fall finden die checks erst in computeTrend() statt!
+          if (length(allNam[["linkErr"]]) > 1) {                                ### data.frame: objekt wird durchgeschleift, checks finden spaeter statt!
               le <- allNam[["linkErr"]]
-              attr(le, "linkingErrorFrame") <- TRUE                             
+              attr(le, "linkingErrorFrame") <- TRUE                             ### das wird gemacht, damit die check-Funktion in computeTrend() erkennt, ob es urspruenglich ein data.frame war!
               return(le)
           }  else  {
+    ### hier beginnt scalar methode: nur fuer zwei MZP geeignet!
               if ( is.null ( allNam[["linkErr"]] ) ) {
                    message("Note: No linking error was defined. Linking error will be defaulted to '0'.")
                    allNam[["linkErr"]] <- "le"
                    datL[,"le"]         <- 0
               }
-              init <- data.frame ( trendVar = allNam[["trend"]], trendLevel1 = sort(unique(datL[,allNam[["trend"]]]))[1] , trendLevel2 = sort(unique(datL[,allNam[["trend"]]]))[2], stringsAsFactors = FALSE)
-              if ( fc == "repTable") {
-                   le <- data.frame ( init, depVar = unique(resT[[1]][["out1"]][,"depVar"]), unique(datL[, c(unique(resT[[1]][["out1"]][,"depVar"]), allNam[["linkErr"]]),drop=FALSE]), stringsAsFactors = FALSE)
-              }
-              if ( fc == "repMean") {
-                   stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
-                   le <- unique(datL[,allNam[["linkErr"]]])                     
-                   le <- data.frame ( init, depVar = unique(resT[[1]][["out1"]][,"depVar"]), parameter = c("mean", "sd"), le = c(le,0), stringsAsFactors = FALSE)
-              }
-              if ( fc %in% c("repGlm", "repLmer", "repGlmer")) {
-                   stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
-                   le <- unique(datL[,allNam[["linkErr"]]])
-                   le <- data.frame ( init, depVar = unique(as.character(resT[[1]][["out1"]][,"depVar"])), parameter = unique(as.character(resT[[1]][["out1"]][,"parameter"])), le = le, stringsAsFactors = FALSE)
-              }
-              if ( fc == "repQuantile") {
-                   stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
-                   le <- data.frame ( init, unique(resT[[1]][["out1"]][,c("depVar", "parameter")]), le = unique(datL[,allNam[["linkErr"]]]), stringsAsFactors = FALSE)
-              }
-              colnames(le)[5:6] <- c("parameter", "le")
-              if ( nrow(le) > length(unique(le[,"parameter"]))) {
-                   stop("Linking errors must be unique for levels of dependent variable.\n")
-              }
+    ### Achtung! Wenn Linkingfehler als Spalte im datensatz uebergeben, impliziert das, das die Linkingfehler fuer alle Paare von zeitpunkten
+    ### glech sind, also LE fuer 2011 vs. 2016 == 2011 vs. 2021 == 2016 vs. 2021 ... deshalb hier als Schleife ueber alle Paare!!
+    ### rohform des Rueckgabe-data.frames initialisieren
+              times<- sort(unique(datL[,allNam[["trend"]]]))
+              paare<- combinat::combn(x=times, m=2, simplify=FALSE)
+              les  <- do.call("rbind", lapply(paare, FUN = function (p ) {
+                      init <- data.frame ( trendVar = allNam[["trend"]], trendLevel1 = p[1] , trendLevel2 = p[2], stringsAsFactors = FALSE)
+                      if ( fc == "repTable") {
+                           le <- data.frame ( init, depVar = unique(resT[[1]][["out1"]][,"depVar"]), unique(datL[, c(unique(resT[[1]][["out1"]][,"depVar"]), allNam[["linkErr"]]),drop=FALSE]), stringsAsFactors = FALSE)
+                      }
+    ### jetzt fuer "mean"
+                      if ( fc == "repMean") {
+                           stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
+                           le <- unique(datL[,allNam[["linkErr"]]])             ### SD-difference: no linking error (=> 0!) (mit Karoline Sachse besprochen)
+                           le <- data.frame ( init, depVar = unique(resT[[1]][["out1"]][,"depVar"]), parameter = c("mean", "sd"), le = c(le,0), stringsAsFactors = FALSE)
+                      }
+    ### jetzt fuer "glm"
+                      if ( fc %in% c("repGlm", "repLmer", "repGlmer")) {
+                           stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
+                           le <- unique(datL[,allNam[["linkErr"]]])
+                           le <- data.frame ( init, depVar = unique(as.character(resT[[1]][["out1"]][,"depVar"])), parameter = unique(as.character(resT[[1]][["out1"]][,"parameter"])), le = le, stringsAsFactors = FALSE)
+                      }
+    ### jetzt fuer "quantile"
+                      if ( fc == "repQuantile") {
+                           stopifnot (length(unique(datL[,allNam[["linkErr"]]])) == 1)
+                           le <- data.frame ( init, unique(resT[[1]][["out1"]][,c("depVar", "parameter")]), le = unique(datL[,allNam[["linkErr"]]]), stringsAsFactors = FALSE)
+                      }
+    ### allgemeine checks
+                      colnames(le)[5:6] <- c("parameter", "le")
+                      if ( nrow(le) > length(unique(le[,"parameter"]))) {
+                           stop("Linking errors must be unique for levels of dependent variable.\n")
+                      }
+                      return(le)}))
           }
-          return(le)}
+          return(les)}
 
 conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, probs, nBoot,bootMethod, modus) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {

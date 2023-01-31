@@ -111,8 +111,8 @@ grouping variables must be equal in both 'sub populations' partitioned by the tr
 }
   \item{linkErr}{
 Optional: Either the name or column number of the linking error variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.
-Alternatively, the linking error may be given as a single scalar value (i.e. \code{linkErr = 1.225}). Alternatively, linking errors may be
-given as data.frame with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
+Alternatively, linking errors may be
+given as \code{data.frame} with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
 levels of the trend variable. The contrasts between both values indicates which trend is meant. For only two measurement occasions, i.e.
 2010 and 2015, \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be \code{2015}. For three measurement occasions,
 i.e. 2010, 2015, and 2020, additional lines are necessary where \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be
