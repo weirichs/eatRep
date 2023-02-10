@@ -18,9 +18,11 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         le      <- check2(repFunOut=repFunOut, jk2=jk2_bind, fun=fun, lev=lev)
    ### calculate all trends!
         vgl <- combinat::combn(names(jk2),2, simplify=FALSE)                    ### untere Zeile: Zusaetze fuer alle trendvergleiche (1 vs. 2; 2 vs. 3; 1 vs. 3) machen
-        adds<- unique(do.call("rbind", lapply( 1:length(vgl), FUN = function ( comp) { ### untere Zeile: merge linking errors ... muss angepasst werden!
+   ### warum muss hier 'unique' stehen? Die paarweisen Trendvergleiche bedeuten, dass die Werte fuer Zeitpunkt 1 sowohl in 1 vs. 2 als auch in 1 vs. 3 drinstehen
+   ### Es soll sie aber nur einmal geben, deshalb unique (nicht schoen, wenn ich ehrlich bin ... )
+        adds<- unique(do.call("rbind", lapply( 1:length(vgl), FUN = function ( comp) {
    ### checks: die selben Zeilen in den paarweise zu vergleichenden Jahren? (fuer GLMs insbesondere testen!)
-               jk2_binS<- check1(jk2=jk2[vgl[[comp]]], jk2_bind=jk2_bind[intersect(which(jk2_bind[,"splitVar"] == TRUE), which(jk2_bind[,tv] %in% vgl[[comp]])),], jk2_all=jk2_all[which(jk2_all[,tv] %in% vgl[[comp]]),], tv=tv)
+               jk2_binS<- check1(jk2=jk2[vgl[[comp]]], jk2_bind=jk2_bind[intersect(which(jk2_bind[,"splitVar"] == TRUE), which(jk2_bind[,tv] %in% vgl[[comp]])),], tv=tv)
                jk2_wide<- reshape2::dcast ( jk2_binS, as.formula ( paste ( " ... ~ coefficient + ", tv ,sep="") ) )
                jk2_wide[,paste0("est_trend_",vgl[[comp]][1],".vs.",vgl[[comp]][2])] <- jk2_wide[,paste("est_",vgl[[comp]][2],sep="")] - jk2_wide[,paste("est_",vgl[[comp]][1],sep="")]
                ind     <- intersect(which(le[,"trendLevel1"] %in% vgl[[comp]]), which(le[,"trendLevel2"] %in% vgl[[comp]]))
@@ -65,7 +67,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
         adds<- eatTools::rbind_common(jk2_bind[which(jk2_bind[,"splitVar"] == FALSE),], adds)
         return(adds) }                                                          ### obere Zeile: Originaloutput und Zusatz untereinanderbinden, spalte 'splitVar' droppen
 
-check1 <- function(jk2, jk2_bind, jk2_all, tv) {
+check1 <- function(jk2, jk2_bind, tv) {
     ### alles gegen alles vergleichen
        stopifnot(length(jk2) == 2)
        chks<- length(unique(jk2[[1]]$group)) != length(unique(jk2[[2]]$group)) || suppressWarnings(!all(sort(unique(jk2[[1]]$group)) == sort(unique(jk2[[2]]$group))))
@@ -119,9 +121,9 @@ check2 <- function(repFunOut, jk2, fun, lev){
            add <- setdiff(unique(jk2[,"parameter"]), unique(le[,"parameter"]))
            if ( length(add)>0) { warning(paste0("No linking errors for parameters '",paste(add, collapse="', '"),"'. Linking errors for these parameters will be defaulted to 0."))}
     ### alle Kombinationen aus jahreszahlen vorhanden?
-           years <- sort(unique (jk2[,repFunOut[["allNam"]][["trend"]]]))
+           years <- eatTools::asNumericIfPossible(sort(unique (jk2[,repFunOut[["allNam"]][["trend"]]])), force.string=FALSE)
            combs <- combinat::combn(x=years, m=2, simplify=FALSE)
-           exist <- unique(plyr::alply(le, .margins = 1, .fun = function (zeile) {sort(c(zeile[["trendLevel1"]], zeile[["trendLevel2"]]))}))
+           exist <- suppressWarnings(unique(plyr::alply(eatTools::asNumericIfPossible(le,force.string=FALSE), .margins = 1, .fun = function (zeile) {sort(c(zeile[["trendLevel1"]], zeile[["trendLevel2"]]))})))
            drin  <- combs %in% exist
            if(!all(drin)) {stop(paste0("Data contains combination of years '",paste(combs[!drin], collapse="', '"), "' which are not included in linking error data.frame 'linkErr'."))}
     ### linkingError spalte in le umbenennen
