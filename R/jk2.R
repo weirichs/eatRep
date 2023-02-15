@@ -1513,7 +1513,7 @@ checkForAdjustmentAndLmer <- function(datL, allNam, groupWasNULL, formula.random
           return(list(allNam=allNam, datL=datL, formula.random=formula.random, formula.fixed=formula.fixed))}
           
 checkNameConvention <- function( allNam) {
-          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "le")
+          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "wgtOne2","le")
           naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
@@ -1567,6 +1567,7 @@ createLoopStructure <- function(datL, allNam, verbose) {
               if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
               if(length(isZero)>0) { warning( "Found ",length(isZero)," zero weights in the weight variable '",allNam[["wgt"]],"'.") }
           }
+          if( is.null(allNam[["L2wgt"]]) )  { datL[,"wgtOne2"] <- 1; allNam[["L2wgt"]] <- "wgtOne2" }
           if(!is.null(allNam[["nest"]]))  {
               stopifnot(length(allNam[["nest"]]) == 1 )
               datL[,allNam[["nest"]]] <- as.character(datL[,allNam[["nest"]]])
