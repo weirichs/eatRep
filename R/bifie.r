@@ -17,6 +17,7 @@ doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.miss
            resML <- bifieTable(bifie.obj = bo, allNam=allNam, dat.g=dat.g, labsD=labsD, toCall=toCall, dat.i=dat.i, modus=modus)
       }
       if ( toCall == "lmer") {
+           foo   <- checkWithinBetweenWeights(dat=dat.i, allNam=allNam)
            resML <- bifieLmer(bifie.obj=bo, allNam=allNam, dat.g=dat.g, labsD=labsD, modus=modus, formula.fixed=formula.fixed, formula.random=formula.random)
       }
       return(resML)}
@@ -173,3 +174,15 @@ aufbMultilevel <- function(resM, allNam, modus) {
           resML<- rbind(resML,data.frame ( group=resL[rows,"group"],depVar = allNam[["dependent"]], modus=modus, parameter=resL[rows,"parameter"], coefficient=tolower(resL[rows,"variable"]),value=resL[rows,"value"], stringsAsFactors = FALSE))
       }
       return(resML)}
+
+checkWithinBetweenWeights <- function(dat, allNam){
+      if(!is.null(allNam[["L2wgt"]]) && !is.null(allNam[["wgt"]])) {
+         if (!is.null(allNam[["imp"]])) {
+             d <- dat[which(dat[,allNam[["imp"]]] == sort(dat[,allNam[["imp"]]])[1]),]
+         }  else  {
+             d <- dat
+         }
+         nUnit <- sapply( d[,c(allNam[["L1wgt"]], allNam[["L2wgt"]], allNam[["wgt"]])], FUN = function (x) {length(unique(x))})
+         if (!is.null(allNam[["L1wgt"]])) {if ( nUnit[[allNam[["wgt"]]]] < nUnit[[allNam[["L1wgt"]]]]) {warning(paste0("Number of distinct units in sampling weights '",allNam[["wgt"]],"' (",nUnit[[allNam[["wgt"]]]],"), is lower than the number of distinct units in level-1 weights '",allNam[["L1wgt"]],"' (",nUnit[[allNam[["L1wgt"]]]],")"))}}
+         if (!is.null(allNam[["L2wgt"]])) {if ( nUnit[[allNam[["wgt"]]]] < nUnit[[allNam[["L2wgt"]]]]) {warning(paste0("Number of distinct units in sampling weights '",allNam[["wgt"]],"' (",nUnit[[allNam[["wgt"]]]],"), is lower than the number of distinct units in level-2 weights '",allNam[["L2wgt"]],"' (",nUnit[[allNam[["L2wgt"]]]],")"))}}
+      }}
