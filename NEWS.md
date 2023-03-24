@@ -1,3 +1,12 @@
+# eatRep 0.14.7
+
+* exemplary with variable labels stored as attributed
+* add 'jkfac' argument to functions which call BIFIEsurvey functions
+* trend analyses (with warning messages) now are possible when levels of grouping variables differ between assessment cycles
+* bug fix in the internally used function which checks linking error object for consistency
+* bug fix in repLmer when no weights are defined
+* reporting function was slightly simplified (i.e., remove additional target formats)
+
 # eatRep 0.14.6
 
 * add function `repLmer()` for replication methods for linear multilevel models (wrapper to `BIFIEsurvey::BIFIE.twolevelreg()`)
