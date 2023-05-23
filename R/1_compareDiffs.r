@@ -50,8 +50,18 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                        matching_levels <- sapply(all_ll_levels, FUN = function ( a ) {all(hl_levels %in% a)})
                                        low_lvl <- fac[[2]][matching_levels]
                                        if ( length(low_lvl)==0) {
+    ### workaround: wenn simple cross-level diffs bestimmt werden sollen, alle Untergruppen verwenden                              
+                                         if(high_lvl == "wholeGroup") {
+                                           low_lvl <- fac[[2]]
+                                         }  else {
     ### workaround: wenn cross-level diffs von group.diffs bestimmt werden sollen (comparison != NA), dann muessen 'low_lvl' anders gefunden werden
-                                            low_lvl <- grep(reshape2::colsplit(string = paste0(hl_levels, collapse = "_"), pattern="___", names=c("a", "b"))[,"a"], fac[[2]], value = TRUE)
+    ### Hotfix SW & BB 23.05.2023: cross-levels of group.diifs waren bisher wohl falsch selektiert (richtige dabei, aber auch vieles unsinniges)
+    # => nun korrekte, eingeschraenkte Auswahl   
+                                           #split_string <- paste0(hl_levels, collapse = "_")
+                                           #search_vec <- reshape2::colsplit(string = split_string, pattern="____", names=c("a", "b"))[,"a"]
+                                           search_vec <- reshape2::colsplit(string = high_lvl, pattern="____", names=c("a", "b"))[,"b"]
+                                           low_lvl <- grep(search_vec, fac[[2]], value = TRUE)
+                                         } 
                                        }
                                        vgl     <- expand.grid(high_lvl, low_lvl)
     ### loop over comparison to be made!

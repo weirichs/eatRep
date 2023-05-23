@@ -127,7 +127,8 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
       esc_param <- Hmisc::escapeRegex(param)
       if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
         grp_regexp <- paste0("^", esc_param, "\\.vs")
-        compare_point_estimates(old_est = cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "est", "value"],
+        compare_point_estimates(old_est = cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & 
+                                                       cross_diff$coefficient == "est", "value"],
                                 new_est = SEs[SEs[, "parameter"] == param, "est"],
                                 param = param)
         # funktioniert nur, da keine correction ueber mehrere Hierarchieebenen hinweg funktioniert!

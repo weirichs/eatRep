@@ -1,11 +1,11 @@
 
-#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction.RData")
+#load("tests/testthat/helper_SE_correction.RData")
 #load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction.RData")
 load("helper_SE_correction.RData")
-#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_wec_complex.RData")
+#load("tests/testthat/helper_SE_correction_wec_complex.RData")
 #load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_wec_complex.RData")
 load("helper_SE_correction_wec_complex.RData")
-#load("c:/Benjamin_Becker/02_Repositories/packages/eatRep/tests/testthat/helper_SE_correction_table.RData")
+#load("tests/testthat/helper_SE_correction_table.RData")
 #load("c:/diskdrv/Winword/Psycho/IQB/Dropbox/R/eat/eatRep/tests/testthat/helper_SE_correction_table.RData")
 load("helper_SE_correction_table.RData")
 
