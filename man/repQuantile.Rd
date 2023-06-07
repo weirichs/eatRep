@@ -1,7 +1,6 @@
 \name{repQuantile}
 \alias{repQuantile}
 \alias{jk2.quantile}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{Replication methods (JK1, JK2 and BRR) for quantiles and trend estimation.}
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
 (e.g. plausible values) based on Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, 
@@ -17,40 +16,32 @@ repQuantile(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"),
             bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE,
             scale = 1, rscales = 1, mse=TRUE,
             rho=NULL, verbose = TRUE, progress = TRUE)}
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
-%%     ~~Describe \code{file} here~~
 Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all
 variables for analysis.
 }
   \item{ID}{
-%%     ~~Describe \code{dif.term} here~~
 Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values.
 }
   \item{wgt}{
-%%     ~~Describe \code{split.dif} here~~
 Optional: Variable name or column number of weighting variable. If no weighting variable is specified,
 all cases will be equally weighted.
 }
   \item{type}{
-%%     ~~Describe \code{abs.dif.bound} here~~
 Defines the replication method for cluster replicates which is to be applied. Depending on \code{type}, additional
 arguments must be specified (e.g., \code{PSU} and/or \code{repInd} or \code{repWgt}).
 }
   \item{PSU}{
-%%     ~~Describe \code{abs.dif.bound} here~~
 Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied,
 the PSU is the jackknife zone variable. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
   \item{repInd}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
   \item{repWgt}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Normally, replicate weights are created by \code{repQuantile} directly from \code{PSU} and \code{repInd} variables. Alternatively,
 if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
@@ -59,55 +50,56 @@ if replicate weights are included in the data.frame, specify the variable names 
   \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.
 }
   \item{groups}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: vector of names or column numbers of one or more grouping variables.
 }
   \item{group.splits}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
 in the whole group or overlying groups. See examples for more details.
 }
   \item{cross.differences}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
 Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
 differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{\link{repMean}} function)
 }
   \item{group.delimiter}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
 }
   \item{trend}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
+Optional: name or column number of the trend variable which contains the measurement time of the survey.
+Note: Levels of all grouping variables must be equal in all 'sub populations' partitioned by the discrete trend variable.
+\code{repQuantile} computes differences for all pairwise contrasts defined by trend variable levels. or three measurement
+occasions, i.e. 2010, 2015, and 2020, contrasts (i.e. trends) are computed for 2010 vs. 2015, 2010 vs. 2020, and
+2015 vs. 2020.
 }
   \item{linkErr}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the linking error variable. If 'NULL', a linking error of 0 will be assumed in trend estimation.
-Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225').
+Optional: Either the name or column number of the linking error variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.
+Alternatively, linking errors may be
+given as \code{data.frame} with following specifications: Two columns, named \code{trendLevel1} and \code{trendLevel2} which contain the
+levels of the trend variable. The contrasts between both values indicates which trend is meant. For only two measurement occasions, i.e.
+2010 and 2015, \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be \code{2015}. For three measurement occasions,
+i.e. 2010, 2015, and 2020, additional lines are necessary where \code{trendLevel1} should be \code{2010}, and \code{trendLevel2} should be
+\code{2020}, to mark the contrast between 2010 and 2020, and further additional lines are necessary where \code{trendLevel1} should be
+\code{2015}, and \code{trendLevel2} should be \code{2020}. The column \code{depVar} must include the name of the dependent variable. This
+string must correspond to the name of the dependent variable in the data. The column \code{parameter} indicates the parameter the linking
+error belongs to. Column \code{linkingError} includes the linking error value. Providing linking error in a data.frame is necessary for
+more than two measurement occasions.
 }
   \item{dependent}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of the dependent variable.
 }
   \item{probs}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Numeric vector with probabilities for which to compute quantiles.
 }
   \item{na.rm}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Should cases with missing values be dropped?
 }
   \item{nBoot}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: Without replicates, standard error cannot be computed in a weighted sample. Alternatively, standard errors may
 be computed using the \code{boot} package. \code{nBoot} therefore specifies the number of bootstrap samples. If not specified,
 no standard errors will be given. In analyses containing replicates or samples without specifying person weights,
 \code{nBoot} will be ignored.
 }
   \item{bootMethod}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If standard error are computed in a bootstrap, two possible methods may be applied.
 \code{wSampling} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted quantiles
 are computed. \code{wQuantiles} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
@@ -138,7 +130,6 @@ Logical: Show progress bar on console?
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on PSU and repInd variables according to JK2 or BRR procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{\link[survey]{svyquantile}} called by \code{\link[survey]{svyby}} implemented in
@@ -146,11 +137,6 @@ the \code{survey} package. The results of the several analyses are then pooled a
 is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
 A list of data frames in the long format. The output can be summarized using the \code{report} function.
 The first element of the list is a list with either one (no trend analyses) or two (trend analyses)
 data frames with at least six columns each. For each subpopulation denoted by the \code{groups} statement, each

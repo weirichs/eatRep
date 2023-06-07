@@ -81,9 +81,11 @@ Alternatively, if \code{TRUE}, cross-level differences for all pairs of levels a
 differences are computed. (see examples 2a, 3, and 4 in the help file of the \code{repMean} function)
 }
   \item{trend}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+Optional: name or column number of the trend variable which contains the measurement time of the survey.
+Note: Levels of all grouping variables and predictors must be equal in all 'sub populations' partitioned by the discrete trend variable.
+\code{repGlm} computes differences for all pairwise contrasts defined by trend variable levels. or three measurement
+occasions, i.e. 2010, 2015, and 2020, contrasts (i.e. trends) are computed for 2010 vs. 2015, 2010 vs. 2020, and
+2015 vs. 2020.
 }
   \item{linkErr}{
 %%     ~~Describe \code{sig.dif.bound} here~~

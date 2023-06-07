@@ -106,8 +106,11 @@ This argument is only necessary, if \code{crossDiffSE = "rep"} \emph{and} none o
 Character string which separates the group names in the output frame.
 }
   \item{trend}{
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
+Optional: name or column number of the trend variable which contains the measurement time of the survey.
+Note: Levels of all grouping variables must be equal in all 'sub populations' partitioned by the discrete trend variable.
+\code{repMean} computes differences for all pairwise contrasts defined by trend variable levels. or three measurement
+occasions, i.e. 2010, 2015, and 2020, contrasts (i.e. trends) are computed for 2010 vs. 2015, 2010 vs. 2020, and
+2015 vs. 2020.
 }
   \item{linkErr}{
 Optional: Either the name or column number of the linking error variable. If \code{NULL}, a linking error of 0 will be assumed in trend estimation.

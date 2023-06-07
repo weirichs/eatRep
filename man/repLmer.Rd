@@ -64,8 +64,10 @@ and \code{type = "JK1"}, \code{\link[BIFIEsurvey]{BIFIE.data.jack}} is called wi
 Optional: column number or name of one grouping variable. Note: in contrast to \code{repMean}, only one grouping variable can be specified.
 }
   \item{trend}{
-Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for
-grouping variables must be equal in both 'sub populations' partitioned by the trend variable.
+Optional: name or column number of the trend variable which contains the measurement time of the survey.
+\code{repLmer} computes differences for all pairwise contrasts defined by trend variable levels. or three measurement
+occasions, i.e. 2010, 2015, and 2020, contrasts (i.e. trends) are computed for 2010 vs. 2015, 2010 vs. 2020, and
+2015 vs. 2020.
 }
   \item{dependent}{
 Name or column number of the dependent variable

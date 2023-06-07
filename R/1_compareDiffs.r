@@ -31,7 +31,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                      }
     ### wenn cross-level diffs von group.diffs bestimmt werden sollen (comparison != NA), dann muessen die cl_diffs angepasst werden
                      if ( !is.na(d[1,"comparison"])) {
-                          cl_diffs  <- as.list(data.frame ( combinat::combn(unique(d[,"sum"]),2)))
+                          cl_diffs  <- combinat::combn(unique(d[,"sum"]),2, simplify=FALSE)
                      }
     ### loop over hierarchy levels ... Vergleichsrichtung wie in eatRep-Funktion festgelegt
                      ret <- do.call("rbind", lapply ( cl_diffs, FUN = function ( comp_vec ) {
@@ -56,12 +56,16 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                          }  else {
     ### workaround: wenn cross-level diffs von group.diffs bestimmt werden sollen (comparison != NA), dann muessen 'low_lvl' anders gefunden werden
     ### Hotfix SW & BB 23.05.2023: cross-levels of group.diifs waren bisher wohl falsch selektiert (richtige dabei, aber auch vieles unsinniges)
-    # => nun korrekte, eingeschraenkte Auswahl   
+    # => nun korrekte, eingeschraenkte Auswahl
                                            #split_string <- paste0(hl_levels, collapse = "_")
                                            #search_vec <- reshape2::colsplit(string = split_string, pattern="____", names=c("a", "b"))[,"a"]
                                            search_vec <- reshape2::colsplit(string = high_lvl, pattern="____", names=c("a", "b"))[,"b"]
+    ### Hotfix, SW, 08.06.2023: SW/BB Hotfix fuehrte dazu, dass crossdiff_of_groupdiff nicht mehr berechnet wurde ... wird hier zu korrigieren versucht
+                                           if (all(is.na(search_vec))) {
+                                               search_vec <- reshape2::colsplit(string = high_lvl, pattern="___", names=c("a", "b"))[,"b"]
+                                           }
                                            low_lvl <- grep(search_vec, fac[[2]], value = TRUE)
-                                         } 
+                                         }
                                        }
                                        vgl     <- expand.grid(high_lvl, low_lvl)
     ### loop over comparison to be made!

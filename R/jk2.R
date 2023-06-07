@@ -45,7 +45,7 @@ chooseSeType <- function ( se_type, clusters) {
        return(se_type)}
 
 generateRandomJk1Zones <- function (datL, unit, nZones, name = "randomCluster") {
-       datL  <- eatTools::makeDataFrame(datL, name = "data")
+       datL  <- eatTools::makeDataFrame(datL, name = "data", minRow = 4, onlyWarn=FALSE)
        stopifnot(length(unit)==1)
        allVar<- list(ID = unit)
        allNam<- eatTools::existsBackgroundVariables(dat = datL, variable=unlist(allVar), warnIfMissing = FALSE)
@@ -77,7 +77,7 @@ repMean <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             }
             type    <- car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
             se_type <- chooseSeType(se_type, clusters)
-            datL    <- eatTools::makeDataFrame ( datL, name = "datL")
+            datL    <- eatTools::makeDataFrame ( datL, name = "datL", minRow = 2, onlyWarn=FALSE)
             if ( is.null ( attr(datL, "modus"))) {
                   modus <- identifyMode ( name = "mean", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             }  else  {
@@ -209,7 +209,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             crossDiffSE <- "old"                                                
             if(isFALSE(cross.differences) == FALSE) {message("To date, only method 'old' is applicable for cross level differences in frequency tables.")}
             modus <- identifyMode ( name = "table", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
-            datL  <- eatTools::makeDataFrame ( datL)
+            datL  <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             chk1  <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",jkfac = jkfac , 
                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, cross.differences=cross.differences, correct = correct,
                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator,
@@ -289,7 +289,7 @@ repQuantile<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE)  {
             modus      <- identifyMode ( name = "quantile", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             bootMethod <- match.arg ( bootMethod )
-            datL       <- eatTools::makeDataFrame ( datL)
+            datL       <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile", engine="survey",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, cross.differences=cross.differences, trend = trend, linkErr = linkErr, dependent = dependent,
                    group.delimiter=group.delimiter, probs=probs, na.rm=na.rm, nBoot=nBoot, bootMethod=bootMethod, doCheck=doCheck, modus=modus, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL)}
@@ -302,7 +302,7 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             poolMethod = c("mice", "scalar") , useWec = FALSE, scale = 1, rscales = 1, mse=TRUE, rho=NULL,
             hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"), clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE,
             progress = TRUE) {
-            datL   <- eatTools::makeDataFrame ( datL)
+            datL   <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             modus  <- identifyMode ( name = "glm", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'") )
             poolMethod <- match.arg(poolMethod)
             crossDiffSE.engine <- match.arg(crossDiffSE.engine)
@@ -317,7 +317,7 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
 repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2", "JK1"),
             PSU = NULL, repInd = NULL, jkfac = NULL, rho=NULL, imp=NULL, group=NULL, trend = NULL,  dependent, formula.fixed, formula.random,
             doCheck = TRUE, na.rm = FALSE, clusters, verbose = TRUE) {
-            datL   <- eatTools::makeDataFrame ( datL)
+            datL   <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             modus  <- identifyMode ( name = "lmer", type = car::recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1")), "'FAY'='Fay'") )
             eatRep(datL =datL, ID=ID , wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, type=type, PSU = PSU, repInd = repInd, jkfac = jkfac, toCall = "lmer",
                    imp = imp, groups =group, trend = trend, dependent=dependent, formula.fixed=formula.fixed, formula.random=formula.random,engine="BIFIEsurvey",
@@ -329,9 +329,10 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, formula.fixed=NULL, formula.random=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine,
           scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters=NULL, fc = NULL, isRecursive = FALSE, depOri = NULL) {
-          datL  <- eatTools::makeDataFrame(datL, name = "datL")
+          datL  <- eatTools::makeDataFrame(datL, name = "datL", minRow = 2, onlyWarn=FALSE)
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
-          if (is.null(fc) && isFALSE(onlyCheck)) {                              
+          if(is.null(trend)) {linkErr <- NULL}                                  ### Hotfix ... sonst gibt es einen fehler, wenn kein Trend bestimmt werden soll, aber dennoch 'linkErr' spezifiziert wird
+          if (is.null(fc) && isFALSE(onlyCheck)) {
 #               beg   <- Sys.time()
                fc    <- identifyFunctionCall()
 #               message(paste0("Identify function call: ", eatTools::timeFormat(Sys.time() - beg)))
@@ -1513,9 +1514,9 @@ checkForAdjustmentAndLmer <- function(datL, allNam, groupWasNULL, formula.random
           return(list(allNam=allNam, datL=datL, formula.random=formula.random, formula.fixed=formula.fixed))}
           
 checkNameConvention <- function( allNam) {
-          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "wgtOne2","le")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr")
-          naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")
+          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "wgtOne2","le", "variable")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable")
+          naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr", "variable")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
           naInd1<- which ( allNam[["independent"]] %in% naInd )
