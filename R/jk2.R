@@ -1487,6 +1487,7 @@ checkForAdjustmentAndLmer <- function(datL, allNam, groupWasNULL, formula.random
              if (length(which(vars[,"isFac"]==TRUE))>0) {
                  for ( g in which(vars[,"isFac"]==TRUE)) {
                        if (vars[g,"type"] == "adjust") {
+                            datL[,vars[g,"vars"]] <- gsub("\\(|\\)|:| |-|,", ".", as.character(datL[,vars[g,"vars"]]))
                             newFr <- model.matrix( as.formula (paste("~",vars[g,"vars"],sep="")), data = datL)[,-1,drop=FALSE]
                             message(paste("    Adjusting variable '",vars[g,"vars"],"' of class '",class(datL[,vars[g,"vars"]]),"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), "'.",sep=""))
                             datL  <- data.frame(datL, newFr, stringsAsFactors=FALSE)
