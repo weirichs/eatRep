@@ -1516,7 +1516,7 @@ checkForAdjustmentAndLmer <- function(datL, allNam, groupWasNULL, formula.random
           
 checkNameConvention <- function( allNam) {
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "wgtOne2","le", "variable")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable", "Freq")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr", "variable")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}
@@ -1635,8 +1635,8 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type, progre
           return(ret) }
 
 checkImpNest <- function (datL, doCheck, toAppl, gr, allNam, toCall, separate.missing.indicator, na.rm) {
-          if(isTRUE(doCheck)) {                                     
-             if ( length( toAppl[[gr]] ) > 1) {                     
+          if(isTRUE(doCheck)) {                                                 ### wenn check=TRUE, werden fuer jede Analyse des splitters
+             if ( length( toAppl[[gr]] ) > 1) {                                 ### eine Reihe von checks durchgefuehrt
                   crsTab <- table(datL[,toAppl[[gr]]])
                   if ( length(which(crsTab < 10 )) > 0 ) {
                        warning("Small number of observations in some combinations of grouping variables:\n   Recommend to remove these group(s).\n", eatTools::print_and_capture(crsTab, 3) )
@@ -1647,20 +1647,42 @@ checkImpNest <- function (datL, doCheck, toAppl, gr, allNam, toCall, separate.mi
              if ( length(laenge ) > 0 ) {
                   warning(length(laenge), " combination(s) of groups without any observations. Analysis might crash.")
              }
-             impNes<- table(impNes[setdiff (1:length(impNes), laenge)])
-             if(length(impNes) != 1 ) {warning("Number of imputations differ across nests and/or groups!\n", eatTools::print_and_capture(impNes, 3))}
+    ### check: gleich viele nests/imputationen je kombination von gruppierungsvariablen?
+             chk1  <- nestsImpsPerGroupComb(datL=datL, allNam=allNam, toAppl=toAppl, gr=gr)
+    ### check: gleichviele PSUs je nest?
              if(!is.null(allNam[["PSU"]]))  {
                   psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}, simplify = FALSE) )
                   if(length(psuNes) != 1 ) {warning("Number of PSUs differ across nests!\n", eatTools::print_and_capture(psuNes, 3))}
              }
+    ### check: sind fuer jede Gruppe alle Faktorstufen in allen nests und allen imputationen vorhanden? z.B. nicht in einer Imputation nur Jungen
              impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = checkNests, allNam=allNam, toAppl=toAppl, gr=gr, simplify = FALSE)
              impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x[["ret"]], FUN = length)) })) )
              if ( !all ( sapply(impNes, FUN = function ( x ) { length(table(x)) } ) == 1) ) { warning("Number of units in at least one group differs across imputations!")}
+    ### Achtung!! jetzt der check, der in der alten Version ueber 'checkData' gemacht wurde!
              datL  <- do.call("rbind", by(data = datL, INDICES = datL[,c( allNam[["group"]], allNam[["nest"]], allNam[["imp"]])], FUN = checkData, allNam=allNam, toCall=toCall, separate.missing.indicator=separate.missing.indicator, na.rm=na.rm))
              ok    <- table(datL[,"isClear"])
              if(length(ok) > 1 ) { message( ok[which(names(ok)=="FALSE")] , " of ", nrow(datL), " cases removed from analysis due to inconsistent data.") }
           }
           return(datL)}
+
+### Hilfsfunktion fuer checkImpNest
+nestsImpsPerGroupComb <- function(datL, allNam, toAppl, gr) {
+         impNes<- table(datL[, c(allNam[["nest"]], allNam[["imp"]], toAppl[[gr]]) ])
+         inDF  <- as.data.frame(impNes)
+         if ( length(toAppl[[gr]]) >0) {ind <- inDF[,toAppl[[gr]]]} else {ind <- rep(1, nrow(inDF))}
+         grpVar<- by(data=inDF, INDICES = ind, FUN = function (grp) {
+                  ch1 <- by(data = grp, INDICES = grp[,"nest"], FUN = function (i) {unique(i[,"imp"])})
+                  if(length(ch1)>1) {
+                      cmb <- combinat::combn(x=1:length(ch1), m=2, simplify=FALSE)# gleichviele imputationen je nest?
+                      ch1 <- all(unlist(lapply(cmb, FUN = function (j) {isTRUE(all.equal(ch1[[j[1]]], ch1[[j[2]]]))})))
+                  }  else {
+                      ch1 <- TRUE
+                  }
+                  ch2 <- all(grp[,"Freq"]>0)
+                  ch3 <- length(unique(grp[,"Freq"])) == 1
+                  return(c(ch1, ch2, ch3))})
+         if ( any(impNes==0) || any( unlist(grpVar) == FALSE) ) {warning("Number of imputations differ across nests and/or groups!\n", eatTools::print_and_capture(impNes, 3))}}
+
 
 prepExpecVal <- function (toCall, expected.values, separate.missing.indicator, allNam, datL) {
           if(toCall=="table") {
