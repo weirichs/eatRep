@@ -359,8 +359,8 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           }  else  {
              leFrame <- NULL
           }
-          allVar<- list(ID = ID, wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = uv_av[["av"]], independent=uv_av[["uv"]], adjust=adjust, clusters=clusters)
-          allNam<- lapply(allVar, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = datL, variable=ii, warnIfMissing = TRUE)})
+          allVar<- list(ID = ID, wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = uv_av[["av"]], independent=uv_av[["uv"]], adjust=adjust, clusters=clusters)
+          allNam<- lapply(allVar, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = datL, variable=ii, warnIfMissing = TRUE, stopIfMissingOnVars = c(allVar[["PSU"]], allVar[["repInd"]]))})
           if ( !is.null(leFrame)){
              allNam[["linkErr"]] <- leFrame
           }
