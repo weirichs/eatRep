@@ -1410,6 +1410,15 @@ checkJK.arguments <- function(type, repWgt, PSU, repInd) {
           }}
 
 checkGroupVars <- function ( datL, allNam, auchUV) {
+    ### Personen mit Gewicht = 0 ausschliessen, damit sie nicht bei Ncases mitgezaehlt werden
+    ### Aber Achtung: Gewicht = NA nicht mit ausschliessen, denn das ist kritisch und soll spaeter ggf. fehlermeldung werfen
+          if(!is.null(allNam[["wgt"]])) {
+             w0 <- which(datL[,allNam[["wgt"]]] == 0)
+             if(length(w0) >0){
+                message("Remove ",length(w0), " cases with zero weights to avoid counting them when determining sample size.")
+                datL <- datL[-w0,]
+             }
+          }
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !inherits(datL[,v],  c("factor", "character", "logical", "integer"))) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
              for ( gg in c(allNam[["group"]], auchUV) ) {                       ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
