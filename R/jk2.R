@@ -1415,7 +1415,8 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
           if(!is.null(allNam[["wgt"]])) {
              w0 <- which(datL[,allNam[["wgt"]]] == 0)
              if(length(w0) >0){
-                message("Remove ",length(w0), " cases with zero weights to avoid counting them when determining sample size.")
+                nID  <- unique(datL[w0,allNam[["ID"]]])
+                message("Remove ",length(nID), " students with zero weights to avoid counting them when determining sample size.")
                 datL <- datL[-w0,]
              }
           }
