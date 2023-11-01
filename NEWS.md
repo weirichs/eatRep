@@ -1,3 +1,10 @@
+# eatRep 0.14.7.9000
+
+* the eatRep functions now issue more informative alerts if missings occur on dependent/independent or jackknife variables. Missing occurrences concerned as crucial will be caught with an error message
+* enhanced warning messages if number of nests/imputations differ between grouping variables
+* enhanced warning messages if number of jkrep units differ between nests/imputations
+* bugfix in the cross-level differences of group differences computation
+
 # eatRep 0.14.7
 
 * exemplary with variable labels stored as attributed

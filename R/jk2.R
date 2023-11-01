@@ -359,8 +359,8 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           }  else  {
              leFrame <- NULL
           }
-          allVar<- list(ID = ID, wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = uv_av[["av"]], independent=uv_av[["uv"]], adjust=adjust, clusters=clusters)
-          allNam<- lapply(allVar, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = datL, variable=ii, warnIfMissing = TRUE)})
+          allVar<- list(ID = ID, wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = uv_av[["av"]], independent=uv_av[["uv"]], adjust=adjust, clusters=clusters)
+          allNam<- lapply(allVar, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = datL, variable=ii, warnIfMissing = TRUE, stopIfMissingOnVars = c(allVar[["PSU"]], allVar[["repInd"]]))})
           if ( !is.null(leFrame)){
              allNam[["linkErr"]] <- leFrame
           }
@@ -1410,6 +1410,16 @@ checkJK.arguments <- function(type, repWgt, PSU, repInd) {
           }}
 
 checkGroupVars <- function ( datL, allNam, auchUV) {
+    ### Personen mit Gewicht = 0 ausschliessen, damit sie nicht bei Ncases mitgezaehlt werden
+    ### Aber Achtung: Gewicht = NA nicht mit ausschliessen, denn das ist kritisch und soll spaeter ggf. fehlermeldung werfen
+          if(!is.null(allNam[["wgt"]])) {
+             w0 <- which(datL[,allNam[["wgt"]]] == 0)
+             if(length(w0) >0){
+                nID  <- unique(datL[w0,allNam[["ID"]]])
+                message("Remove ",length(nID), " students with zero weights to avoid counting them when determining sample size.")
+                datL <- datL[-w0,]
+             }
+          }
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !inherits(datL[,v],  c("factor", "character", "logical", "integer"))) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
              for ( gg in c(allNam[["group"]], auchUV) ) {                       ### levels der Gruppen duerfen keine "." oder "_" enthalten, falls cross differences berechnet werden sollen
