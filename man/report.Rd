@@ -1,23 +1,25 @@
 \name{report}
 \alias{report}
+\alias{report2}
 
-\title{Reporting function for \code{\link{repMean}}, \code{\link{repTable}},
+\title{Reporting functions for \code{\link{repMean}}, \code{\link{repTable}},
 \code{\link{repQuantile}}, and \code{\link{repGlm}} }
 
 \description{
-Summarizes the output of the four main functions \code{\link{repMean}},\code{\link{repTable}},
+Summarizes the output of the four main functions \code{\link{repMean}}, \code{\link{repTable}},
 \code{\link{repQuantile}}, and \code{\link{repGlm}}, and provides a single data.frame with all
-results.
-}
+results.}
 
 \usage{
 report(repFunOut, trendDiffs = FALSE, add = list(),
       exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
       round = TRUE, digits = 3, printDeviance = FALSE)
-}
+report2(repFunOut, trendDiffs = FALSE, add = list(),
+      exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
+      round = TRUE, digits = 3, printDeviance = FALSE)  }
 \arguments{
   \item{repFunOut}{output of one of the four \code{eatRep}-functions. }
-  \item{trendDiffs}{Logical: compute differences of trends? }
+  \item{trendDiffs}{Logical: compute differences of trends? Note: this argument is deprecated for \code{report2}}
   \item{add}{Optional: additional columns for output. See examples of the jk2-functions}
   \item{exclude}{Which parameters should be excluded from reporting?}
   \item{printGlm}{Only relevant for \code{\link{repGlm}}: print summary on console?}
@@ -30,7 +32,9 @@ report(repFunOut, trendDiffs = FALSE, add = list(),
   to \code{"scalar"}. }
 }
 \value{
-A data frame with at least nine columns.
+\code{report} and \code{report2} differ in the output which is returned. The output of \code{report2}
+is optimized for further processing, i.e. drawing plots by means of the \code{eatPlot} package. For
+\code{report}, the output is a data frame with at least nine columns.
 \item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the
 whole sample were requested, the value of \sQuote{group} is \sQuote{wholeGroup}.}
 \item{depVar}{Denotes the name of the dependent variable in the analysis. }
@@ -49,6 +53,14 @@ If mean analysis was applied, the \sQuote{parameter} column takes the values \sQ
 \item{est}{Denotes the estimate of the corresponding analysis.}
 \item{se}{Denotes the standard error of the corresponding estimate.}
 \item{p}{Denotes the p value of the estimate.}
+For \code{report2}, the output is a list with four elements:
+\item{comparison}{An allocation table that indicates which comparison (group comparison or cross-level comparison)
+relates to which groups.}
+\item{group}{A table that assigns an ID to each analysis unit. This makes it easier later on to read from the output
+which comparison relates to which groups. This simplifies the assignment, especially when comparing comparisons
+(i.e., cross-level differences of group differences).}
+\item{estimate}{The results of the analyses, assigned to their IDs.}
+\item{plain}{The complete results in human-readable form.}
 }
 \author{
 Benjamin Becker, Sebastian Weirich

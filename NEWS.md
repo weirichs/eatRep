@@ -1,5 +1,8 @@
 # eatRep 0.14.7.9000
 
+* [multicore]
+* computation of group differences using 'group.differences.by' now also works for adjusted means
+* for weighted analyses, the eatRep functions now remove zero weight cases prior to analyses to avoid counting them when determining sample size
 * the eatRep functions now issue more informative alerts if missings occur on dependent/independent or jackknife variables. Missing occurrences concerned as crucial will be caught with an error message
 * enhanced warning messages if number of nests/imputations differ between grouping variables
 * enhanced warning messages if number of jkrep units differ between nests/imputations

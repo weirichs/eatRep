@@ -20,7 +20,7 @@ repMean (datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU
          engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
          rho=NULL, hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
          clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
-         stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
+         stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE, nCores=NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -183,6 +183,10 @@ Logical: Show analysis information on console?
 }
   \item{progress}{
 Logical: Show progress bar on console?
+}
+  \item{nCores}{
+integer (default: NULL), number of cores to use for parallel processing, if \code{engine = "survey"]}. If \code{NULL},
+single core processing is used.
 }
 }
 \details{

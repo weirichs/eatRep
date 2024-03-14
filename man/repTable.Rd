@@ -19,7 +19,7 @@ repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU
           trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE,
           na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
           engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
-          rho=NULL, verbose = TRUE, progress = TRUE )}
+          rho=NULL, verbose = TRUE, progress = TRUE, nCores=NULL )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -171,6 +171,10 @@ Logical: Show analysis information on console?
 }
   \item{progress}{
 Logical: Show progress bar on console?
+}
+  \item{nCores}{
+integer (default: NULL), number of cores to use for parallel processing, if \code{engine = "survey"]}. If \code{NULL},
+single core processing is used.
 }
 }
 \details{
