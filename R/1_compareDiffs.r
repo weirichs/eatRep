@@ -8,7 +8,7 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
        if ( fun %in% c("glm", "table") ) {
             jk2  <- jk2[which(!jk2[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
        }
-    ### wenn die Funktions fuer TRends aufgerufen wird, gibt es nun mehrere trends (statt wie frueher bei 2 zeitpunkten nur einen)
+    ### wenn die Funktions fuer Trends aufgerufen wird, gibt es nun mehrere trends (statt wie frueher bei 2 zeitpunkten nur einen)
     ### daher wird hier nach trendgruppen gesplittet, aber nur, wenn es trends gibt!! sonst wird eine Konstante zum Schleifenaufruf erzeugt
        if (is.null(tv)) {jk2[,"gruppierungsvariable"] <- "all"; tv <- "gruppierungsvariable"; isNullTv <- TRUE} else { isNullTv <- FALSE}
     ### cross-level diffs werden fuer die Gruppen 'comparison = NA' und 'comparison != NA' separat bestimmt, um
@@ -37,37 +37,16 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                      ret <- do.call("rbind", lapply ( cl_diffs, FUN = function ( comp_vec ) {
                             redDF_1 <- d[which(d[, "sum"] %in% comp_vec),]
                             fac     <- by(data = redDF_1, INDICES = redDF_1[, "sum"], FUN = function ( x ) { unique(x[, "group"])})
+                            if(length(fac) == 1) {return(NULL)}
     ### Achtung: nur ineinander geschachtelte CrossLevel-Differenzen werden gebildet
                             all_grp_list <- lapply(fac[[1]], function(high_lvl) {
     ### all comparisons if wholeGroup higher level
-                                       hl_levels <- unlist(strsplit(high_lvl, "_"))
-                                       if(identical(high_lvl, "wholeGroup") | substr(high_lvl, 1,9) == "all.group") {hl_levels <- "."}
-    ### extrahiere alle in hoehere Ebene geschachtelten lower levels
-                 # falls diese doch gebraucht werden:
-                 # if(allCrossLvlDiffs) name_part <- "."
-                                       all_ll_levels <- lapply(fac[[2]], FUN = function ( x) {unlist(strsplit(x, "_"))})
-                                       ## Suche matches
-                                       matching_levels <- sapply(all_ll_levels, FUN = function ( a ) {all(hl_levels %in% a)})
-                                       low_lvl <- fac[[2]][matching_levels]
-                                       if ( length(low_lvl)==0) {
-    ### workaround: wenn simple cross-level diffs bestimmt werden sollen, alle Untergruppen verwenden                              
-                                         if(high_lvl == "wholeGroup") {
-                                           low_lvl <- fac[[2]]
-                                         }  else {
-    ### workaround: wenn cross-level diffs von group.diffs bestimmt werden sollen (comparison != NA), dann muessen 'low_lvl' anders gefunden werden
-    ### Hotfix SW & BB 23.05.2023: cross-levels of group.diifs waren bisher wohl falsch selektiert (richtige dabei, aber auch vieles unsinniges)
-    # => nun korrekte, eingeschraenkte Auswahl
-                                           #split_string <- paste0(hl_levels, collapse = "_")
-                                           #search_vec <- reshape2::colsplit(string = split_string, pattern="____", names=c("a", "b"))[,"a"]
-                                           search_vec <- reshape2::colsplit(string = high_lvl, pattern="____", names=c("a", "b"))[,"b"]
-    ### Hotfix, SW, 08.06.2023: SW/BB Hotfix fuehrte dazu, dass crossdiff_of_groupdiff nicht mehr berechnet wurde ... wird hier zu korrigieren versucht
-                                           if (all(is.na(search_vec))) {
-                                               search_vec <- reshape2::colsplit(string = high_lvl, pattern="___", names=c("a", "b"))[,"b"]
-                                           }
-                                           low_lvl <- grep(search_vec, fac[[2]], value = TRUE)
-                                         }
-                                       }
-                                       vgl     <- expand.grid(high_lvl, low_lvl)
+                                       hl_levels <- unlist(strsplit(high_lvl, ", |_+"))
+                                       matches   <- unlist(lapply(fac[[2]], FUN = function (single) {
+                                                    part <- unlist(strsplit(single, ", |_+"))
+                                                    return(sum(part %in% hl_levels))}))
+                                       low_lvl   <- fac[[2]][which(matches == max(matches))]
+                                       vgl       <- expand.grid(high_lvl, low_lvl)
     ### loop over comparison to be made!
                                        grp <- do.call("rbind", plyr::alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {
                                               redDF_2 <- redDF_1[which(redDF_1[,"group"] %in% single_comp),]
@@ -81,10 +60,9 @@ computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, comp_type = NULL
                                        return(grp)
                             })
                             all_grp <- do.call("rbind", all_grp_list)
-                            return(all_grp)})
-                     )
+                            return(all_grp)}) )
                      return(ret)
-              })) })                                                            ### untre Zeile: Hotfix: dummyvariable loeschen falls es keine trends gibt
+              })) })                                                            ### untere Zeile: Hotfix: dummyvariable loeschen falls es keine trends gibt
        if (isNullTv) {retA[[1]] <- retA[[1]][,-match("gruppierungsvariable", colnames(retA[[1]]))]}
        ret <- rbind(ori, do.call("rbind", retA))
        return(ret) }
@@ -100,13 +78,13 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
   ## for means: extract SDs
   if(identical(fun, "mean")) { df_sd <- df_allP[df_allP[, "parameter"] == "sd", ] }
   out <- by ( data = df_allP, INDICES = df_allP[,"parameter"], FUN = function ( df ) {
-    stopifnot(nrow(df) == 4 || nrow(df)==2)                                     ### checks
+    df <- cleanDF(df)                                                           ### checks
     #if(df$group[1] == "female") browser()
-    df <- df[order(df$sum, decreasing = FALSE), ]                                ### Direction of crossDiff: Higher vs Lower (eg country vs all)
+    df <- df[order(df$sum, decreasing = FALSE), ]                               ### Direction of crossDiff: Higher vs Lower (eg country vs all)
     mea <- diff(df[which(df[,"coefficient"] == "est"),"value"])                 ### compute mean difference
     if ( length(mea) ==0 || is.na(mea)) {return(NULL)}
 	if ( !"se" %in% df[, "coefficient"]) {
-         cat(paste0( "   Warning: No standard error for parameter '",unique(df[,"parameter"]),"'. Cannot compute standard errors and p value for difference between '",df[1,"group"],"' and '",df[2,"group"],"'.\n"))
+         warning( "No standard error for parameter '",unique(df[,"parameter"]),"'. Cannot compute standard errors and p value for cross-level difference between '",df[1,"group"],"' and '",df[2,"group"],"'.\n")
          se <- pval <- NA
     }  else  {
          se  <- sqrt(sum(df[which(df[,"coefficient"] == "se"),"value"]^2))      ### compute SE
@@ -147,3 +125,15 @@ compareParameters <- function(df_allP, grpv, fun, comp_type = NULL) {
   })
   return(do.call("rbind", out))
 }
+
+cleanDF <- function(df){
+   if(nrow(df) %in% c(2,4)) {return(df)}                                        ### alles ok
+   stopifnot(nrow(df) %in% c(1,3))
+   valid <- table(df[,"coefficient"])
+   weg   <- which(valid != 2)
+   if ( length(weg) >0) {
+         warning("No '",paste(names(weg), collapse = "', '"), "' for parameter '",unique(df[,"parameter"]),"'. Skip computation of standard errors and p values for cross-level difference between '",df[1,"group"],"' and '",df[2,"group"],"'")
+         df <- df[-eatTools::whereAre(names(weg), df[,"coefficient"], verbose=FALSE),]
+   }
+   return(df)}
+   

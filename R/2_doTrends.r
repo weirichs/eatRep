@@ -52,6 +52,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                    tabs     <- table(jk2_wideS[,c("parameter", "group")])
                    if ( !all ( tabs == 1) ) {                                   ### checks SW: jeder Eintrag in "group" darf nur zweimal vorkommen ... sonst Effektstaerkebestimmug ueberspringen
                         message("Cannot find standard deviations of following groups: \n",eatTools::print_and_capture(tabs, 5),"\nSkip computation of effect sizes.")
+                        jk2_wide <- eatTools::na_omit_selection(jk2_wideS, varsToOmitIfNA="group")
                    }  else  {                                                   ### sortieren nach "group" und "parameter"; siehe Mail an Benjamin, 11.06.2019
                         jk2_wideS<- jk2_wideS[with(jk2_wideS, order(parameter, group)),]
                         pooledSD <- sqrt(0.5 * (jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",vgl[[comp]][1], sep="")]^2 + jk2_wideS[jk2_wideS[, "parameter"] == "sd", paste("est_",vgl[[comp]][2], sep="")]^2))
@@ -96,23 +97,10 @@ check2 <- function(repFunOut, jk2, fun, lev){
            le    <- repFunOut[["le"]]
            dv    <- unique(jk2[,"depVar"])
            stopifnot(length(dv)==1)
-           if(!dv %in% le[,"depVar"]) {stop(paste0("Cannot found dependent variable '",dv,"' in 'depVar' column of linking error data.frame 'linkErr'."))}
-#               if (fc != "repTable") {
-#                   stop(paste0("Cannot found dependent variable '",allNam[["dependent"]],"' in 'depVar' column of linking error data.frame 'linkErr'."))
-#               }  else  {
-#                   lvls <- unique(le[,"depVar"])                             ### assumed level
-#                   mat  <- lapply(lvls, FUN = function (l) {grep(l,allNam[["dependent"]])})
-#                   mat1 <- which(mat == 1)
-#                   if ( length(mat1) != 1) {stop(paste0("Cannot match dependent variable in data ('",allNam[["dependent"]],"') to the dependent variables in the 'depVar' column of linking error data.frame 'linkErr': '",paste(unique(le[,"depVar"]), collapse = "', '"),"'."))}
-#                   le   <- le[which(le[,"depVar"] == lvls[mat1]),]
-#                   prm  <- eatTools::removePattern( allNam[["dependent"]], pattern = lvls[mat1])
-#                   if ( !prm %in% le[,"parameter"]) {stop(paste0("Cannot find parameter '",prm,"' in the 'parameter' column of linking error data.frame 'linkErr'"))}
-#                   le   <- le[which(le[,"parameter"] == prm),]
-#                   le[,"depVar"] <- allNam[["dependent"]]
-#               }
-#           }  else  {
-#               le  <- le[which(le[,"depVar"] == allNam[["dependent"]]),]
-#           }
+           if(!dv %in% le[,"depVar"]) {                                         ### hier beginnt ggf. der Fall, dass repTable ueber repMean gewrappt wurde und die AV daher anders heisst
+               le[,"depVar"] <- paste0(le[,"depVar"], le[,"parameter"])
+               if(!dv %in% le[,"depVar"]) {stop(paste0("Cannot found dependent variable '",dv,"' in 'depVar' column of linking error data.frame 'linkErr'."))}
+           }
            le  <- le[which(le[,"depVar"] == dv),]
     ### nur ein Kompetenzbereich?
            le1   <- le[,c("parameter", "trendLevel1", "trendLevel2")]
@@ -120,7 +108,7 @@ check2 <- function(repFunOut, jk2, fun, lev){
     ### gibt es fuer alle Parameter auch linkingfehler? Hier reicht eine warnung aus, da die Linkingfehler in der computeTrend-Funktion rangemergt werden. Da kann man sie dann auf 0 setzen
            add <- setdiff(unique(jk2[,"parameter"]), unique(le[,"parameter"]))
            if ( length(add)>0) { warning(paste0("No linking errors for parameters '",paste(add, collapse="', '"),"'. Linking errors for these parameters will be defaulted to 0."))}
-    ### alle Kombinationen aus jahreszahlen vorhanden?
+    ### alle Kombinationen aus jahreszahlen vorhanden? Wenn Jahreszahlen im datensatz character und im Linkingfehlerobjekt numerisch, gibts Probleme, deshalb vereinheitlichen
            years <- eatTools::asNumericIfPossible(sort(unique (jk2[,repFunOut[["allNam"]][["trend"]]])), force.string=FALSE)
            combs <- combinat::combn(x=years, m=2, simplify=FALSE)
            exist <- suppressWarnings(unique(plyr::alply(eatTools::asNumericIfPossible(le,force.string=FALSE), .margins = 1, .fun = function (zeile) {sort(c(zeile[["trendLevel1"]], zeile[["trendLevel2"]]))})))

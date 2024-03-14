@@ -1,86 +1,104 @@
+# load("N:/problem.rda")
+# "TR_BUNDESLAND=Berlin____aohneZWH.vs.einET.vs.all.group=1____aohneZWH.vs.ersteGen" %in% x[,"group"]
+# res  <- report(r, add = list ( kb = dat.kb[1,"kb"], spf = subdat.name), trendDiffs = TRUE)
 report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
                      round = TRUE, digits = 3, printDeviance = FALSE) {
           if(is.null(repFunOut)) {return(NULL)}
+          allN     <- repFunOut[["allNam"]]
+    ### Achtung: wenn repTable aufgerufen wurde fuer eine polytome Outcomevariable, fuer die dann intern repMean mehrfach hintereinander aufgerufen wird
+    ### (also jeweils fuer die dichotomen Indikatoren der polytomen Variable), gibt es im Output nicht nur eine, sondern mehrere AVs! Falls cross differences
+    ### bestimmt werden sollen, tritt dann eine Fehlermeldung in 'compareParameters()' auf, weil die levels einander nicht mehr zugeordnet werden koennen
+    ### Um das zu verhindern, wird hier ein Hotfix benoetigt, der den Output 'repFunOut' in so viele Listenelemente splittet, wie es AVs gibt. Ueber diese
+    ### Liste wird dann 'report()' geschleift.
+          repFunOut<- buildList(repFunOut)
+          out      <- do.call("rbind", lapply(names(repFunOut), FUN = function (rfo) {
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
-          if ( length(grep("glm", as.character(repFunOut[["resT"]][[1]][1,"modus"]))) ==1 ) {
-               if ( printGlm == TRUE ) { dG(repFunOut, digits = digits, printDeviance = printDeviance, add = add ) }
-          }
-    ### 1. Input extrahieren: diese Variablen dann spaeter an Einzelfunktionen weitergeben!
-          jk2      <- repFunOut[["resT"]]
-          tv       <- repFunOut[["allNam"]][["trend"]]
-          cols     <- c("group", "depVar", "modus", "parameter")
-          grpv     <- setdiff(setdiff(colnames(jk2[[1]]), cols), c("comparison", "coefficient", "value", tv))
-          grp_by   <- repFunOut[["allNam"]][["group.differences.by"]]
-          cl_diffs <- repFunOut[["allNam"]][["cross.differences"]]
-          funs     <- c("mean", "table", "quantile", "glm", "lmer")
-          fun      <- funs [ which( unlist(lapply(funs, FUN = function ( f ) { length(grep(f, jk2[[1]][1,"modus"]))})) > 0) ]
-    ### 2. cross-level diffs bestimmen: ueberschreibt bzw. erweitert das Objekt 'jk2' ... Achtung: sind nur fuer "mean" oder "table" erlaubt
-          if ( is.list(cl_diffs) ) {
-               jk2 <- lapply(jk2, FUN = function (df) {computeCrossLevel (df, cols=cols, grpv = grpv, fun = fun, cl_diffs = cl_diffs, comp_type = "crossDiff")})
-               jk2 <- lapply(jk2, FUN = function (df) {                         ### in spalte "comparison" 'crossDiff_of_groupDiff' eintragen, falls in Spalte "group" 3x ".vs." steht
-                      spl <- strsplit(df[,"group"], ".vs.")
-                      ind <- which(sapply(spl, length)==4)
-                      if ( length(ind)>0) {
-                           df[ind,"comparison"] <- "crossDiff_of_groupDiff"     ### das mittlere ".vs." gross schreiben
-                           df[ind,"group"]      <- unlist(lapply(spl[ind], FUN = function ( z ) {paste(z[1], ".vs.", z[2], ".VS.", z[3], ".vs.", z[4], sep="")}))
+                      if ( length(grep("glm", as.character(repFunOut[[rfo]][["resT"]][[1]][1,"modus"]))) ==1 ) {
+                           if ( printGlm == TRUE ) { dG(repFunOut[[rfo]], digits = digits, printDeviance = printDeviance, add = add ) }
                       }
-                      return(df)})
-          }
+    ### 1. Input extrahieren: diese Variablen dann spaeter an Einzelfunktionen weitergeben!
+                      jk2      <- repFunOut[[rfo]][["resT"]]
+                      tv       <- repFunOut[[rfo]][["allNam"]][["trend"]]
+                      cols     <- c("group", "depVar", "modus", "parameter")
+                      grpv     <- setdiff(setdiff(colnames(jk2[[1]]), cols), c("comparison", "coefficient", "value", tv))
+                      grp_by   <- repFunOut[[rfo]][["allNam"]][["group.differences.by"]]
+                      if(is.logical(repFunOut[[rfo]][["allNam"]][["cross.differences"]]) &&  isTRUE(repFunOut[[rfo]][["allNam"]][["cross.differences"]])) {
+                        cl_diffs <- combinat::combn(0:length(repFunOut[[rfo]][["allNam"]][["group"]]),2, simplify=FALSE)
+                      }  else  {
+                        cl_diffs <- repFunOut[[rfo]][["allNam"]][["cross.differences"]]
+                      }
+                      funs     <- c("mean", "table", "quantile", "glm", "lmer")
+                      fun      <- funs [ which( unlist(lapply(funs, FUN = function ( f ) { length(grep(f, jk2[[1]][1,"modus"]))})) > 0) ]
+    ### 2. cross-level diffs bestimmen: ueberschreibt bzw. erweitert das Objekt 'jk2' ... Achtung: sind nur fuer "mean" oder "table" erlaubt
+                      if ( is.list(cl_diffs) ) {
+                           jk2 <- lapply(jk2, FUN = function (df) {computeCrossLevel (df, cols=cols, grpv = grpv, fun = fun, cl_diffs = cl_diffs, comp_type = "crossDiff")})
+                           jk2 <- lapply(jk2, FUN = function (df) {             ### in spalte "comparison" 'crossDiff_of_groupDiff' eintragen, falls in Spalte "group" 3x ".vs." steht
+                                  spl <- strsplit(df[,"group"], ".vs.")
+                                  ind <- which(sapply(spl, length)==4)
+                                  if ( length(ind)>0) {                         ### das mittlere ".vs." gross schreiben
+                                       df[ind,"comparison"] <- "crossDiff_of_groupDiff"
+                                       df[ind,"group"]      <- unlist(lapply(spl[ind], FUN = function ( z ) {paste(z[1], ".vs.", z[2], ".VS.", z[3], ".vs.", z[4], sep="")}))
+                                  }
+                                  return(df)})
+                      }
     ### 2.b) SE correction durchfuehren (siehe Paper Weirich & Hecht)
-          if(!is.null(repFunOut[["SE_correction"]]) && !is.null(repFunOut[["SE_correction"]][[1]])) {
+                      if(!is.null(repFunOut[[rfo]][["SE_correction"]]) && !is.null(repFunOut[[rfo]][["SE_correction"]][[1]])) {
     ### checks, ob Vergleiche dabei, fuer die keine Korrektur verfuehgbar ist
-              if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
-                  warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
-              }
-              mult_hierarchy <- any(unlist(lapply(repFunOut$allNam$cross.differences, function(x) x[2] - x[1] != 1)))
-              if(mult_hierarchy) warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")
+                          if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
+                              warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
+                          }
+                          mult_hierarchy <- any(unlist(lapply(cl_diffs, function(x) x[2] - x[1] != 1)))
+                          if(mult_hierarchy) {warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")}
     ### correction durchfuehren
-              jk2 <- lapply(jk2, function(jk2_single) { seCorrect(SE_correction = repFunOut[["SE_correction"]], jk2 = jk2_single, grpv = grpv)   })
-          }
+                          jk2 <- lapply(jk2, function(jk2_single) { seCorrect(SE_correction = repFunOut[[rfo]][["SE_correction"]], jk2 = jk2_single, grpv = grpv)   })
+                      }
     ### 3. Trend bestimmen
-          if ( !is.null(tv) ) {
-               jk2 <- computeTrend(jk2 = jk2, repFunOut = repFunOut, tv = tv, fun = fun)
-          } else {
-               jk2 <- jk2[[1]]
-          }
+                      if ( !is.null(tv) ) {
+                           jk2 <- computeTrend(jk2 = jk2, repFunOut = repFunOut[[rfo]], tv = tv, fun = fun)
+                      } else {
+                           jk2 <- jk2[[1]]
+                      }
     ### 4. Trend-Differences bestimmen ... Achtung: sind nur fuer "mean" oder "table" erlaubt
-          if ( !is.null(tv) && trendDiffs ) {
-               jk2 <- computeTrendDiffs(jk2 = jk2, grpv = grpv, tv = tv, grp_by = grp_by, fun = fun, cl_diffs = cl_diffs)
-          }
+                      if ( !is.null(tv) && trendDiffs ) {
+                           jk2 <- computeTrendDiffs(jk2 = jk2, grpv = grpv, tv = tv, grp_by = grp_by, fun = fun, cl_diffs = cl_diffs)
+                      }
     ### 5. 'add' ergaenzen, falls gewuenscht
-          if ( length(add)>0) {
-               if(!all(nchar(names(add))>0)) { stop("'add' must be named.")}    ### necessary checks
-               if(length(names(add)) != length(unique(names(add)))) { stop("Duplicated names of 'add' are not allowed.")}
-               if(!all(sapply(add, length) == 1)) {stop("All elements of 'add' must be of length 1.")}
-               if(!all(sapply(add, class) == "character")) {stop("All elements of 'add' must be of class 'character'.")}
-               dopp<- names(add) %in% colnames(jk2)
-               ind <- which(dopp==TRUE)
-               if ( length( ind ) > 0 ) {stop(paste0("Following names of 'add' are not allowed: '",paste(names(add)[ind], collapse = "', '"), "'."))}
-               for ( u in names(add)) {jk2[,u] <- add[[u]]}
-          }
+                      if ( length(add)>0) {                                     ### necessary checks
+                           if(!all(nchar(names(add))>0)) { stop("'add' must be named.")}
+                           if(length(names(add)) != length(unique(names(add)))) { stop("Duplicated names of 'add' are not allowed.")}
+                           if(!all(sapply(add, length) == 1)) {stop("All elements of 'add' must be of length 1.")}
+                           if(!all(sapply(add, class) == "character")) {stop("All elements of 'add' must be of class 'character'.")}
+                           dopp<- names(add) %in% colnames(jk2)
+                           ind <- which(dopp==TRUE)
+                           if ( length( ind ) > 0 ) {stop(paste0("Following names of 'add' are not allowed: '",paste(names(add)[ind], collapse = "', '"), "'."))}
+                           for ( u in names(add)) {jk2[,u] <- add[[u]]}
+                      }
     ### 6. reshapen
-          spltVar  <- c("coefficient", tv)                                      ### split-Variable
-          if ( length(exclude)>0) {
-               weg <- which(jk2[,"parameter"] %in% exclude)
-               if ( length(weg)>0) {
-                    jk2 <- jk2[-weg,]
-               }
-          }                                                                     ### was muss in die Spalten? das haengt davon ab, ob es einen Trend gibt
-          frml     <- as.formula(paste0("... ~ ", paste(spltVar,collapse=" + ") ) )
+                      spltVar  <- c("coefficient", tv)                          ### split-Variable
+                      if ( length(exclude)>0) {
+                           weg <- which(jk2[,"parameter"] %in% exclude)
+                           if ( length(weg)>0) {
+                                jk2 <- jk2[-weg,]
+                           }
+                      }                                                         ### was muss in die Spalten? das haengt davon ab, ob es einen Trend gibt
+                      frml     <- as.formula(paste0("... ~ ", paste(spltVar,collapse=" + ") ) )
     ### Hotfix: wenn repTable ueber wiederholten Aufrufen von repMean gewrappt wurde, stehen die Ns mehrmals drin, naemlich fuer
     ### jede Indikatorvariable einer mehrstufigen Faktorvariable separat. Sie sind aber immer gleich. Durch das Mehrmalsdrinstehen
     ### misslingt das reshapen, deshalb muessen sie jetzt raus
-          if ( fun == "table") {jk2 <- reduceDoubleN(jk2)}
+                      if ( fun == "table") {jk2 <- reduceDoubleN(jk2)}
     ### Hotfix: damit fuer glm im Output die Koeffizienten immer zuerst und R2, R2nagel, Nvalid imer dahinter stehen, werden die jetzt voruebergehen umbenannt (hinterher wieder zurueck benannt)
-          if ( fun == "glm") {jk2[,"parameter"] <- car::recode(jk2[,"parameter"], "'Nvalid'='zzzzNvalid'; 'R2'='zzzzR2'; 'R2nagel'='zzzzR2nagel'") }
-          jk2wide  <- reshape2::dcast(data = jk2, formula = frml, value.var = "value")
-          if ( fun == "glm") {jk2wide[,"parameter"] <- car::recode(jk2wide[,"parameter"], "'zzzzNvalid'='Nvalid'; 'zzzzR2'='R2'; 'zzzzR2nagel'='R2nagel'") }
+                      if ( fun == "glm") {jk2[,"parameter"] <- car::recode(jk2[,"parameter"], "'Nvalid'='zzzzNvalid'; 'R2'='zzzzR2'; 'R2nagel'='zzzzR2nagel'") }
+                      jk2wide  <- reshape2::dcast(data = jk2, formula = frml, value.var = "value")
+                      if ( fun == "glm") {jk2wide[,"parameter"] <- car::recode(jk2wide[,"parameter"], "'zzzzNvalid'='Nvalid'; 'zzzzR2'='R2'; 'zzzzR2nagel'='R2nagel'") }
     ### runden, falls gewuenscht
-          if ( isTRUE(round)) {
-               jk2wide <- eatTools::roundDF(jk2wide, digits = digits)
-          }
-          return(jk2wide)}
-
+                      if ( isTRUE(round)) {
+                           jk2wide <- eatTools::roundDF(jk2wide, digits = digits)
+                      }
+                      return(jk2wide)}))
+          attr(out, "allNam") <- allN                                           ### das braucht report2()
+          return(out)}
+          
+          
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
           if(is.null(groupCols)) {groupCols <- c("group", "parameter")}
           dat <- do.call("rbind", by ( data = dat, INDICES = dat[,groupCols], FUN = function ( x ) {
@@ -127,8 +145,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
       esc_param <- Hmisc::escapeRegex(param)
       if(identical(SE_correction[[i]]$refGrp, "all")) { ## if reference level is the whole group
         grp_regexp <- paste0("^", esc_param, "\\.vs")
-        compare_point_estimates(old_est = cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & 
-                                                       cross_diff$coefficient == "est", "value"],
+        compare_point_estimates(old_est = cross_diff[cross_diff$parameter == "mean" & grepl(grp_regexp, cross_diff$group) & cross_diff$coefficient == "est", "value"],
                                 new_est = SEs[SEs[, "parameter"] == param, "est"],
                                 param = param)
         # funktioniert nur, da keine correction ueber mehrere Hierarchieebenen hinweg funktioniert!
@@ -173,7 +190,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv ) {
 separate_jk2 <- function(jk2) {
   ## Trend or no trend
   year <- as.character(unique(jk2[["year"]]))
-  if(length(year) == 0) year <- 1
+  if(length(year) == 0) {year <- 1}
   ## dissect results so far
   no_cross_diff <- jk2[is.na(jk2$comparison) | jk2$comparison != "crossDiff" | jk2$parameter != "mean", ]
   cross_diff <- jk2[which(jk2$comparison == "crossDiff" & jk2$parameter == "mean"), ]
@@ -226,61 +243,14 @@ reduceDoubleN <- function(jk2){
           jk2   <- rbind(jk2[which(jk2[,"parameter"] != "Ncases"),], cases)     ### jk2   <- rbind(subset(jk2,parameter != "Ncases"), cases)
           return(jk2)}
 
-#reshapeReport <- function(inp, tv, fun, repFunOut, target, wholeGroupName) {
-    ### testweise initialisieren
-#          inpR <- inp                                                           ### untere zeile: levels der Trendvariablen
-#          lev  <- paste(as.character(unique(do.call("rbind", repFunOut[["resT"]])[,repFunOut[["allNam"]][["trend"]]])), collapse="|")
-    ### reshapen nur machen, wenn Parameterspalte mehr als einen Eintrag hat ... das ist bspw. nicht der Fall, wenn man repTable() mit dichotomer AV (Regelstandard erreicht) macht
-#          if (length(unique(inp[,"parameter"])) > 1) {
-    ### fuer trend
-#              if (!is.null(tv) ) {
-    ### fuer mittelwerte mit trend
-#                   if (fun == "mean") {
-#                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
-#                   }
-    ### fuer haeufigkeitsverteilungen mit trend
-#                   if (fun == "table") {
-#                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
-#                   }
-#              }  else  {
-    ### fuer mittelwerte ohne trend
-#                   if (fun == "mean") {
-#                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = intersect(c("es", "est", "p", "se"), colnames(inp))), stringsAsFactors=FALSE)
-#                   }
-    ### fuer haeufigkeitsverteilungen ohne trend
-#                   if (fun == "table") {
-#                        inpR <- data.frame(tidyr::pivot_wider(inp, names_from = "parameter", values_from = intersect(c("est", "p", "se"), colnames(inp))), stringsAsFactors=FALSE)
-#                   }
-#              }
-#          }
-    ### fuer allen Output: spalten, die nur NA haben, loeschen
-#          inpR <- inpR[, colSums(is.na(inpR)) != nrow(inpR)]
-    ### crossDiff-Benennung anpassen (Mail Juan Jose, 27.04.2022, 9.37 Uhr). Das passiert auch dann, wenn nicht gereshapet wird
-#          if ("comparison" %in% colnames(inpR)) {
-#               if( any(c("crossDiff", "trendDiff_cross") %in% inpR[,"comparison"])) {
-#                  rows <- intersect(intersect(grep("wholeGroup$", inpR[,"group"]), setdiff(1:nrow(inpR), grep("_",inpR[,"group"]))), which(inpR[,"comparison"] %in% c("crossDiff", "trendDiff_cross")))
-#                  if (length(rows)>0) {
-#                       inpR[rows,"group"] <- eatTools::removePattern(inpR[rows,"group"], "\\.vs\\.wholeGroup$")
-#                  }
-#               }
-#          }
-    ### Alternativ: Mail Kristoph, 12.05.2022, 18.40 Uhr (geht wahrscheinlich nur fuer eine Gruppierungsvariable)
-#          if (fun == "table" && length(unique(inpR[,"group"])) < nrow(inpR) && target == "BT2021.table" && length(repFunOut[["allNam"]][["group"]])>0 ) {
-#              prz <- grep("^est|^se", colnames(inpR), value=TRUE)
-#              if(length(prz)<1) {warning("Cannot found colums with percentage values. Skip value transformation.")}  else {
-#                  for ( i in prz) { inpR[,i] <- 100*inpR[,i]}
-#              }
-    ### Spalten identifizieren, die fuers reshapen entfernt werden muessen, und zwar sowohl fuer mit als auch fuer ohne trend
-#              weg  <- grep(repFunOut[["allNam"]][["group"]], colnames(inpR))
-#              stopifnot(length(weg)>0)
-    ### erstmal ohne Trend
-#              if (is.null(tv) ) {
-#                  inpR <- data.frame(tidyr::pivot_wider(inpR[,-weg], names_from = "comparison", values_from = intersect(c("es", "est", "p", "se"), colnames(inpR))), stringsAsFactors=FALSE)
-#              }  else  {                                                        ### mit Trend
-#                  inpR <- data.frame(tidyr::pivot_wider(inpR[,-weg], names_from = "comparison", values_from = grep(lev, colnames(inp), value=TRUE)), stringsAsFactors=FALSE)
-#              }
-#              inpR[,"group"] <- car::recode(inpR[,"group"], paste0("'wholeGroup'='",wholeGroupName,"'"))
-#              colnames(inpR) <- eatTools::removePattern(colnames(inpR), pattern = "_NA$")
-#          }
-#          inpR <- inpR[, colSums(is.na(inpR)) != nrow(inpR)]                    ### nochmal spalten loeschen mit nur NA
-#          return(inpR)}
+buildList <- function(repFunOut){
+      dvs <- unique(repFunOut[["resT"]][[1]][,"depVar"])
+      out <- lapply(dvs, FUN = function (dv) {
+             for ( i in 1:length(repFunOut[["resT"]])) {repFunOut[["resT"]][[i]] <- repFunOut[["resT"]][[i]][which(repFunOut[["resT"]][[i]][,"depVar"] == dv),]}
+             repFunOut[["allNam"]][["dependent"]] <- dv
+             return(repFunOut)})
+      names(out) <- dvs
+      return(out)}
+
+
+

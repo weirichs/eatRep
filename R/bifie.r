@@ -1,27 +1,26 @@
-doBifieAnalyses <- function (dat.i, allNam, na.rm, group.delimiter,separate.missing.indicator, expected.values, probs,  jkfac, fayfac, formula, glmTransformation, toCall, modus, type, verbose, L1wgt, L2wgt,formula.fixed, formula.random){
-      dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(allNam), colnames(dat.i))], from = "character", to = "factor")
+doBifieAnalyses <- function (dat.i, a=a){
+      dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(a[a%$$%allNam]), colnames(dat.i))], from = "character", to = "factor")
       dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)                  
       dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")            
-      dat2 <- sortBifie(dat = dat2, toCall=toCall, allNam=allNam)
-      labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["dependent"]]),]
-      datL <- by ( data = dat2, INDICES = dat2[,allNam[["imp"]]], FUN = function ( imp.i ) { return(imp.i)})
-      jkt  <- car::recode(type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
-	    if(is.null(fayfac)) {if(jkt == "JK_GROUP") {fayfac <- (length(unique(dat.i[, allNam[["PSU"]]]))-1)/length(unique(dat.i[, allNam[["PSU"]]]))   }}
-      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = allNam[["wgt"]], jktype=jkt , jkzone = allNam[["PSU"]], jkrep = allNam[["repInd"]], jkfac=jkfac, fayfac=fayfac, cdata=FALSE))
-      if ( isTRUE(verbose)) { cat("\n"); print(bo)}
-      attributes(allNam[["group"]]) <- NULL                                     
-      if ( toCall == "mean") {
-           resML <- bifieMean(bifie.obj = bo, allNam=allNam, dat.g=dat.g, labsD=labsD, toCall=toCall, dat.i=dat.i, modus=modus)
+      dat2 <- sortBifie(dat = dat2, toCall=a$toCall, allNam=a[a%$$%allNam])
+      labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == a%$$%dependent),]
+      datL <- by ( data = dat2, INDICES = dat2[,a%$$%imp], FUN = function ( imp.i ) { return(imp.i)})
+      jkt  <- car::recode(a$type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
+	    if(is.null(a$rho)) {if(jkt == "JK_GROUP") {a$rho <- (length(unique(dat.i[, a%$$%PSU]))-1)/length(unique(dat.i[, a%$$%PSU]))   }}
+      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
+      if ( isTRUE(a%$$%verbose)) { cat("\n"); print(bo)}
+      attributes(a$group) <- NULL                                               
+      if ( a%$$%toCall == "mean") {
+           resML <- bifieMean(bifie.obj = bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, toCall=a%$$%toCall, dat.i=dat.i, modus=a%$$%modus)
       }
-      if ( toCall == "table") {
-           resML <- bifieTable(bifie.obj = bo, allNam=allNam, dat.g=dat.g, labsD=labsD, toCall=toCall, dat.i=dat.i, modus=modus)
+      if ( a%$$%toCall == "table") {
+           resML <- bifieTable(bifie.obj = bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, toCall=a%$$%toCall, dat.i=dat.i, modus=a%$$%modus)
       }
-      if ( toCall == "lmer") {
-           foo   <- checkWithinBetweenWeights(dat=dat.i, allNam=allNam)
-           resML <- bifieLmer(bifie.obj=bo, allNam=allNam, dat.g=dat.g, labsD=labsD, modus=modus, formula.fixed=formula.fixed, formula.random=formula.random)
+      if ( a%$$%toCall == "lmer") {
+           foo   <- checkWithinBetweenWeights(dat=dat.i, allNam=a[a%$$%allNam])
+           resML <- bifieLmer(bifie.obj=bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, modus=a%$$%modus, formula.fixed=a%$$%formula.fixed, formula.random=a%$$%formula.random)
       }
       return(resML)}
-
 
 sortBifie <- function(dat, toCall, allNam) {
       if ( toCall != "lmer") {
@@ -36,14 +35,12 @@ aufbOut <- function (resM, allNam, dat.g, labsD) {
            cols <- grep("groupva", colnames(resM[["stat"]]), value=TRUE)
            stopifnot(length(cols) ==2)
            altn <- data.frame ( alt = cols, neu = paste0(cols, "1"), stringsAsFactors = FALSE)
-           recs <- paste("'",altn[,"alt"] , "' = '" , altn[,"neu"],"'",sep="", collapse="; ")
-           colnames(resM[["stat"]]) <- car::recode(colnames(resM[["stat"]]), recs)
+           colnames(resM[["stat"]]) <- eatTools::recodeLookup(colnames(resM[["stat"]]), altn)
       }
       if(length(allNam[["group"]])>0) {
            for ( i in 1:length(allNam[["group"]])) {
                  labsG<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["group"]][i]),]
-                 recs <- paste("'",labsG[,"value"] , "' = '" , labsG[,"valLabel"],"'",sep="", collapse="; ")
-                 resM[["stat"]][,paste0("groupval", i)] <- car::recode (resM[["stat"]][,paste0("groupval", i)], recs)
+                 resM[["stat"]][,paste0("groupval", i)] <- eatTools::recodeLookup(resM[["stat"]][,paste0("groupval", i)], labsG[,c("value", "valLabel")])
            }
       }
       if(!is.na(labsD[1,"value"])) {                                            
