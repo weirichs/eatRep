@@ -1,5 +1,7 @@
 checkLEs <- function(filePaths, leDF) {
-       if(length(filePaths) < 2) {stop("At least two data bases must be specified ('filePath' must be a character vector of length 2 or more).")}
+  checkmate::assert_file_exists(filePaths)
+  checkmate::assert_character(filePaths, min.len = 2)
+  leDF <- eatTools::makeDataFrame(leDF)
     ### erstmal nur das linking error objekt an sich checken: check variable names
        allV  <- list(trendLevel1 = "trendLevel1", trendLevel2 = "trendLevel2", parameter = "parameter", linkingError="linkingError", depVar = "depVar")
        allN  <- lapply(allV, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = leDF, variable=ii, warnIfMissing = TRUE)})
