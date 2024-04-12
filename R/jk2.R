@@ -329,7 +329,22 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, formula.fixed=NULL, formula.random=NULL,
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE, modus, poolMethod = "mice", useWec = FALSE, engine,
           scale, rscales, mse, rho, reihenfolge = NULL, hetero, se_type, crossDiffSE.engine, stochasticGroupSizes, verbose, progress, clusters=NULL, fc = NULL, isRecursive = FALSE, depOri = NULL) {
-          datL  <- eatTools::makeDataFrame(datL, name = "datL", minRow = 2, onlyWarn=FALSE)
+  
+  # checks/assertions
+  datL  <- eatTools::makeDataFrame(datL, name = "datL", minRow = 2, onlyWarn=FALSE)
+  if (checkmate::test_numeric(ID)){
+    checkmate::assert_numeric(ID, len = 1, any.missing = FALSE)
+  } else {checkmate::assert_character(ID, len = 1, any.missing = FALSE)}
+  lapply(c(cross.differences, useEffectLiteR, na.rm, forcePooling, doCheck,
+           separate.missing.indicator, forceSingularityTreatment, onlyCheck, useWec, isRecursive), 
+         assert_logical, len = 1)
+  
+  if(checkmate::test_character(wgt)){
+    checkmate::assert_character(wgt, len = 1, null.ok = TRUE)
+  } else{checkmate::assert_numeric(wgt, len = 1, null.ok = TRUE)}
+  
+  
+  
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
           if(is.null(trend)) {linkErr <- NULL}                                  ### Hotfix ... sonst gibt es einen fehler, wenn kein Trend bestimmt werden soll, aber dennoch 'linkErr' spezifiziert wird
           if (is.null(fc) && isFALSE(onlyCheck)) {
