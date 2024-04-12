@@ -342,7 +342,13 @@ eatRep <- function (datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none
   if(checkmate::test_character(wgt)){
     checkmate::assert_character(wgt, len = 1, null.ok = TRUE)
   } else{checkmate::assert_numeric(wgt, len = 1, null.ok = TRUE)}
-  
+  lapply(c(L1wgt, L2wgt), checkmate::assert_character, len = 1, null.ok = TRUE)
+  if(checkmate::test_character(PSU)){
+    checkmate::assert_character(PSU, len = 1, null.ok = TRUE)
+  } else{checkmate::assert_numeric(PSU, len = 1, null.ok = TRUE)}
+  if(checkmate::test_character(repInd)){
+    checkmate::assert_character(repInd, len = 1, null.ok = TRUE)
+  } else{checkmate::assert_numeric(repInd, len = 1, null.ok = TRUE)}
   
   
           if ( isTRUE(useWec) ) { forceSingularityTreatment <- TRUE; poolMethod <- "scalar"}
