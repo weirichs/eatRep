@@ -82,7 +82,54 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
            groups<- subset(plain, is.na(comparison))[,na.omit(match(c("id", attr(out, "allNam")[["group"]], attr(out, "allNam")[["trend"]],  names(add)), colnames(plain))), drop=FALSE]
            if(length(attr(out, "allNam")[["group"]])>0) {for ( i in attr(out, "allNam")[["group"]]) {if(i %in% colnames(groups)) {groups[,i] <- car::recode(groups[,i], "NA='all'")}}}
            estim <- plain[,c("id", colnames(plain)[na.omit(match(c("depVar", "parameter", "est", "se", "p", "es"), colnames(plain)))])]
-           return(list(comparisons = compar, group=groups, estimate = estim, plain = plain[,-match("row", colnames(plain))]))}
+    ### Schritt 6: Anpassungen entsprechend der Mail von Nicklas, 21.03.2024, 8.32 Uhr: "gepasteten strings" anpassen
+           plain1<- rbind(subset(plain, is.na(comparison)), subset(plain, comparison=="trend"))
+           if(length(attr(out, "allNam")[["group"]]) >0) {                      ### fuer alle Levels der comparison variable getrennt
+              plain1[,"group"] <- apply(plain1[,attr(out, "allNam")[["group"]], drop=FALSE], MARGIN = 1, FUN = function (zeile) {
+                                  z <- na.omit(zeile)
+                                  return(car::recode(paste(names(z), z, sep="=", collapse=", "), "''='total'"))})
+           }
+           plain2<- subset(plain, comparison %in% c("trend_crossDiff", "crossDiff"))
+           if(nrow(plain2)>0) {
+              plain2 <- do.call("rbind", by(data = plain2, INDICES = plain2[,"group"], FUN = function (grp) {
+                        halb <- strsplit(unique(grp[,"group"]), ".vs.")[[1]]
+                        halb1<- lapply(halb, FUN = function (x) {
+                                str1 <- strsplit(x, split="_")[[1]]
+                                str1 <- addVarNamsToVarVals (string=str1, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total") })
+                        grp[,"group"]<- paste(paste(unlist(halb1[[1]]), collapse= ", ") , paste(unlist(halb1[[2]]), collapse= ", "), sep = " - ")
+                        for ( i in 1:length(halb1)) {for ( j in 1:length(halb1[[i]])) {if(!is.null(attr(halb1[[i]][[j]], "dfr"))) {if(is.na(grp[1,attr(halb1[[i]][[j]], "dfr")[["variable"]]])) {grp[,attr(halb1[[i]][[j]], "dfr")[["variable"]]] <- paste0(attr(halb1[[i]][[j]], "dfr")[["value"]], ".vs.total") }}}}
+                        return(grp)}))
+           }
+           plain3<- subset(plain, comparison %in% c("trend_groupDiff", "groupDiff"))
+           if(nrow(plain3)>0) {
+              second <- eatTools::halveString(plain3[,"group"], "____")         ### untere Zeile: Achtung! hier muss wirklich 'plain1' stehen, weil 'plain3' keine Gruppenvalues fuer crossdiff enthaelt
+              txt    <- capture.output(third <- eatTools::makeDataFrame(eatTools::halveString(second[,2], ".vs.")))
+              third  <- data.frame ( lapply(third, FUN = function (col) {unlist(addVarNamsToVarVals (string=col, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total"))}), stringsAsFactors = FALSE)
+              plain3[,"group"] <- paste0(gsub("all.group=1", "total", second[,1]), ": ", third[,1], " - ", third[,2])
+           }
+           plain4<- subset(plain, comparison %in% c("crossDiff_of_groupDiff", "trend_crossDiff_of_groupDiff"))
+           if(nrow(plain4)>0) {
+              plain4 <- do.call("rbind", by(data = plain4, INDICES = plain4[,"group"], FUN = function (grp) {
+                        spl1   <- strsplit(unique(grp[,"group"]), ".VS.")[[1]]
+                        spl2   <- strsplit(spl1, "____")
+                        allVals<- unlist(strsplit(unlist(spl2), "=|.vs."))
+                        allStrg<- addVarNamsToVarVals (string=allVals, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total")
+                        for ( i in 1:length(allStrg)) {if(!is.null(attr(allStrg[[i]], "dfr"))) {if(is.na(grp[1,attr(allStrg[[i]], "dfr")[["variable"]]])) {grp[,attr(allStrg[[i]], "dfr")[["variable"]]] <- paste0(attr(allStrg[[i]], "dfr")[["value"]], ".vs.total") }}}
+                        spl2   <- lapply(spl2, FUN = function (x) {
+                                  tx<- capture.output(y <- eatTools::makeDataFrame(eatTools::halveString(x[2], ".vs.")))
+                                  y <- lapply(y, FUN = function (col) {addVarNamsToVarVals (string=col, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total")})
+                                  y <- gsub("all.group=1", "total", c(x[1], unlist(y[[1]]), unlist(y[[2]])))
+                                  stopifnot(length(y) == 3)
+                                  y <- paste0("(",y[1], ": ",y[2], " - ", y[3], ")")
+                                  return(y)})
+                        stopifnot(length(spl2) ==2)
+                        grp[,"group"] <- paste0(spl2[1], " - ", spl2[2])
+                        return(grp)}))
+           }
+           stopifnot(nrow(plain) == nrow(rbind(plain1, plain2, plain3, plain4)))
+           plain <- rbind(plain1, plain2, plain3, plain4)
+           rownames(plain) <- NULL
+           return(list(plain = plain[,-match("row", colnames(plain))], comparisons = compar, group=groups, estimate = estim))}
 
 ### Funktion waehlt die Fokus- und Referenzgruppe fuer cross differences aus
 idFocRefGrpCROSSDIFF <- function(string, out, plainn, add) {
@@ -152,18 +199,15 @@ idFocRefGrpCROSSDIFF_OF_GROUPDIFF <- function (string, out, plainn, add) {
            stopifnot(nrow(refere)==1)
            return(rbind(focus, refere))}
 
-
-
-### verbotene (gruppen-)variablennamen
-#    - coef
-#    - variable
-#    - group
-#    - id
-#    - unit_1
-#    - unit_2
-#    - comb.group
-#    - row
-
-# Hilfefunktion mit alias, nur eine hilfeseite fuer report und report2, siehe hmisc
+addVarNamsToVarVals <- function (string, group , plain , tot = "total"){
+           str1 <- lapply(string, FUN = function (st) {
+                   col <- sapply(plain[,group, drop=FALSE], FUN = function (x) {st %in% x})
+                   col <- names(which(col==TRUE))
+                   if ( length(col) ==0) {return(tot)}
+                   dfr <- list(variable = col, value = st)
+                   ret <- paste0(col, "=", st)
+                   attr(ret, "dfr") <- dfr
+                   return(ret)})
+           return(str1)}
 
 

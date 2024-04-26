@@ -185,7 +185,7 @@ Logical: Show analysis information on console?
 Logical: Show progress bar on console?
 }
   \item{nCores}{
-integer (default: NULL), number of cores to use for parallel processing, if \code{engine = "survey"]}. If \code{NULL},
+integer (default: NULL), number of cores to use for parallel processing, if \code{engine = "survey"}. If \code{NULL},
 single core processing is used.
 }
 }

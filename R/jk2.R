@@ -1393,14 +1393,14 @@ doSurveyAnalyses <- function (datL1, a) {
                    if (is.null(a%$$%nCores)) {                                  
                         anaI <- by(data = datN, INDICES = datN[,a%$$%imp], FUN = chooseFunction, a=a, pb=pb)
                    }  else  {                                                   
-                        doIt <- function (laufnummer,  a ) {
+                        doIt <- function (laufnummer,  a, pb ) {
                                 if(!exists("repMean"))  { library(eatRep) }
                                 dat <- datN[which(datN[,a%$$%imp] == laufnummer),]
-                                ret <- chooseFunction ( datI = dat, a=a)
+                                ret <- chooseFunction ( datI = dat, a=a, pb=pb)
                                 return(ret)}
                         beg  <- Sys.time()
                         cl   <- makeCluster(a%$$%nCores, type = "SOCK")
-                        anaI <- clusterApply(cl = cl, x = 1:length(unique(datN[,a%$$%imp])), fun = doIt, a=a)
+                        anaI <- clusterApply(cl = cl, x = 1:length(unique(datN[,a%$$%imp])), fun = doIt, a=a, pb=pb)
                         stopCluster(cl)
                         tme  <- eatTools::removePattern(capture.output(print(Sys.time() - beg, digits=3)), pattern="Time difference of ")
                         message(paste0("Multicore processing of '",a%$$%modus,"', using ",length(unique(datN[,a%$$%imp]))," imputations and ",a%$$%nCores," cores: ",tme))
@@ -1574,7 +1574,7 @@ checkForAdjustmentAndLmer <- function(datL, a, groupWasNULL) {
                             newFr <- model.matrix( as.formula (paste("~",vars[g,"vars"],sep="")), data = datL)[,-1,drop=FALSE]
                             message(paste("    Adjusting variable '",vars[g,"vars"],"' of class '",class(datL[,vars[g,"vars"]]),"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), "'.",sep=""))
                             datL  <- data.frame(datL, newFr, stringsAsFactors=FALSE)
-                            a$allNam$adjust <- c(setdiff(a%$$%adjust,vars[g,"vars"]), colnames(newFr))
+                            a$adjust <- c(setdiff(a%$$%adjust,vars[g,"vars"]), colnames(newFr))
                        }
                        if (vars[g,"type"] == "fixed") {
                             if ( !vars[g,"vars"] %in% extractFactorVarsFromFormula(a%$$%formula.fixed) && vars[g,"vars"] %in% all.vars(a%$$%formula.fixed) ) {
@@ -1596,7 +1596,7 @@ checkForAdjustmentAndLmer <- function(datL, a, groupWasNULL) {
           
 checkNameConvention <- function( allNam) {
           na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne", "wgtOne2","le", "variable", "est", "se")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable", "Freq")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable", "Freq", "id", "unit_1", "unit_2", "comb.group", "row", "coef", "label")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr", "variable")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}

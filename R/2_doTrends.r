@@ -64,7 +64,7 @@ computeTrend <- function(jk2, tv, repFunOut, fun) {
                jkl <- reshape2::melt(jk2_wide[,-na.omit(match(c("le", "rowNr"), colnames(jk2_wide)))], measure.vars = mv, na.rm=TRUE)
                return(jkl)})))
    ### 'reshape'-Variable 'variable' nach coefficient und year aufsplitten
-        adds<- data.frame ( adds[,-match(c("splitVar", "variable"), colnames(adds))], eatTools::halveString(as.character(adds[,"variable"]), pattern="_", first=TRUE, colnames=c("coefficient", "year")), stringsAsFactors = FALSE)
+        adds<- data.frame ( adds[,-match(c("splitVar", "variable"), colnames(adds))], eatTools::halveString(as.character(adds[,"variable"]), pattern="_", first=TRUE, colnames=c("coefficient", tv)), stringsAsFactors = FALSE)
         adds<- eatTools::rbind_common(jk2_bind[which(jk2_bind[,"splitVar"] == FALSE),], adds)
         return(adds) }                                                          ### obere Zeile: Originaloutput und Zusatz untereinanderbinden, spalte 'splitVar' droppen
 
