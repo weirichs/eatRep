@@ -8,17 +8,17 @@ doBifieAnalyses <- function (dat.i, a=a){
       jkt  <- car::recode(a$type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
 	    if(is.null(a$rho)) {if(jkt == "JK_GROUP") {a$rho <- (length(unique(dat.i[, a%$$%PSU]))-1)/length(unique(dat.i[, a%$$%PSU]))   }}
       txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
-      if ( isTRUE(a%$$%verbose)) { cat("\n"); print(bo)}
+      if ( isTRUE(a%$$%verbose)) { cat("\n"); printJackInfo(bo=bo, a=a, jkt=jkt, cdata=FALSE)}
       attributes(a$group) <- NULL                                               
       if ( a%$$%toCall == "mean") {
-           resML <- bifieMean(bifie.obj = bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, toCall=a%$$%toCall, dat.i=dat.i, modus=a%$$%modus)
+           resML <- bifieMean(bifie.obj = bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, toCall=a%$$%toCall, dat.i=dat.i, modus=a%$$%modus, verbose=a%$$%verbose)
       }
       if ( a%$$%toCall == "table") {
-           resML <- bifieTable(bifie.obj = bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, toCall=a%$$%toCall, dat.i=dat.i, modus=a%$$%modus)
+           resML <- bifieTable(bifie.obj = bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, toCall=a%$$%toCall, dat.i=dat.i, modus=a%$$%modus, verbose=a%$$%verbose)
       }
       if ( a%$$%toCall == "lmer") {
            foo   <- checkWithinBetweenWeights(dat=dat.i, allNam=a[a%$$%allNam])
-           resML <- bifieLmer(bifie.obj=bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, modus=a%$$%modus, formula.fixed=a%$$%formula.fixed, formula.random=a%$$%formula.random)
+           resML <- bifieLmer(bifie.obj=bo, allNam=a[a%$$%allNam], dat.g=dat.g, labsD=labsD, modus=a%$$%modus, formula.fixed=a%$$%formula.fixed, formula.random=a%$$%formula.random, verbose=a%$$%verbose)
       }
       return(resML)}
 
@@ -79,7 +79,8 @@ aufbNoMultilevel <- function (resM, mv, toCall, allNam, dat.i, modus, grp) {
           resML<- rbind(resML, grp)
           return(resML)}
 
-bifieMean <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus) {
+bifieMean <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus, verbose) {
+      if(verbose) {cat(paste0("'BIFIE.univar' for 'call = mean'. dependent = '",allNam[["dependent"]],"'. group(s) = '",paste(allNam[["group"]], collapse="', '"), "'. \n"))}
       txt  <- capture.output(resM <- BIFIE.univar( BIFIEobj=bifie.obj , vars = allNam[["dependent"]], group=allNam[["group"]] ))
       mv   <- c("Nweight", "Ncases", "M", "M_SE", "M_p", "SD", "SD_SE", "SD_p")
       grp  <- computeGroupDifferences(resM=resM, allNam=allNam, dat.g=dat.g, modus=modus)
@@ -87,7 +88,8 @@ bifieMean <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus) {
       resML<- aufbNoMultilevel(resM=resM, mv=mv, toCall=toCall, allNam=allNam, dat.i=dat.i, modus=modus, grp=grp)
       return(resML)  }
 
-bifieTable <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus) {
+bifieTable <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus, verbose) {
+      if(verbose) {cat(paste0("'BIFIE.freq' for 'call = table'. dependent = '",allNam[["dependent"]],"'. group(s) = '",paste(allNam[["group"]], collapse="', '"), "'. \n"))}
       txt  <- capture.output(resM <- BIFIE.freq( BIFIEobj=bifie.obj , vars = allNam[["dependent"]], group=allNam[["group"]] ))
       resM[["stat"]][,"perc_p"] <- 2*(1-pnorm(resM[["stat"]][,"perc"] / resM[["stat"]][,"perc_SE"]))
       mv   <- c("Nweight", "Ncases", "perc", "perc_SE", "perc_p")               
@@ -96,7 +98,7 @@ bifieTable <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus) 
       resML<- aufbNoMultilevel(resM=resM, mv=mv, toCall=toCall, allNam=allNam, dat.i=dat.i, modus=modus, grp=NULL)
       return(resML)  }
       
-bifieLmer <- function ( bifie.obj, allNam, dat.g, labsD, modus, formula.fixed, formula.random) {
+bifieLmer <- function ( bifie.obj, allNam, dat.g, labsD, modus, formula.fixed, formula.random, verbose) {
       resM <- BIFIE.twolevelreg( BIFIEobj=bifie.obj, dep=allNam[["dependent"]], formula.fixed=formula.fixed, formula.random=formula.random, idcluster=allNam[["clusters"]], wgtlevel2=allNam[["L2wgt"]], wgtlevel1=allNam[["L1wgt"]], group = allNam[["group"]])
       resM <- aufbOut(resM=resM, allNam=allNam, dat.g=dat.g, labsD=labsD)       
       resML<- aufbMultilevel(resM=resM, allNam=allNam, modus=modus)
@@ -107,7 +109,7 @@ computeGroupDifferences <- function(resM, allNam, dat.g, modus){
            liste<- data.frame ( merge(resM[["stat_M"]],resM[["stat_SD"]][,c(grep("^groupva", colnames(resM[["stat_SD"]]), value=TRUE), "SD", "SD_SE")],  by = grep("^groupva", colnames(resM[["stat_SD"]]), value=TRUE), all=TRUE, sort=FALSE), dp = resM[["parnames"]], groupvar0 = "wholePop", groupval0 = 0, stringsAsFactors = FALSE)
            if ( length(allNam[["group.differences.by"]]) == length(allNam[["group"]])) {
                colnames(liste) <- car::recode(colnames(liste), "'groupvar'='groupvar1'; 'groupval'='groupval1'")
-           }                                                                    
+           }
            col  <- colnames(liste)[which(sapply(eatTools::facToChar(liste[1,]), FUN = function ( x ) { x == allNam[["group.differences.by"]] }))]
            col  <- c(eatTools::removeNumeric(col), eatTools::removeNonNumeric(col))
            res  <- setdiff(grep("^groupval", colnames(liste), value=TRUE), paste0("groupval", col[2]))
@@ -183,3 +185,10 @@ checkWithinBetweenWeights <- function(dat, allNam){
          if (!is.null(allNam[["L1wgt"]])) {if ( nUnit[[allNam[["wgt"]]]] < nUnit[[allNam[["L1wgt"]]]]) {warning(paste0("Number of distinct units in sampling weights '",allNam[["wgt"]],"' (",nUnit[[allNam[["wgt"]]]],"), is lower than the number of distinct units in level-1 weights '",allNam[["L1wgt"]],"' (",nUnit[[allNam[["L1wgt"]]]],")"))}}
          if (!is.null(allNam[["L2wgt"]])) {if ( nUnit[[allNam[["wgt"]]]] < nUnit[[allNam[["L2wgt"]]]]) {warning(paste0("Number of distinct units in sampling weights '",allNam[["wgt"]],"' (",nUnit[[allNam[["wgt"]]]],"), is lower than the number of distinct units in level-2 weights '",allNam[["L2wgt"]],"' (",nUnit[[allNam[["L2wgt"]]]],")"))}}
       }}
+
+printJackInfo <- function(bo, a, jkt, cdata){
+      pre  <- match.call(BIFIE.data.jack, call("BIFIE.data.jack", "datL", wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
+      txt1 <- capture.output(print(bo))
+      start<- min(grep("data with", txt1))
+      print(pre)
+      cat(txt1[5:length(txt1)], sep = " || "); cat("\n")}
