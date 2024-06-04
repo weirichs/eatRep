@@ -539,7 +539,7 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          } })   }                                               
 
 createLinkingError <- function  ( resT = resT, a=a) {
- <- a[[""]]
+trend <- a[["trend"]]; fc <- a[["fc"]]
           if (length(linkErr) > 1) {                              
               le <- linkErr
               attr(le, "linkingErrorFrame") <- TRUE                           
@@ -556,7 +556,6 @@ createLinkingError <- function  ( resT = resT, a=a) {
                       init <- data.frame ( trendVar = trend, trendLevel1 = p[1] , trendLevel2 = p[2], stringsAsFactors = FALSE)
                       if ( fc == "repTable") {
                            le <- data.frame ( init, depVar = unique(resT[[1]][["out1"]][,"depVar"]), unique(datL[, c(unique(resT[[1]][["out1"]][,"depVar"]), linkErr),drop=FALSE]), stringsAsFactors = FALSE)
-
                       }
                       if ( fc == "repMean") {
                            stopifnot (length(unique(datL[,linkErr])) == 1)
@@ -1530,13 +1529,13 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                         chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
                    }
                    if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').") }
-                   if ( inherits(datL[,gg], c("factor", "character")) && length(grep("\\.|_", datL[,gg])) > 0) {
-                       message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' which is not allowed. '.' and '_' will be deleted.")
+                   if ( inherits(datL[,gg], c("factor", "character")) && length(grep("\\.|_|^ | $", datL[,gg])) > 0) {
+                       message( "Levels of grouping variable '",gg, "' contain '.' and/or '_' and/or leading/trailing space characters which is not allowed. '.' and '_' and leading/trailing space characters will be deleted.")
                        if ( inherits ( datL[,gg], "factor")) {
-                           levNew <- gsub("\\.|_", "", levels(datL[,gg]))
-                           datL[,gg] <- factor(gsub("\\.|_", "", datL[,gg]), levels = levNew)
+                           levNew <- eatTools::crop(gsub("\\.|_", "", levels(datL[,gg])))
+                           datL[,gg] <- factor(eatTools::crop(gsub("\\.|_", "", datL[,gg])), levels = levNew)
                        }  else  {
-                           datL[,gg] <- gsub("\\.|_", "", datL[,gg])
+                           datL[,gg] <- eatTools::crop(gsub("\\.|_", "", datL[,gg]))
                        }
                    }
              }

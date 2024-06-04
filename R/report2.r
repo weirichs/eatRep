@@ -98,8 +98,7 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
            colnames(plain) <- car::recode(colnames(plain), "'group'='label2'")
            if ( length(which(is.na(plain[,"comparison"]))) > 0) {plain[,"comparison"] <- car::recode(plain[,"comparison"], "NA='none'")}
     ### Schritt 7: post processing labelspalten 1 (sprechend) und 2 (pseudomathematisch) anpassen: 'p:\Methoden\02_R_Pakete\eatRep\Outputstruktur\Umfrage.doc'
-           plain <- data.frame ( label1 = createLabel1(plain, out=out), plain, stringsAsFactors=FALSE)
-browser()
+           plain <- data.frame ( label1 = createLabel1(plain, out=out), label2 = createLabel2(plain, out=out), plain[,-match("label2", colnames(plain))], stringsAsFactors=FALSE)
            rownames(plain) <- NULL
            return(list(plain = plain[,-match("row", colnames(plain))], comparisons = compar, group=groups, estimate = estim))}
 
@@ -221,7 +220,7 @@ replaceVS <- function (plain, out, groups) {
 createLabel1 <- function(plain, out) {
            label1 <- apply(X=plain, MARGIN = 1, FUN = function (zeile){
                      if(!is.null(attr(out, "allNam")[["trend"]]) && grepl(" - ", zeile[[attr(out, "allNam")[["trend"]]]])) {
-                        tr <- paste0("trend (",zeile[[attr(out, "allNam")[["trend"]]]],") fuer ")
+                        tr <- paste0("trend (",zeile[[attr(out, "allNam")[["trend"]]]],") for ")
                      } else {
                         tr <- ""
                      }
@@ -234,18 +233,64 @@ createLabel1 <- function(plain, out) {
                         cd <- paste0("crossDiff (",cd,") ")
                      } else {
                         cd <- ""
+                        tr <- eatTools::crop(tr, "for ")
                      }
                      if(grepl("groupdiff", zeile[["comparison"]],ignore.case=TRUE)) {
                         sig<- unlist(zeile[attr(out, "allNam")[["group"]]])
                         col<- setdiff(grep(" - ", sig), grep("total", sig))
                         stopifnot(length(col)==1)
-                        gd <- paste0("bzgl. groupDiff (",sig[[col]],")")
+                        gd <- paste0("of groupDiff (",sig[[col]],")")
                      } else {
                         gd <- ""
                      }
-                     tot <- eatTools::crop(eatTools::crop(eatTools::crop(eatTools::crop(paste0(tr, cd, gd), "bzgl\\."), " "), "fuer"), " ")
+                     if (tr=="" && cd =="") {gd <- eatTools::crop(gd, "of ") }
+                     tot <- paste0(tr, cd, gd)
                      return(tot)})
            return(label1)}
                      
+createLabel2 <- function(plain, out) {
+           gv     <- attr(out, "allNam")[["group.differences.by"]]
+           tv     <- attr(out, "allNam")[["trend"]]
+           label2 <- apply(X=plain, MARGIN = 1, FUN = function (zeile){
+                     if(length(grep("groupdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
+                        IN <- paste(gv, strsplit(zeile[[gv]], " - ")[[1]], collapse = " - ", sep="=")
+                     } else {
+                        IN <- ""
+                     }
+                     if(length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
+                        cv    <- zeile[attr(out, "allNam")[["group"]]]
+                        weg   <- setdiff(grep(" - ", cv), grep("total", cv))
+                        if ( length(weg)>0) {                                   ### umstaendlich aber noetig,
+                            cv    <- names(cv[-weg])                            ### falls weg integer(0) ist, schlaegt das sonst fehl
+                        }  else  {
+                            cv    <- names(cv)
+                        }
+                        cd    <- zeile[cv]
+                        comps <- eatTools::makeDataFrame(eatTools::halveString(cd, " - "), verbose=FALSE)
+                        for ( i in 1:nrow(comps)) {
+                            if(is.na(comps[i,2])) {comps[i,2] <- comps[i,1]}
+                            for ( j in 1:ncol(comps)) {comps[i,j] <- paste(rownames(comps)[i], comps[i,j], sep="=")} }
+                        comps <- lapply(comps, FUN = function (co) {paste(co, collapse = ", ")})
+                        if (IN != "") {
+                            comps <- lapply(comps, FUN = function (co) {paste0("(", co, ": ",IN, ")")})
+                        } else {
+                            comps <- paste0("(", comps, ")")
+                        }
+                     } else {
+                        comps <- IN
+                     }
+                     if(length(grep("trend", zeile[["comparison"]], ignore.case=TRUE))>0){
+                        if( IN == "" && length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE)) == 0) {
+                            kl1 <- ""; kl2 <- ""; kl3 <- ""
+                        } else {
+                            kl1 <- "["; kl2 <- "]"; kl3 <- ": "
+                        }
+                        comps <- paste(paste0(paste0(kl1, paste(tv, strsplit(zeile[[tv]], " - ")[[1]], sep="="), kl3), comps, kl2), collapse=" - ")
+                     } else {
+                        comps <- paste(comps, collapse=" - ")
+                     }
+                     return(comps)})
+           return(label2)}
+                        
 
 

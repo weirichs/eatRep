@@ -53,14 +53,16 @@ If mean analysis was applied, the \sQuote{parameter} column takes the values \sQ
 \item{est}{Denotes the estimate of the corresponding analysis.}
 \item{se}{Denotes the standard error of the corresponding estimate.}
 \item{p}{Denotes the p value of the estimate.}
-For \code{report2}, the output is a list with four elements:
+For \code{report2}, the output is a list with four data.frames. The first data.frame \code{plain} summarizes the
+results in human-readable form. The data.frames 2 to 4 (\code{comparisons}, \code{group}, \code{estimate}) are redundant
+to \code{plain} and contain the results in a technical presentation suitable for further processing in \code{eatPlot}.
+\item{plain}{The complete results in human-readable form.}
 \item{comparison}{An allocation table that indicates which comparison (group comparison or cross-level comparison)
 relates to which groups.}
 \item{group}{A table that assigns an ID to each analysis unit. This makes it easier later on to read from the output
 which comparison relates to which groups. This simplifies the assignment, especially when comparing comparisons
 (i.e., cross-level differences of group differences).}
 \item{estimate}{The results of the analyses, assigned to their IDs.}
-\item{plain}{The complete results in human-readable form.}
 }
 \author{
 Benjamin Becker, Sebastian Weirich

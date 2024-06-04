@@ -7,6 +7,8 @@
 * enhanced warning messages if number of nests/imputations differ between grouping variables
 * enhanced warning messages if number of jkrep units differ between nests/imputations
 * bugfix in the cross-level differences of group differences computation
+* bugfix if levels of grouping variables contain leading and/or trailing spaces
+* new function `report2` which summarizes the output of the four main functions a little tidier and provides an interface for eatPlot
 
 # eatRep 0.14.7
 
