@@ -24,17 +24,18 @@ pool.means <- function (m, se, na.rm = FALSE) {
      return(list(summary=pooled))}
 
 
-pool.R2 <- function ( r2, N, quiet = FALSE ) {
+pool.R2 <- function ( r2, N, verbose = TRUE ) {
            if(!is.list(r2)) {r2 <- list(r2)}
            if (missing(N))  {
-               if(quiet == FALSE ) {cat("No sample size given. Will not compute standard error of pooled R squared.\n")}
+               if(verbose ) {cat("No sample sizes given. Will not compute standard error of pooled R squared.\n")}
                N <- lapply(r2, FUN = function (x) { rep ( 1000, length( x ) ) } )
                mis.N <- TRUE
+           } else {
+               mis.N <- FALSE
            }
            if(!is.list(N))  {N  <- list(N)}
            if (!missing(N)) {
                stopifnot(length(N) == length(r2) )
-               mis.N <- FALSE
                stopifnot( all ( sapply(N, length) == sapply(r2, length) ) )
            }
            Q.i     <- lapply(r2, FUN = function (x) {0.5*log( (1 + sqrt(x)) / (1-sqrt(x))  )})

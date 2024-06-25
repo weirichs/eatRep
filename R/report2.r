@@ -20,7 +20,7 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
               isTren<- grep(".vs.", outL[,attr(out, "allNam")[["trend"]]])
               outL[isTren,"comparison"] <- eatTools::crop(paste("trend", car::recode(outL[isTren,"comparison"],"NA=''"), sep="_"), "_")
            }                                                                    ### untere Zeile: das hier soll spaeter im tabellenblatt 'plain' landen
-           plain <- eatTools::makeDataFrame(tidyr::pivot_wider(outL, names_from = "coef", values_from = "value"))
+           plain <- eatTools::makeDataFrame(tidyr::pivot_wider(outL, names_from = "coef", values_from = "value"), verbose=FALSE)
            plain[,"row"] <- 1:nrow(plain)
     ### Schritt 1: id fuer comparison = NA vergeben
            plainn<- subset(plain, is.na(comparison))
@@ -68,7 +68,7 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
            plain3<- subset(plain, comparison %in% c("trend_groupDiff", "groupDiff"))
            if(nrow(plain3)>0) {
               second <- eatTools::halveString(plain3[,"group"], "____")         ### untere Zeile: Achtung! hier muss wirklich 'plain1' stehen, weil 'plain3' keine Gruppenvalues fuer crossdiff enthaelt
-              txt    <- capture.output(third <- eatTools::makeDataFrame(eatTools::halveString(second[,2], ".vs.")))
+              third  <- eatTools::makeDataFrame(eatTools::halveString(second[,2], ".vs."), verbose=FALSE)
               third  <- data.frame ( lapply(third, FUN = function (col) {unlist(addVarNamsToVarVals (string=col, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total"))}), stringsAsFactors = FALSE)
               plain3[,"group"] <- paste0(gsub("all.group=1", "total", second[,1]), ": ", third[,1], " - ", third[,2])
            }
@@ -77,7 +77,8 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
               plain4 <- do.call("rbind", by(data = plain4, INDICES = plain4[,"group"], FUN = function (grp) {
                         spl1   <- strsplit(unique(grp[,"group"]), ".VS.")[[1]]
                         spl2   <- strsplit(spl1, "____")
-                        allVals<- unlist(strsplit(unlist(spl2), "=|.vs."))
+                        spl3   <- lapply(spl2, FUN = function(y) {unlist(strsplit(y, ", "))})
+                        allVals<- unlist(strsplit(unlist(spl3), "=|.vs."))
                         allStrg<- addVarNamsToVarVals (string=allVals, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total")
                         for ( i in 1:length(allStrg)) {if(!is.null(attr(allStrg[[i]], "dfr"))) {if(is.na(grp[1,attr(allStrg[[i]], "dfr")[["variable"]]])) {grp[,attr(allStrg[[i]], "dfr")[["variable"]]] <- paste0(attr(allStrg[[i]], "dfr")[["value"]], ".vs.total") }}}
                         spl2   <- lapply(spl2, FUN = function (x) {
@@ -219,18 +220,36 @@ replaceVS <- function (plain, out, groups) {
            
 createLabel1 <- function(plain, out) {
            label1 <- apply(X=plain, MARGIN = 1, FUN = function (zeile){
+                     if(zeile[["comparison"]] == "none") {
+                        if(length(attr(out, "allNam")[["group"]])>0 ) {
+                           no <- paste(zeile[attr(out, "allNam")[["group"]]], collapse="_")
+                        } else {
+                           no <- "total"
+                        }
+                     } else {
+                        no <- ""
+                     }
                      if(!is.null(attr(out, "allNam")[["trend"]]) && grepl(" - ", zeile[[attr(out, "allNam")[["trend"]]]])) {
                         tr <- paste0("trend (",zeile[[attr(out, "allNam")[["trend"]]]],") for ")
+                        if(zeile[["comparison"]] == "trend") {
+                           if(length(attr(out, "allNam")[["group"]])>0 ) {
+                              tr <- paste0(tr, paste(zeile[attr(out, "allNam")[["group"]]], collapse="_"))
+                           } else {
+                              tr <- paste0(tr, "total")
+                           }
+                        }
                      } else {
                         tr <- ""
                      }
                      if(grepl("crossdiff", zeile[["comparison"]],ignore.case=TRUE)) {
-                        cd <- lapply(attr(out, "allNam")[["group"]], FUN = function (v) {
+                        cdv<- setdiff(attr(out, "allNam")[["group"]], attr(out, "allNam")[["group.differences.by"]])
+                        cd <- lapply(cdv, FUN = function (v) {
                                 spl <- unlist(strsplit(zeile[[v]], " - "))
                                 if(length(spl)==1) {spl <- c(spl,spl)}
                                 return(spl)})
-                        cd <- paste(cd[[1]], cd[[2]], sep="_", collapse=" - ")
-                        cd <- paste0("crossDiff (",cd,") ")
+                        cd1<- paste(unlist(lapply(cd, FUN = function (x) {x[1]})), collapse="_")
+                        cd2<- paste(unlist(lapply(cd, FUN = function (x) {x[2]})), collapse="_")
+                        cd <- paste0("crossDiff (",paste(cd1, cd2, sep=" - "),") ")
                      } else {
                         cd <- ""
                         tr <- eatTools::crop(tr, "for ")
@@ -239,12 +258,25 @@ createLabel1 <- function(plain, out) {
                         sig<- unlist(zeile[attr(out, "allNam")[["group"]]])
                         col<- setdiff(grep(" - ", sig), grep("total", sig))
                         stopifnot(length(col)==1)
-                        gd <- paste0("of groupDiff (",sig[[col]],")")
+                        gd <- paste0("of groupDiff (",sig[[col]],")")           ### ocg = other group cols
+                        ogc<- setdiff(attr(out, "allNam")[["group"]], attr(out, "allNam")[["group.differences.by"]])
+                        ogc<- unlist(zeile[ogc])
+                        weg<- c(grep(" - ", ogc), grep("total", ogc))
+                        if(length(weg)>0) {ogc <- ogc[-weg]}
+                        if(length(ogc)>0) {
+                           gd <- paste0(gd, " in ", paste(names(ogc), ogc, sep="=", collapse=", "))
+                        }
+                        if(!is.null(attr(out, "allNam")[["trend"]]) && length(grep(" - ", zeile[[attr(out, "allNam")[["trend"]]]])) ==0) {
+                           gd <- paste0(gd, " for ", attr(out, "allNam")[["trend"]], " ", zeile[[attr(out, "allNam")[["trend"]]]])
+                        }
                      } else {
                         gd <- ""
                      }
                      if (tr=="" && cd =="") {gd <- eatTools::crop(gd, "of ") }
-                     tot <- paste0(tr, cd, gd)
+                     tot <- paste0(no, tr, cd, gd)
+                     if (!is.null(attr(out, "allNam")[["trend"]]) && length(grep(" - ", zeile[[attr(out, "allNam")[["trend"]]]])) ==0) {
+                         tot <- paste0(tot, " for ",attr(out, "allNam")[["trend"]]," ",zeile[[attr(out, "allNam")[["trend"]]]])
+                     }
                      return(tot)})
            return(label1)}
                      
@@ -252,42 +284,74 @@ createLabel2 <- function(plain, out) {
            gv     <- attr(out, "allNam")[["group.differences.by"]]
            tv     <- attr(out, "allNam")[["trend"]]
            label2 <- apply(X=plain, MARGIN = 1, FUN = function (zeile){
-                     if(length(grep("groupdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
-                        IN <- paste(gv, strsplit(zeile[[gv]], " - ")[[1]], collapse = " - ", sep="=")
-                     } else {
-                        IN <- ""
-                     }
-                     if(length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
-                        cv    <- zeile[attr(out, "allNam")[["group"]]]
-                        weg   <- setdiff(grep(" - ", cv), grep("total", cv))
-                        if ( length(weg)>0) {                                   ### umstaendlich aber noetig,
-                            cv    <- names(cv[-weg])                            ### falls weg integer(0) ist, schlaegt das sonst fehl
-                        }  else  {
-                            cv    <- names(cv)
-                        }
-                        cd    <- zeile[cv]
-                        comps <- eatTools::makeDataFrame(eatTools::halveString(cd, " - "), verbose=FALSE)
-                        for ( i in 1:nrow(comps)) {
-                            if(is.na(comps[i,2])) {comps[i,2] <- comps[i,1]}
-                            for ( j in 1:ncol(comps)) {comps[i,j] <- paste(rownames(comps)[i], comps[i,j], sep="=")} }
-                        comps <- lapply(comps, FUN = function (co) {paste(co, collapse = ", ")})
-                        if (IN != "") {
-                            comps <- lapply(comps, FUN = function (co) {paste0("(", co, ": ",IN, ")")})
+                     if(zeile[["comparison"]] == "none") {                      ### hier jetzt fuer alles, was kein Vergleich ist
+                        if(!is.null(tv)) {
+                           pre <- paste0(tv,"=",zeile[[tv]],": ")
                         } else {
-                            comps <- paste0("(", comps, ")")
+                           pre <- ""
                         }
-                     } else {
-                        comps <- IN
-                     }
-                     if(length(grep("trend", zeile[["comparison"]], ignore.case=TRUE))>0){
-                        if( IN == "" && length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE)) == 0) {
-                            kl1 <- ""; kl2 <- ""; kl3 <- ""
+                        if ( !is.null(attr(out, "allNam")[["group"]])) {
+                           post <- zeile[attr(out, "allNam")[["group"]]]
+                           post <- paste(names(post), post, sep= "=", collapse=", ")
                         } else {
-                            kl1 <- "["; kl2 <- "]"; kl3 <- ": "
+                           post <- ""
                         }
-                        comps <- paste(paste0(paste0(kl1, paste(tv, strsplit(zeile[[tv]], " - ")[[1]], sep="="), kl3), comps, kl2), collapse=" - ")
+                        comps <- paste0(pre, post)
                      } else {
-                        comps <- paste(comps, collapse=" - ")
+                        if(length(grep("groupdiff", zeile[["comparison"]], ignore.case=TRUE))==0){
+                           IN <- ""
+                        } else {                                                ### untere Zeile: groupdiff ohne crossdiff ist anders als groupdiff in kombination mit crossdiff
+                           if(length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
+                              IN <- paste(gv, strsplit(zeile[[gv]], " - ")[[1]], collapse = " - ", sep="=")
+                           } else {
+                              IN <- eatTools::halveString(zeile[attr(out, "allNam")[["group"]]], " - ")
+                              for ( i in 1:nrow(IN)) {if(is.na(IN[i,2])) {IN[i,2]  <- IN[i,1]}}
+                              IN <- t(IN)
+                              IN <- paste(paste0("(", paste(colnames(IN), IN[1,], collapse=", ", sep="="), ")"), paste0("(", paste(colnames(IN), IN[2,], collapse=", ", sep="="), ")"), sep=" - ")
+                           }
+                        }
+                        if(length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
+                           cv    <- zeile[attr(out, "allNam")[["group"]]]
+                           weg   <- setdiff(grep(" - ", cv), grep("total", cv))
+                           if ( length(weg)>0) {                                ### umstaendlich aber noetig,
+                               cv    <- names(cv[-weg])                         ### falls weg integer(0) ist, schlaegt das sonst fehl
+                           }  else  {
+                               cv    <- names(cv)
+                           }
+                           cd    <- zeile[cv]
+                           comps <- eatTools::makeDataFrame(eatTools::halveString(cd, " - "), verbose=FALSE)
+                           for ( i in 1:nrow(comps)) {
+                               if(is.na(comps[i,2])) {comps[i,2] <- comps[i,1]}
+                               for ( j in 1:ncol(comps)) {comps[i,j] <- paste(rownames(comps)[i], comps[i,j], sep="=")} }
+                           comps <- lapply(comps, FUN = function (co) {paste(co, collapse = ", ")})
+                           if (IN != "") {
+                               comps <- lapply(comps, FUN = function (co) {paste0("(", co, ": ",IN, ")")})
+                           } else {
+                               comps <- paste0("(", comps, ")")
+                           }
+                        } else {
+                           comps <- IN
+                        }
+                        if(length(grep("trend", zeile[["comparison"]], ignore.case=TRUE))>0){
+                           if( IN == "" && length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE)) == 0) {
+                               kl1 <- ""; kl2 <- ""; kl3 <- ""
+                           } else {
+                               kl1 <- "["; kl2 <- "]"; kl3 <- ": "
+                           }
+                           comps <- paste(paste0(paste0(kl1, paste(tv, strsplit(zeile[[tv]], " - ")[[1]], sep="="), kl3), comps, kl2), collapse=" - ")
+                           if(zeile[["comparison"]] == "trend") {
+                              if(length(attr(out, "allNam")[["group"]])>0 ) {
+                                 comps <- paste0(comps, ": ", paste(names(zeile[attr(out, "allNam")[["group"]]]), zeile[attr(out, "allNam")[["group"]]], sep="=", collapse = ", "))
+                              } else {
+                                 comps <- paste0(comps, ": total")
+                              }
+                           }
+                        } else {
+                           comps <- paste(comps, collapse=" - ")
+                           if(!is.null(tv)) {
+                              comps <- paste0("[", tv, "=",zeile[[tv]], ": ",comps, "]")
+                           }
+                        }
                      }
                      return(comps)})
            return(label2)}

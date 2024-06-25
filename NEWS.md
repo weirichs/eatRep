@@ -9,6 +9,7 @@
 * bugfix in the cross-level differences of group differences computation
 * bugfix if levels of grouping variables contain leading and/or trailing spaces
 * new function `report2` which summarizes the output of the four main functions a little tidier and provides an interface for eatPlot
+* new function `pool.R2` computes pooled R^2 for multiple imputed and nested multiple imputed regression analyses according to Harel (2009)
 
 # eatRep 0.14.7
 
