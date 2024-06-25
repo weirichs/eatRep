@@ -611,7 +611,7 @@ group <- a[["group"]]; wgt <- a[["wgt"]]; dependent <- a[["dependent"]]; probs <
 
 
 jackknife.quantile <- function ( dat.i , a) {
-type <- a[["type"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; svyquantile <- a[["svyquantile"]]; probs <- a[["probs"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]
+type <- a[["type"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; probs <- a[["probs"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]
      typeS   <- car::recode(type, "'JK2'='JKn'")        
      design  <- svrepdesign(data = dat.i[,c(group, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
      formel  <- as.formula(paste("~ ",dependent, sep = "") )
@@ -663,7 +663,7 @@ group <- a[["group"]]; dependent <- a[["dependent"]]; expected.values <- a[["exp
 
 
 jackknife.table <- function ( dat.i , a) {
-dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; type <- a[["type"]]; group <- a[["group"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; svymean <- a[["svymean"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
+dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; type <- a[["type"]]; group <- a[["group"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
                    dat.i[,dependent] <- factor(dat.i[,dependent], levels = expected.values)
                    typeS     <- car::recode(type, "'JK2'='JKn'")
                    design    <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
@@ -1381,7 +1381,7 @@ doSurveyAnalyses <- function (datL1, a) {
                  cri2<- nrep > 9 & length(unique(datL1[,a%$$%ID]))>5000
             }
             if ( a%$$%progress && (isTRUE(cri1) | isTRUE(cri2)) ) {
-                 pb  <- progress_bar$new( format = paste0(a%$$%str1, " [:bar] :percent in :elapsed"), incomplete = " ", total = nrep, clear = FALSE, width= 75, show_after = 0.01)
+                 pb  <- progress::progress_bar$new( format = paste0(a%$$%str1, " [:bar] :percent in :elapsed"), incomplete = " ", total = nrep, clear = FALSE, width= 75, show_after = 0.01)
             }  else  {
                  pb <- list()
                  pb$tick <- function (){return(NULL)}
@@ -1682,7 +1682,7 @@ assignReplicates <- function ( a) {
           return(repA)}
 
 generate.replicates <- function ( dat, a)   {
-type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["allNam"]]; verbose <- a[["verbose"]]; progress <- a[["progress"]]; progress_bar <- a[["progress_bar"]]; wgt <- a[["wgt"]]; ID <- a[["ID"]]
+type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["allNam"]]; verbose <- a[["verbose"]]; progress <- a[["progress"]]; wgt <- a[["wgt"]]; ID <- a[["ID"]]
           if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) }
           if(type  == "JK1" ) { if(!is.null(repInd))  {
              cat("'repInd' is ignored for 'type = JK1'.\n")
@@ -1694,7 +1694,7 @@ type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["a
           zonen       <- names(table(as.character(dat.i[,PSU]) ) )
           if ( verbose) { cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))}
           if ( progress && nrow(dat)>5000 & length(zonen) > 50 ) {         
-               pb     <- progress_bar$new( format = "         replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 75, show_after = 0.01)
+               pb     <- progress::progress_bar$new( format = "         replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 75, show_after = 0.01)
           }
           missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
           if(!all(missings == 0)) {
