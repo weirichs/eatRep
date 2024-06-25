@@ -456,7 +456,7 @@ eatRep <- function (datL, a) {
                   return(allRes) }} }
                   
 checkFactorLevels <- function(a) {
-group <- a[["group"]]; datL <- a[["datL"]]; trend <- a[["trend"]]; if( datL %in% names(a)) {datL <- a[["datL"]]}
+group <- a[["group"]]; datL <- a[["datL"]]; trend <- a[["trend"]]; if( "datL" %in% names(a)) {datL <- a[["datL"]]}
        if (!is.null(group)) {
              foo <- lapply(group, FUN = function ( gr ) {
                     ch <- by(data = datL, INDICES = datL[,trend], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
@@ -539,7 +539,7 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          } })   }                                               
 
 createLinkingError <- function  ( resT = resT, a=a) {
-trend <- a[["trend"]]; fc <- a[["fc"]]; if( datL %in% names(a)) {datL <- a[["datL"]]}
+trend <- a[["trend"]]; fc <- a[["fc"]]; if( "datL" %in% names(a)) {datL <- a[["datL"]]}
           if (length(linkErr) > 1) {                              
               le <- linkErr
               attr(le, "linkingErrorFrame") <- TRUE                           
@@ -1693,7 +1693,7 @@ type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["a
           if(type %in% c("JK2", "BRR")) { if( !all( names(table(dat.i[,repInd])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for 'repInd' variable.\n")} }
           zonen       <- names(table(as.character(dat.i[,PSU]) ) )
           if ( verbose) { cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))}
-          if ( progress && nrow(dat)>5000 & length(zonen) > 50 ) {         
+          if ( progress && nrow(dat)>5000 & length(zonen) > 50 ) {              
                pb     <- progress::progress_bar$new( format = "         replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 75, show_after = 0.01)
           }
           missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
@@ -1703,7 +1703,7 @@ type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["a
           }                                                                     
           reps <- data.frame ( lapply(zonen , FUN = function(ii) {              
                   if ( progress && nrow(dat)>5000 & length(zonen) > 50 ) { pb$tick() }
-                  rep.ii <- dat.i[,wgt]                           
+                  rep.ii <- dat.i[,wgt]                                         
                   if(type == "JK2")  { rep.ii[dat.i[,PSU] == ii ] <- ifelse(dat.i[ dat.i[,PSU] == ii ,repInd] == 1, 0, 2 * rep.ii[dat.i[,PSU] == ii ] ) }
                   if(type == "BRR")  { rep.ii <- ifelse(dat.i[ ,repInd] == 1, 0, 2 * rep.ii ) }
                   if(type == "JK1")  {
@@ -1717,8 +1717,8 @@ type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["a
           return(ret) }
 
 checkImpNest <- function (toAppl, gr, a) {
-doCheck <- a[["doCheck"]]; nest <- a[["nest"]]; imp <- a[["imp"]]; allNam <- a[["allNam"]]; PSU <- a[["PSU"]]; checkNests <- a[["checkNests"]]; group <- a[["group"]]; checkData <- a[["checkData"]]; if( datL %in% names(a)) {datL <- a[["datL"]]}
-          if(isTRUE(doCheck)) {                                            
+doCheck <- a[["doCheck"]]; nest <- a[["nest"]]; imp <- a[["imp"]]; allNam <- a[["allNam"]]; PSU <- a[["PSU"]]; checkNests <- a[["checkNests"]]; group <- a[["group"]]; checkData <- a[["checkData"]]; if( "datL" %in% names(a)) {datL <- a[["datL"]]}
+          if(isTRUE(doCheck)) {                                                 
              if ( length( toAppl[[gr]] ) > 1) {                                 
                   crsTab <- table(datL[,toAppl[[gr]]])
                   if ( length(which(crsTab < 10 )) > 0 ) {
