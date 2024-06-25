@@ -456,7 +456,7 @@ eatRep <- function (datL, a) {
                   return(allRes) }} }
                   
 checkFactorLevels <- function(a) {
-group <- a[["group"]]; datL <- a[["datL"]]; trend <- a[["trend"]]
+group <- a[["group"]]; datL <- a[["datL"]]; trend <- a[["trend"]]; if( datL %in% names(a)) {datL <- a[["datL"]]}
        if (!is.null(group)) {
              foo <- lapply(group, FUN = function ( gr ) {
                     ch <- by(data = datL, INDICES = datL[,trend], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
@@ -539,7 +539,7 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          } })   }                                               
 
 createLinkingError <- function  ( resT = resT, a=a) {
-trend <- a[["trend"]]; fc <- a[["fc"]]
+trend <- a[["trend"]]; fc <- a[["fc"]]; if( datL %in% names(a)) {datL <- a[["datL"]]}
           if (length(linkErr) > 1) {                              
               le <- linkErr
               attr(le, "linkingErrorFrame") <- TRUE                           
@@ -611,7 +611,7 @@ group <- a[["group"]]; wgt <- a[["wgt"]]; dependent <- a[["dependent"]]; probs <
 
 
 jackknife.quantile <- function ( dat.i , a) {
-type <- a[["type"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; probs <- a[["probs"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]
+type <- a[["type"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; svyquantile <- a[["svyquantile"]]; probs <- a[["probs"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]
      typeS   <- car::recode(type, "'JK2'='JKn'")        
      design  <- svrepdesign(data = dat.i[,c(group, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
      formel  <- as.formula(paste("~ ",dependent, sep = "") )
@@ -663,7 +663,7 @@ group <- a[["group"]]; dependent <- a[["dependent"]]; expected.values <- a[["exp
 
 
 jackknife.table <- function ( dat.i , a) {
-dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; type <- a[["type"]]; group <- a[["group"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
+dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; type <- a[["type"]]; group <- a[["group"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; svymean <- a[["svymean"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
                    dat.i[,dependent] <- factor(dat.i[,dependent], levels = expected.values)
                    typeS     <- car::recode(type, "'JK2'='JKn'")
                    design    <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
@@ -1717,7 +1717,7 @@ type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["a
           return(ret) }
 
 checkImpNest <- function (toAppl, gr, a) {
-doCheck <- a[["doCheck"]]; nest <- a[["nest"]]; imp <- a[["imp"]]; allNam <- a[["allNam"]]; PSU <- a[["PSU"]]; checkNests <- a[["checkNests"]]; group <- a[["group"]]; checkData <- a[["checkData"]]
+doCheck <- a[["doCheck"]]; nest <- a[["nest"]]; imp <- a[["imp"]]; allNam <- a[["allNam"]]; PSU <- a[["PSU"]]; checkNests <- a[["checkNests"]]; group <- a[["group"]]; checkData <- a[["checkData"]]; if( datL %in% names(a)) {datL <- a[["datL"]]}
           if(isTRUE(doCheck)) {                                            
              if ( length( toAppl[[gr]] ) > 1) {                                 
                   crsTab <- table(datL[,toAppl[[gr]]])
