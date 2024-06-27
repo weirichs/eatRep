@@ -456,7 +456,7 @@ eatRep <- function (datL, a) {
                   return(allRes) }} }
                   
 checkFactorLevels <- function(a) {
-group <- a[["group"]]; datL <- a[["datL"]]; trend <- a[["trend"]]; if( "datL" %in% names(a)) {datL <- a[["datL"]]}
+       for ( i in c("group", "trend", "datL")) { assign(i, a[[i]]) }
        if (!is.null(group)) {
              foo <- lapply(group, FUN = function ( gr ) {
                     ch <- by(data = datL, INDICES = datL[,trend], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
@@ -539,7 +539,7 @@ checkRegression <- function ( dat, allNam, useWec ) {
                          } })   }                                               
 
 createLinkingError <- function  ( resT = resT, a=a) {
-trend <- a[["trend"]]; fc <- a[["fc"]]; if( "datL" %in% names(a)) {datL <- a[["datL"]]}
+          for ( i in names(a)) { assign(i, a[[i]]) }
           if (length(linkErr) > 1) {                              
               le <- linkErr
               attr(le, "linkingErrorFrame") <- TRUE                           
@@ -581,7 +581,7 @@ trend <- a[["trend"]]; fc <- a[["fc"]]; if( "datL" %in% names(a)) {datL <- a[["d
           
 
 conv.quantile      <- function ( dat.i , a) {
-group <- a[["group"]]; wgt <- a[["wgt"]]; dependent <- a[["dependent"]]; probs <- a[["probs"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; bootMethod <- a[["bootMethod"]]
+                      for ( i in names(a)) { assign(i, a[[i]]) }
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,group], FUN = function ( sub.dat) {
                               if( all(sub.dat[,wgt] == 1) )  {             
                                  ret   <- Hmisc::hdquantile(x = sub.dat[,dependent], se = TRUE, probs = probs,na.rm=na.rm )
@@ -611,7 +611,7 @@ group <- a[["group"]]; wgt <- a[["wgt"]]; dependent <- a[["dependent"]]; probs <
 
 
 jackknife.quantile <- function ( dat.i , a) {
-type <- a[["type"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; svyquantile <- a[["svyquantile"]]; probs <- a[["probs"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]
+     for ( i in names(a)) { assign(i, a[[i]]) }
      typeS   <- car::recode(type, "'JK2'='JKn'")        
      design  <- svrepdesign(data = dat.i[,c(group, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
      formel  <- as.formula(paste("~ ",dependent, sep = "") )
@@ -627,7 +627,7 @@ type <- a[["type"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <
 
 
 conv.table      <- function ( dat.i , a) {
-group <- a[["group"]]; dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; wgt <- a[["wgt"]]; ID <- a[["ID"]]; group.differences.by <- a[["group.differences.by"]]; correct <- a[["correct"]]; modus <- a[["modus"]]; group.delimiter <- a[["group.delimiter"]]
+     for ( i in names(a)) { assign(i, a[[i]]) }
      tabs <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,group], FUN = function ( sub.dat) {
              prefix <- data.frame(sub.dat[1,group, drop=FALSE], row.names = NULL, stringsAsFactors = FALSE )
              foo    <- make.indikator(variable = sub.dat[,dependent], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = "no")
@@ -663,7 +663,7 @@ group <- a[["group"]]; dependent <- a[["dependent"]]; expected.values <- a[["exp
 
 
 jackknife.table <- function ( dat.i , a) {
-dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; type <- a[["type"]]; group <- a[["group"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; svymean <- a[["svymean"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
+                   for ( i in names(a)) { assign(i, a[[i]]) }
                    dat.i[,dependent] <- factor(dat.i[,dependent], levels = expected.values)
                    typeS     <- car::recode(type, "'JK2'='JKn'")
                    design    <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
@@ -706,7 +706,7 @@ dependent <- a[["dependent"]]; expected.values <- a[["expected.values"]]; type <
 
 
 conv.mean      <- function (dat.i , a) {
-group <- a[["group"]]; wgt <- a[["wgt"]]; dependent <- a[["dependent"]]; na.rm <- a[["na.rm"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]; group.delimiter <- a[["group.delimiter"]]
+                  for ( i in names(a)) { assign(i, a[[i]]) }
                   deskr    <- data.frame ( do.call("rbind", by(data = dat.i, INDICES = dat.i[,group], FUN = function ( sub.dat) {
                               prefix <- sub.dat[1,group, drop=FALSE]
                               if ( all(sub.dat[,wgt] == 1) )  {
@@ -777,7 +777,7 @@ computeTrueDiffAndOtherDiffs <- function (difs, repl, dat, kontr, group.differen
           return(list(true = trueD, other = otherD))  }
 
 jackknife.adjust.mean <- function (dat.i , a) {
-type <- a[["type"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; adjust <- a[["adjust"]]; wgt <- a[["wgt"]]; rho <- a[["rho"]]; useEffectLiteR <- a[["useEffectLiteR"]]; allNam <- a[["allNam"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
+          for ( i in names(a)) { assign(i, a[[i]]) }
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
           des  <- svrepdesign(data = dat.i[,c(group, dependent, adjust)], weights = dat.i[,wgt], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE, rho=rho)
@@ -860,7 +860,7 @@ funAdjustEL <- function(w, data, allNam){
        return(ret)}  
        
 conv.adjust.mean <- function ( dat.i, a) {
-useEffectLiteR <- a[["useEffectLiteR"]]; wgt <- a[["wgt"]]; dependent <- a[["dependent"]]; group <- a[["group"]]; adjust <- a[["adjust"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
+       for ( i in names(a)) { assign(i, a[[i]]) }
        if(isTRUE(useEffectLiteR)) {                                             
            if ( all(dat.i[,wgt] == 1) ) {                                  
                 res <- EffectLiteR::effectLite(y = dependent, x = group, z = adjust, data = dat.i, fixed.cell = TRUE, fixed.z = FALSE, homoscedasticity = FALSE, method="sem")
@@ -938,7 +938,7 @@ useEffectLiteR <- a[["useEffectLiteR"]]; wgt <- a[["wgt"]]; dependent <- a[["dep
 
 
 jackknife.mean <- function (dat.i , a) {
-type <- a[["type"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; rho <- a[["rho"]]; na.rm <- a[["na.rm"]]; group.delimiter <- a[["group.delimiter"]]; modus <- a[["modus"]]; group.differences.by <- a[["group.differences.by"]]
+          for ( i in names(a)) { assign(i, a[[i]]) }                            
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
           des  <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
@@ -1038,7 +1038,7 @@ giveRefgroup <- function ( refGrp) {
           return(ret)}
 
 jackknife.cov <- function (dat.i , a){
-type <- a[["type"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; group <- a[["group"]]; dependent <- a[["dependent"]]; wgt <- a[["wgt"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; rho <- a[["rho"]]; allNam <- a[["allNam"]]; refGrp <- a[["refGrp"]]; reihenfolge <- a[["reihenfolge"]]
+          for ( i in names(a)) { assign(i, a[[i]]) }
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
           des  <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
@@ -1067,7 +1067,7 @@ conv.cov <- function (dat.i, a){
           return(rs)}
           
 jackknife.glm <- function (dat.i , a) {
-group <- a[["group"]]; wgt <- a[["wgt"]]; doJK <- a[["doJK"]]; type <- a[["type"]]; independent <- a[["independent"]]; dependent <- a[["dependent"]]; rscales <- a[["rscales"]]; mse <- a[["mse"]]; repA <- a[["repA"]]; ID <- a[["ID"]]; rho <- a[["rho"]]; forceSingularityTreatment <- a[["forceSingularityTreatment"]]; group.delimiter <- a[["group.delimiter"]]; useWec <- a[["useWec"]]; glmTransformation <- a[["glmTransformation"]]; allNam <- a[["allNam"]]; crossDiffSE.engine <- a[["crossDiffSE.engine"]]; hetero <- a[["hetero"]]; stochasticGroupSizes <- a[["stochasticGroupSizes"]]
+                 for ( i in names(a)) { assign(i, a[[i]]) }                     
                  sub.ana <- by(data = dat.i, INDICES = dat.i[,group], FUN = function (sub.dat) {
                             nam    <- sub.dat[1,group,drop=FALSE]               
                             if ( wgt == "wgtOne") {
@@ -1340,7 +1340,7 @@ reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, 
         return(ret)}
 
 checkData <- function ( sub.dat, a) {
-PSU <- a[["PSU"]]; toCall <- a[["toCall"]]; separate.missing.indicator <- a[["separate.missing.indicator"]]; na.rm <- a[["na.rm"]]; dependent <- a[["dependent"]]
+        for ( i in names(a)) { assign(i, a[[i]]) }
         if(!is.null(PSU)) {
             nJkZones <- length(table(as.character(sub.dat[,PSU])))
             if(nJkZones<2)  {
@@ -1682,7 +1682,7 @@ assignReplicates <- function ( a) {
           return(repA)}
 
 generate.replicates <- function ( dat, a)   {
-type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["allNam"]]; verbose <- a[["verbose"]]; progress <- a[["progress"]]; wgt <- a[["wgt"]]; ID <- a[["ID"]]
+          for ( i in names(a)) { assign(i, a[[i]]) }
           if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) }
           if(type  == "JK1" ) { if(!is.null(repInd))  {
              cat("'repInd' is ignored for 'type = JK1'.\n")
@@ -1717,7 +1717,7 @@ type <- a[["type"]]; PSU <- a[["PSU"]]; repInd <- a[["repInd"]]; allNam <- a[["a
           return(ret) }
 
 checkImpNest <- function (toAppl, gr, a) {
-doCheck <- a[["doCheck"]]; nest <- a[["nest"]]; imp <- a[["imp"]]; allNam <- a[["allNam"]]; PSU <- a[["PSU"]]; group <- a[["group"]]; if( "datL" %in% names(a)) {datL <- a[["datL"]]}
+          for ( i in names(a)) { assign(i, a[[i]]) }
           if(isTRUE(doCheck)) {                                                 
              if ( length( toAppl[[gr]] ) > 1) {                                 
                   crsTab <- table(datL[,toAppl[[gr]]])
