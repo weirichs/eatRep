@@ -297,4 +297,10 @@ freq.tab5 <- repTable(datL = dat[which(dat[,"dimension"] == "reading"),],
              chiSquare = FALSE, trend = "year",
              linkErr = lErr[which(lErr[,"domain"] == "reading"),])
 res5      <- report(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ))
+\dontrun{
+# gives error
+res5A     <- report2(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ))
+# works appropriately
+res5A     <- report2(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ), na.rm = FALSE)
+}
 }}

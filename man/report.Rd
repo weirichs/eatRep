@@ -16,7 +16,7 @@ report(repFunOut, trendDiffs = FALSE, add = list(),
       round = TRUE, digits = 3, printDeviance = FALSE)
 report2(repFunOut, trendDiffs = FALSE, add = list(),
       exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
-      round = TRUE, digits = 3, printDeviance = FALSE)  }
+      round = TRUE, digits = 3, printDeviance = FALSE, na.rm = TRUE)  }
 \arguments{
   \item{repFunOut}{output of one of the four \code{eatRep}-functions. }
   \item{trendDiffs}{Logical: compute differences of trends? Note: this argument is deprecated for \code{report2}}
@@ -30,6 +30,12 @@ report2(repFunOut, trendDiffs = FALSE, add = list(),
   Should the deviance information printed additionally? Note: To print deviance information,
   the argument \code{poolMethod} of the \code{\link{repGlm}} function must be set
   to \code{"scalar"}. }
+  \item{na.rm}{Logical: drop empty values when reshaping result table according to the revised
+  result structure? It is recommended to set \code{na.rm = TRUE}. If \code{result2()} aborts with an
+  error message, one reason might be, that the dependent variable in one measurement occasion contains
+  values which do not occur in the other measurement occasion, if, for example, students reach
+  competence level 5 in 2010 but not in 2015. \code{na.rm} should be set to \code{FALSE} in this case.
+  See the last example in the \code{repTable} help file for an illustration.}
 }
 \value{
 \code{report} and \code{report2} differ in the output which is returned. The output of \code{report2}

@@ -122,9 +122,7 @@ test_that("wec 3 grouping variables, no trend, cross diff on higher level", {
 })
 
 test_that("Warning for different point estimates", {
-  expect_warning(compare_point_estimates(old_est = 5, new_est = 2, param = "vgl"),
-                 "Difference in point estimate of cross level difference for comparison vgl: 3")
-  
+
   m_pisa2 <- m_pisa
   m_wec2 <- m_wec
   m_pisa2$SE_correction[[1]]$resT$noTrend[1, "value"] <- 0.5

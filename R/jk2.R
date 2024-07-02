@@ -1073,7 +1073,7 @@ jackknife.glm <- function (dat.i , a) {
                             if ( wgt == "wgtOne") {
                                  glm.ii <- test <- glm(formula = formula, data = sub.dat, family = family)
                             }  else  {
-                                 glm.ii <- test <- glm(formula = formula, data = sub.dat, family = family, weights = wgt)
+                                 glm.ii <- test <- eval(parse(text = paste("glm(formula = formula, data = sub.dat, family = family, weights = ",wgt,")",sep="")))
                             }
                             singular       <- names(glm.ii[["coefficients"]])[which(is.na(glm.ii[["coefficients"]]))]
                             if(doJK) {
@@ -1084,22 +1084,19 @@ jackknife.glm <- function (dat.i , a) {
                                    glm.ii  <- suppressWarnings(svyglm(formula = formula, design = design, return.replicates = FALSE, family = family))
                                 }
                             }
-                            r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
-                            r.nagelkerke   <- fmsb::NagelkerkeR2(glm.ii)
+                            if ( glm.ii[["family"]][["family"]] == "gaussian") {
+                                 r2 <- list ( R2 = var(glm.ii$fitted.values)/var(glm.ii$y) , N = length(glm.ii$fitted.values) )
+                            }  else {
+                                 r2 <- fmsb::NagelkerkeR2(glm.ii)
+                            }
                             summaryGlm     <- summary(glm.ii)
-                            if( inherits(family, "family" )) {
-                                if (  length(grep("binomial", eatTools::crop(capture.output(family)))) > 0 ) {
-                                      res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","R2nagel", "deviance", "null.deviance", "AIC", "df.residual", "df.null"),
-                                                coefficient = c(rep(c("est","se"),each=2+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 7)), value=c(r.squared[["N"]],r.squared[["N.valid"]],na.omit(glm.ii[["coefficients"]]),NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]], test$deviance, test$null.deviance, test$aic, test$df.residual, test$df.null),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
-                                }   else  {
-                                      res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","R2nagel"),
-                                                coefficient = c(rep(c("est","se"),each=2+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 2)),
-                                                value=c(r.squared[["N"]],r.squared[["N.valid"]],na.omit(glm.ii[["coefficients"]]),NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
-                                }
-                            }  else  {
-                                res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases","Nvalid",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","R2nagel"),
-                                          coefficient = c(rep(c("est","se"),each=2+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 2)),
-                                          value=c(r.squared[["N"]],r.squared[["N.valid"]],na.omit(glm.ii[["coefficients"]]),NA,NA,summaryGlm$coef[,2],r.squared[["r.squared"]],r.nagelkerke[["R2"]]),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
+                            if (  length(grep("gaussian", glm.ii[["family"]][["family"]])) > 0 ) {
+                                  res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases",names(na.omit(glm.ii[["coefficients"]]))),2),"R2"),
+                                            coefficient = c(rep(c("est","se"),each=1+length(names(na.omit(glm.ii[["coefficients"]])))),"est"),
+                                            value=c(r2[["N"]],na.omit(glm.ii[["coefficients"]]),NA,summaryGlm$coef[,2],r2[["R2"]]),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
+                            }   else  {
+                                  res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","deviance", "null.deviance", "AIC", "df.residual", "df.null"),
+                                            coefficient = c(rep(c("est","se"),each=1+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 6)), value=c(r2[["N"]],na.omit(glm.ii[["coefficients"]]),NA,summaryGlm$coef[,2],r2[["R2"]],test$deviance, test$null.deviance, test$aic, test$df.residual, test$df.null),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                             }
                             if(doJK || isTRUE(useWec) ) {                       
                                 if(length(which(is.na(glm.ii[["coefficients"]]))) > 0 ) {
@@ -1197,7 +1194,7 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
 			               if(is.null(analyses)) {analyses <- 1:length(splitData)}
                      for ( i in analyses) {
                            spl    <- splitData[[i]]
-                           weg1   <- which ( spl[,"parameter"] %in% c("Ncases","Nvalid","R2","R2nagel", "deviance", "df.null", "df.residual", "null.deviance", "AIC"))
+                           weg1   <- which ( spl[,"parameter"] %in% c("Ncases","Nvalid","R2", "deviance", "df.null", "df.residual", "null.deviance", "AIC"))
                            weg2   <- grep("wholePopDiff",spl[,"parameter"])
                            weg3   <- grep("^p$", spl[,"coefficient"])
                            ret    <- reshape2::dcast(spl[-unique(c(weg1, weg2, weg3)),], parameter~coefficient)
@@ -1221,9 +1218,7 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
                            cat ( paste( "dependent Variable: ", as.character(spl[1,"depVar"]), "\n \n", sep=""))
                            print(ret)
                            r2     <- spl[ spl[,"parameter"] == "R2" ,"value"]
-                           r2nagel<- spl[ spl[,"parameter"] == "R2nagel" ,"value"]
                            cat(paste("\n            R-squared: ",round(r2[1],digits = digits),"; SE(R-squared): ",round(r2[2],digits = digits),"\n",sep=""))
-                           cat(paste  ("Nagelkerkes R-squared: ",round(r2nagel[1],digits = digits),"; SE(Nagelkerkes R-squared): ",round(r2nagel[2],digits = digits),"\n",sep=""))
                            if ( isTRUE(printDeviance) ) {
                                 for ( prms in c("deviance", "null.deviance", "df.null", "df.residual", "AIC")) {
                                       if ( prms %in% spl[,"parameter"] ) {

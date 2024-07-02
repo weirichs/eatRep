@@ -1,9 +1,9 @@
 ### setzt auf dem Output von report() auf
 report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
-                     round = TRUE, digits = 3, printDeviance = FALSE) {
+                     round = TRUE, digits = 3, printDeviance = FALSE, na.rm = TRUE) {
            out   <- eval(parse(text=paste0("report(",paste(formalArgs(report), formalArgs(report), collapse=", ", sep="="), ")")))
            measur<- setdiff(colnames(out), c(intersect(unlist(attr(out, "allNam")), colnames(out)), names(add), c("group", "depVar", "modus", "comparison", "parameter")))
-           outL  <- reshape2::melt(out, measure.vars = measur, na.rm=TRUE)
+           outL  <- reshape2::melt(out, measure.vars = measur, na.rm=na.rm)
            if(length(grep("_", as.character(outL[,"variable"])))>0) {
               outL[,"coef"] <- car::recode(eatTools::halveString(as.character(outL[,"variable"]), "_", first=TRUE)[,1], "'sig'='p'")
            }  else  {
@@ -13,6 +13,8 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
               outL[,attr(out, "allNam")[["trend"]]] <- eatTools::crop(eatTools::removePattern(eatTools::halveString(as.character(outL[,"variable"]), "_", first=TRUE)[,2], "trend"), "_")
            }
            outL[,"variable"] <- NULL
+    ### comparison spalte initialisieren falls nicht vorhanden
+           if(!"comparison" %in% colnames(outL)) {outL[,"comparison"] <- NA}
            if(any(c("trendDiff_cross", "trendDiff_group") %in% outL[,"comparison"])) {
               outL  <- outL[-eatTools::whereAre(c("trendDiff_cross", "trendDiff_group"), outL[,"comparison"], verbose=FALSE),]
            }
@@ -49,9 +51,9 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
            estim <- plain[,c("id", colnames(plain)[na.omit(match(c("depVar", "parameter", "est", "se", "p", "es"), colnames(plain)))])]
     ### Schritt 6: Anpassungen entsprechend der Mail von Nicklas, 21.03.2024, 8.32 Uhr: "gepasteten strings" anpassen
            plain1<- rbind(subset(plain, is.na(comparison)), subset(plain, comparison=="trend"))
-           if(length(attr(out, "allNam")[["group"]]) >0) {                      ### fuer alle Levels der comparison variable getrennt
+           if(length(attr(out, "allNam")[["group"]]) >0 && all(attr(out, "allNam")[["group"]] %in% colnames(plain1)) ) {
               plain1[,"group"] <- apply(plain1[,attr(out, "allNam")[["group"]], drop=FALSE], MARGIN = 1, FUN = function (zeile) {
-                                  z <- na.omit(zeile)
+                                  z <- na.omit(zeile)                           ### fuer alle Levels der comparison variable getrennt
                                   return(car::recode(paste(names(z), z, sep="=", collapse=", "), "''='total'"))})
            }
            plain2<- subset(plain, comparison %in% c("trend_crossDiff", "crossDiff"))
@@ -82,7 +84,7 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
                         allStrg<- addVarNamsToVarVals (string=allVals, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total")
                         for ( i in 1:length(allStrg)) {if(!is.null(attr(allStrg[[i]], "dfr"))) {if(is.na(grp[1,attr(allStrg[[i]], "dfr")[["variable"]]])) {grp[,attr(allStrg[[i]], "dfr")[["variable"]]] <- paste0(attr(allStrg[[i]], "dfr")[["value"]], ".vs.total") }}}
                         spl2   <- lapply(spl2, FUN = function (x) {
-                                  tx<- capture.output(y <- eatTools::makeDataFrame(eatTools::halveString(x[2], ".vs.")))
+                                  y <- eatTools::makeDataFrame(eatTools::halveString(x[2], ".vs."), verbose=FALSE)
                                   y <- lapply(y, FUN = function (col) {addVarNamsToVarVals (string=col, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total")})
                                   y <- gsub("all.group=1", "total", c(x[1], unlist(y[[1]]), unlist(y[[2]])))
                                   stopifnot(length(y) == 3)
@@ -108,20 +110,20 @@ idFocRefGrpCROSSDIFF <- function(string, out, plainn, add) {
            prepost<- strsplit(unique(string[,"group"]), ".vs.")
            stopifnot(length(prepost[[1]]) ==2)
            prepost<- lapply(prepost, FUN = function (x) {strsplit(x, "_")})
-           focCols<- data.frame ( lapply(plainn, FUN = function (col) { any(prepost[[1]][[1]] %in% col) })[attr(out, "allNam")[["group"]]], drop=FALSE, stringsAsFactors = FALSE)
+           focCols<- data.frame ( lapply(plainn, FUN = function (col) { any(prepost[[1]][[1]] %in% col) }),stringsAsFactors = FALSE)[,attr(out, "allNam")[["group"]], drop=FALSE]
            focCols<- focCols[,which(sapply(focCols, FUN = eval)), drop=FALSE]
            for ( i in 1:ncol(focCols)) {focCols[,i] <- prepost[[1]][[1]][i]}
-           focCols<- unique(data.frame ( focCols, string[,c(attr(out, "allNam")[["trend"]], "depVar")],stringsAsFactors = FALSE))
+           focCols<- unique(data.frame ( focCols, string[,c(attr(out, "allNam")[["trend"]], "depVar"), drop=FALSE],stringsAsFactors = FALSE))
            focus  <- merge(focCols,plainn, by = colnames(focCols), all=FALSE)
            if(nrow(focus) != length(unique(focus[,"parameter"]))) {focus  <- chooseLine(obj = focus, prepost=prepost, whichOne = 1, char = "_", groupName = "group")}
            if( prepost[[1]][[2]][1] == "wholeGroup") {
-               refCol <- unique(data.frame ( group = "wholeGroup", string[,c(attr(out, "allNam")[["trend"]], "depVar")], stringsAsFactors = FALSE))
+               refCol <- unique(data.frame ( group = "wholeGroup", string[,c(attr(out, "allNam")[["trend"]], "depVar"), drop=FALSE], stringsAsFactors = FALSE))
                refere <- merge(refCol,plainn, by = colnames(refCol), all=FALSE)
            }  else  {
-               refCol <- data.frame ( lapply(plainn, FUN = function (col) { any(prepost[[1]][[2]] %in% col) })[attr(out, "allNam")[["group"]]], drop=FALSE, stringsAsFactors = FALSE)
+               refCol <- data.frame ( lapply(plainn, FUN = function (col) { any(prepost[[1]][[2]] %in% col) }),stringsAsFactors = FALSE)[,attr(out, "allNam")[["group"]], drop=FALSE]
                refCol <- refCol[,which(sapply(refCol, FUN = eval)), drop=FALSE]
                for ( i in 1:ncol(refCol)) {refCol[,i] <- prepost[[1]][[2]][i]}
-               refCol <- unique(data.frame ( refCol, string[,c(attr(out, "allNam")[["trend"]], "depVar")], stringsAsFactors = FALSE))
+               refCol <- unique(data.frame ( refCol, string[,c(attr(out, "allNam")[["trend"]], "depVar"), drop=FALSE], stringsAsFactors = FALSE))
                refere <- merge(refCol,plainn, by = colnames(refCol), all=FALSE)
                if ( length(prepost[[1]][[2]]) == 1) {refere  <- refere[setdiff(1:nrow(refere), grep("_", refere[,"group"])),]}
            }
@@ -140,7 +142,7 @@ idFocRefGrpTREND <- function(string, out, plainn, add) {
            tomerge<- rbind(tomerge, tomerge)
            tomerge[,1] <- strsplit(tomerge[1,1], ".vs.")[[1]]
            tomerge<- merge(tomerge,plainn, by = colnames(tomerge), all=FALSE)
-           stopifnot(nrow(tomerge)==2*length(unique(tomerge[,"parameter"])))
+           if(nrow(tomerge) != 2*length(unique(tomerge[,"parameter"]))) {stop("The number of rows in the result structure does not correspond to twice the number of parameters. Maybe try `report2(..., na.rm = FALSE)` or see for details: `?report2`.")}
            return(tomerge)}
 
 ### Funktion waehlt die Fokus- und Referenzgruppe fuer group differences aus
@@ -152,18 +154,18 @@ idFocRefGrpGROUPDIFF <- function(string, out, plainn, add) {
            tomerge<- rbind(tomerge, tomerge)
            tomerge[,names(kontras)] <- kontr[[1]]
            tomerge<- merge(tomerge,plainn, by = colnames(tomerge), all=FALSE)
-           stopifnot(nrow(tomerge) == 2*length(unique(tomerge[,"parameter"])))
+           if(nrow(tomerge) != 2*length(unique(tomerge[,"parameter"]))) {stop("The number of rows in the result structure does not correspond to twice the number of parameters. Maybe try `report2(..., na.rm = FALSE)` or see for details: `?report2`.")}
            return(tomerge)}
 
 idFocRefGrpCROSSDIFF_OF_GROUPDIFF <- function (string, out, plainn, add) {
     ### erstmal den Gruppenvergleich finden (Referenz!)
            spl1   <- strsplit(unique(string[,"group"]), split = ".VS.")
-           tomerge<- unique(string[,c(attr(out, "allNam")[["trend"]], "depVar", names(add))])
+           tomerge<- unique(string[,c(attr(out, "allNam")[["trend"]], "depVar", names(add)), drop=FALSE])
            tomerge[,"group"] <- spl1[[1]][2]
            refere <- merge(tomerge, subset(plainn, comparison == "groupDiff"), by = colnames(tomerge), all=FALSE)
            stopifnot(nrow(refere)==length(unique(refere[,"parameter"])))
     ### jetzt den crossdiff finden
-           focus  <- unique(string[,c(attr(out, "allNam")[["trend"]], "depVar", names(add))])
+           focus  <- unique(string[,c(attr(out, "allNam")[["trend"]], "depVar", names(add)), drop=FALSE])
            focus[,"group"] <- spl1[[1]][1]
            focus  <- merge(focus, subset(plainn, comparison == "groupDiff"), by = colnames(focus), all=FALSE)
            stopifnot(nrow(focus)==length(unique(focus[,"parameter"])))
@@ -221,7 +223,7 @@ replaceVS <- function (plain, out, groups) {
 createLabel1 <- function(plain, out) {
            label1 <- apply(X=plain, MARGIN = 1, FUN = function (zeile){
                      if(zeile[["comparison"]] == "none") {
-                        if(length(attr(out, "allNam")[["group"]])>0 ) {
+                        if( length(attr(out, "allNam")[["group"]])>0 && !identical (attr(out, "allNam")[["group"]], "wholeGroup") ) {
                            no <- paste(zeile[attr(out, "allNam")[["group"]]], collapse="_")
                         } else {
                            no <- "total"
@@ -232,7 +234,7 @@ createLabel1 <- function(plain, out) {
                      if(!is.null(attr(out, "allNam")[["trend"]]) && grepl(" - ", zeile[[attr(out, "allNam")[["trend"]]]])) {
                         tr <- paste0("trend (",zeile[[attr(out, "allNam")[["trend"]]]],") for ")
                         if(zeile[["comparison"]] == "trend") {
-                           if(length(attr(out, "allNam")[["group"]])>0 ) {
+                           if(length(attr(out, "allNam")[["group"]])>0 && !identical (attr(out, "allNam")[["group"]], "wholeGroup")  ) {
                               tr <- paste0(tr, paste(zeile[attr(out, "allNam")[["group"]]], collapse="_"))
                            } else {
                               tr <- paste0(tr, "total")
@@ -290,7 +292,7 @@ createLabel2 <- function(plain, out) {
                         } else {
                            pre <- ""
                         }
-                        if ( !is.null(attr(out, "allNam")[["group"]])) {
+                        if ( !is.null(attr(out, "allNam")[["group"]]) && !identical (attr(out, "allNam")[["group"]], "wholeGroup") ) {
                            post <- zeile[attr(out, "allNam")[["group"]]]
                            post <- paste(names(post), post, sep= "=", collapse=", ")
                         } else {
@@ -340,7 +342,7 @@ createLabel2 <- function(plain, out) {
                            }
                            comps <- paste(paste0(paste0(kl1, paste(tv, strsplit(zeile[[tv]], " - ")[[1]], sep="="), kl3), comps, kl2), collapse=" - ")
                            if(zeile[["comparison"]] == "trend") {
-                              if(length(attr(out, "allNam")[["group"]])>0 ) {
+                              if(length(attr(out, "allNam")[["group"]])>0 && !identical (attr(out, "allNam")[["group"]], "wholeGroup") ) {
                                  comps <- paste0(comps, ": ", paste(names(zeile[attr(out, "allNam")[["group"]]]), zeile[attr(out, "allNam")[["group"]]], sep="=", collapse = ", "))
                               } else {
                                  comps <- paste0(comps, ": total")
