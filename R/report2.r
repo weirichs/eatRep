@@ -69,7 +69,8 @@ report2 <- function(repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Ncas
            }
            plain3<- subset(plain, comparison %in% c("trend_groupDiff", "groupDiff"))
            if(nrow(plain3)>0) {
-              second <- eatTools::halveString(plain3[,"group"], "____")         ### untere Zeile: Achtung! hier muss wirklich 'plain1' stehen, weil 'plain3' keine Gruppenvalues fuer crossdiff enthaelt
+              if(!grepl("____",plain3[,"group"])) {splitS <- "___"} else {splitS <- "____"}
+              second <- eatTools::halveString(plain3[,"group"], splitS)         ### untere Zeile: Achtung! hier muss wirklich 'plain1' stehen, weil 'plain3' keine Gruppenvalues fuer crossdiff enthaelt
               third  <- eatTools::makeDataFrame(eatTools::halveString(second[,2], ".vs."), verbose=FALSE)
               third  <- data.frame ( lapply(third, FUN = function (col) {unlist(addVarNamsToVarVals (string=col, group = attr(out, "allNam")[["group"]], plain = plain1, tot = "total"))}), stringsAsFactors = FALSE)
               plain3[,"group"] <- paste0(gsub("all.group=1", "total", second[,1]), ": ", third[,1], " - ", third[,2])
