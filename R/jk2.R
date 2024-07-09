@@ -1084,17 +1084,14 @@ jackknife.glm <- function (dat.i , a) {
                                    glm.ii  <- suppressWarnings(svyglm(formula = formula, design = design, return.replicates = FALSE, family = family))
                                 }
                             }
-                            if ( glm.ii[["family"]][["family"]] == "gaussian") {
-                                 r2 <- list ( R2 = var(glm.ii$fitted.values)/var(glm.ii$y) , N = length(glm.ii$fitted.values) )
-                            }  else {
-                                 r2 <- fmsb::NagelkerkeR2(glm.ii)
-                            }
                             summaryGlm     <- summary(glm.ii)
                             if (  length(grep("gaussian", glm.ii[["family"]][["family"]])) > 0 ) {
+                                  r2     <- list ( R2 = var(glm.ii$fitted.values)/var(glm.ii$y) , N = length(glm.ii$fitted.values) )
                                   res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases",names(na.omit(glm.ii[["coefficients"]]))),2),"R2"),
                                             coefficient = c(rep(c("est","se"),each=1+length(names(na.omit(glm.ii[["coefficients"]])))),"est"),
                                             value=c(r2[["N"]],na.omit(glm.ii[["coefficients"]]),NA,summaryGlm$coef[,2],r2[["R2"]]),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                             }   else  {
+                                  r2     <- fmsb::NagelkerkeR2(glm.ii)          
                                   res.bl <- data.frame ( group=paste(sub.dat[1,group], collapse=group.delimiter), depVar =dependent,modus = modus, parameter = c(rep(c("Ncases",names(na.omit(glm.ii[["coefficients"]]))),2),"R2","deviance", "null.deviance", "AIC", "df.residual", "df.null"),
                                             coefficient = c(rep(c("est","se"),each=1+length(names(na.omit(glm.ii[["coefficients"]])))),rep("est", 6)), value=c(r2[["N"]],na.omit(glm.ii[["coefficients"]]),NA,summaryGlm$coef[,2],r2[["R2"]],test$deviance, test$null.deviance, test$aic, test$df.residual, test$df.null),sub.dat[1,group, drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
                             }
@@ -1306,13 +1303,8 @@ chooseFunction <- function (datI, a, pb) {
         return(list(ana.i=ana.i, glms=glms, nams=nams, grps=grps))}
 
 
-reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, pooled, allNam, modus, formula) {
-        r2  <- lapply(neu[[group]], FUN = function ( x ) {var(x$fitted.values)/var(x$y)})
-        r2n <- lapply(neu[[group]], FUN = function ( x ) {fmsb::NagelkerkeR2(x)[["R2"]]})
-        Nval<- lapply(neu[[group]], FUN = function ( x ) {length(x$fitted.values)})
-        mat <- which ( unlist(lapply(grps[[1]], FUN = function ( x ) { paste(as.character(unlist(x)), collapse = group.delimiter)})) == group)
-        out <- summary(pooled[[group]])
-        if ( "est" %in% colnames(out) ) {
+findEstSeNames <- function (out) {
+         if ( "est" %in% colnames(out) ) {
              est <- "est"
         } else {
              stopifnot ( "estimate" %in% colnames(out))
@@ -1323,15 +1315,28 @@ reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, 
         } else {
              stopifnot ( "std.error" %in% colnames(out))
              se <- "std.error"
-        }                                                                       
+        }
+        return(c(est, se))}
+
+reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, pooled, allNam, modus, formula) {
+        type<- unique(unlist(lapply(neu[[group]], FUN = function ( x ) {x[["family"]][["family"]]})))
+        stopifnot(length(type)==1)
+        if( length(grep("gaussian", type)) > 0) {
+            r2  <- lapply(neu[[group]], FUN = function ( x ) {var(x$fitted.values)/var(x$y)})
+        }  else  {
+            r2  <- lapply(neu[[group]], FUN = function ( x ) {fmsb::NagelkerkeR2(x)[["R2"]]})
+        }
+        Nval<- lapply(neu[[group]], FUN = function ( x ) {length(x$fitted.values)})
+        mat <- which ( unlist(lapply(grps[[1]], FUN = function ( x ) { paste(as.character(unlist(x)), collapse = group.delimiter)})) == group)
+        out <- summary(pooled[[group]])
+        nams<- findEstSeNames(out)
         prms<- all.vars(formula)[-1]
         col <- which(unlist(lapply(out, FUN = function ( co ) { length(unlist(lapply(prms, FUN = function ( l ) { grep(l, co)})))}))>0)
         stopifnot(length(col) <= 1)
         if ( length(col) == 1) { prm <- as.character(out[,col])}
         if ( length(col) == 0) { prm <- rownames(out)}
-        ret <- data.frame ( group=group, depVar =allNam[["dependent"]],modus = modus, comparison = NA, parameter = c(rep(c("Ncases","Nvalid",prm),2),"R2","R2nagel"),
-               coefficient = c(rep(c("est","se"),each=2+length(prm)),rep("est", 2)) , value= c(NA, min(unlist(Nval)),out[,est], NA, NA, out[,se], pool.R2(unlist(r2), unlist(Nval), verbose = FALSE )[["m.pooled"]],
-               pool.R2(unlist(r2n), unlist(Nval), verbose = FALSE )[["m.pooled"]]), grps[[1]][[mat]], stringsAsFactors = FALSE, row.names = NULL)
+        ret <- data.frame ( group=group, depVar =allNam[["dependent"]],modus = modus, comparison = NA, parameter = c(rep(c("Ncases","Nvalid",prm),2),"R2"),
+               coefficient = c(rep(c("est","se"),each=2+length(prm)),"est") , value= c(NA, min(unlist(Nval)),out[,nams[1]], NA, NA, out[,nams[2]], pool.R2(unlist(r2), unlist(Nval), verbose = FALSE )[["m.pooled"]]), grps[[1]][[mat]], stringsAsFactors = FALSE, row.names = NULL)
         return(ret)}
 
 checkData <- function ( sub.dat, a) {
