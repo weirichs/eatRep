@@ -240,7 +240,7 @@ res1      <- report(freq.tab1, add = list ( domain = "reading" ))
 ### Second example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country. Now we test whether the frequency of each single category
 ### differs between pairs of countries (it's not an overall test ... repTable now
-### calls repMean internally, using dummy variables
+### calls repMean internally, using dummy variables)
 freq.tab2 <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
              type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
              group.differences.by = "country", dependent = "comp", chiSquare = FALSE)
