@@ -1,6 +1,13 @@
 report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("NcasesValid", "var", "sampleSize"), printGlm = FALSE,
                      round = TRUE, digits = 3, printDeviance = FALSE) {
-          if(is.null(repFunOut)) {return(NULL)}
+  
+  if(is.null(repFunOut)) {return(NULL)}
+  ### assertions with checkmate
+  lapply(c(trendDiffs, printGlm, round, printDeviance), checkmate::assert_logical, len = 1)
+  checkmate::assert_list(add)
+  checkmate::assert_character(exclude)
+  checkmate::assert_numeric(digits, len = 1)
+          
     ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
           if ( length(grep("glm", as.character(repFunOut[["resT"]][[1]][1,"modus"]))) ==1 ) {
                if ( printGlm == TRUE ) { dG(repFunOut, digits = digits, printDeviance = printDeviance, add = add ) }
@@ -82,6 +89,9 @@ report <- function ( repFunOut, trendDiffs = FALSE, add=list(), exclude = c("Nca
           return(jk2wide)}
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
+  checkmate::assert_data_frame(dat)
+  checkmate::assert_character(groupCols, null.ok = TRUE)
+  
           if(is.null(groupCols)) {groupCols <- c("group", "parameter")}
           dat <- do.call("rbind", by ( data = dat, INDICES = dat[,groupCols], FUN = function ( x ) {
                  z  <- x[which(x[,"coefficient"] %in% c("est", "se")),]
