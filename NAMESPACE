@@ -2,6 +2,8 @@ importFrom("stats", "family", "formula", "as.formula", "chisq.test", "coef", "ga
 importFrom("utils", "str", "capture.output", "flush.console")
 importFrom("methods",formalArgs)
 importFrom("eatTools", `%$$%`)
+importFrom("lifecycle",deprecated)
+importFrom("Hmisc",`%nin%`)
 import(lavaan)
 import(progress)
 import(survey)

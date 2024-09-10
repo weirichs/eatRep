@@ -1,22 +1,22 @@
 \name{pool.R2}
 \alias{pool.R2}
-\title{Computed R^2 in multiple imputed and nested multiple imputed data}
-\description{With (nested) multiple imputations, the determination coefficient R^2 has to be
+\title{Compute \eqn{R^2} in multiple imputed and nested multiple imputed data}
+\description{With (nested) multiple imputations, the determination coefficient \eqn{R^2} has to be
 computed for each imputed data set and pooled afterwards. \code{pool.R2} provide pooling routines
-according to Harel (2009). The function requires that the R^2 coefficients from the multiple imputed
+according to Harel (2009). The function requires that the \eqn{R^2} coefficients from the multiple imputed
 analyses are already available.}
 \usage{
 pool.R2 ( r2, N, verbose = TRUE )
 }
 \arguments{
   \item{r2}{
-For multiple imputed data, a numeric vector of R^2 values. For nested multiple imputed data, a
-list of numeric vectors of R^2 values. The number of list elements must correspond to the number of nests.
-The number of R^2 values within each list element must be equal and must correspond to the number of
+For multiple imputed data, a numeric vector of \eqn{R^2} values. For nested multiple imputed data, a
+list of numeric vectors of \eqn{R^2} values. The number of list elements must correspond to the number of nests.
+The number of \eqn{R^2} values within each list element must be equal and must correspond to the number of
 imputations within each nest.
 }
   \item{N}{
-Optional: the sample size of each imputed data set. Only necessary if the standard error for the pooled R^2
+Optional: the sample size of each imputed data set. Only necessary if the standard error for the pooled \eqn{R^2}
 should be computed. The structure of the \code{N} object must correspond to the structure of the \code{r2}
 object. See examples for further details.
 }
@@ -25,7 +25,7 @@ Optional: Print additional messages to console?
 }
 }
 \value{
-Returns a data.frame with one or two columns which contains the pooled R^2 value and optionally it's standard error.
+Returns a data.frame with one or two columns which contains the pooled \eqn{R^2} value and optionally it's standard error.
 }
 \references{
   Harel, O. (2009): The estimation of \eqn{R^2} and adjusted \eqn{R^2} in incomplete data

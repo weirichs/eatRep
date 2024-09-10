@@ -256,9 +256,7 @@ freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
                  dependent = "comp", chiSquare = FALSE, trend = "year",
                  linkErr = "leComp") })
 res3      <- do.call("rbind", lapply(names(freq.tab3), FUN = function (domain) {
-             report(freq.tab3[[domain]], trendDiffs = TRUE,
-                    add = list ( domain = domain ))
-             }))
+             report(freq.tab3[[domain]], add = list ( domain = domain )) }))
              
 ### Fourth example: similar to example 3. trend estimation using a linking
 ### error data.frame
@@ -275,9 +273,7 @@ freq.tab4 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
                  linkErr = linkErrs[which(linkErrs[,"domain"] == subdat[1,"domain"]),])
              })
 res4      <- do.call("rbind", lapply(names(freq.tab4), FUN = function (domain) {
-             report(freq.tab4[[domain]], trendDiffs = TRUE,
-                    add = list ( domain = domain ))
-             }))
+             report(freq.tab4[[domain]], add = list ( domain = domain ))  }))
 
 ### Fifth example: minimal example for three measurement occasions
 ### borrow data from the eatGADS package
@@ -296,11 +292,6 @@ freq.tab5 <- repTable(datL = dat[which(dat[,"dimension"] == "reading"),],
              ID = "idstud", type="none", imp="imp", dependent = "traitLevel",
              chiSquare = FALSE, trend = "year",
              linkErr = lErr[which(lErr[,"domain"] == "reading"),])
-res5      <- report(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ))
-\dontrun{
-# gives error
-res5A     <- report2(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ))
-# works appropriately
-res5A     <- report2(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ), na.rm = FALSE)
-}
+res5      <- report(freq.tab5, add = list ( domain = "reading" ))
+res5A     <- report2(freq.tab5, add = list ( domain = "reading" ))
 }}

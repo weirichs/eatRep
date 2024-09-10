@@ -1,4 +1,4 @@
-doBifieAnalyses <- function (dat.i, a=a){
+doBifieAnalyses <- function (dat.i, a){
       dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(a[a%$$%allNam]), colnames(dat.i))], from = "character", to = "factor")
       dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)                  
       dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")            

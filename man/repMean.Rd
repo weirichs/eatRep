@@ -264,7 +264,7 @@ means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "j
           dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=FALSE)
 res1a  <- report(means1a, add = list(domain = "reading"))
 
-### See that the means of 'countryA' and 'countryB' significantly differ from the overall mean.
+### See that the means of all countries significantly differ from the overall mean.
 print(res1a[intersect(which(res1a[,"comparison"] == "crossDiff"),
       which(res1a[,"parameter"] == "mean")),], digits = 3)
 
@@ -287,7 +287,7 @@ means2a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "j
           group.differences.by="sex", cross.differences = list(c(0,1), c(0,2)),
           dependent = "score", na.rm=FALSE, doCheck=TRUE,
           crossDiffSE.engine= "lm", clusters = "idclass")
-res2a  <- report(means2a,add = list(domain = "reading"), trendDiffs = TRUE)
+res2a  <- report(means2a,add = list(domain = "reading"))
 
 ### Third example: like example 2a, but using nested imputations of dependent variable,
 ### and additionally estimating trend: use 'rd' instead of 'rdN1y10'
@@ -331,7 +331,7 @@ means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
                  na.rm=FALSE, doCheck=TRUE,
                  trend = "year", linkErr = "leScore", crossDiffSE.engine= "lm") })
 ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
-          report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
+          report(means4T[[domain]], add = list(domain = domain))}))
           
 ### Fifth example: compute adjusted means, also with trend estimation
 ### Note: all covariates must be numeric or 0/1 dichotomous
