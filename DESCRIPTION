@@ -8,7 +8,8 @@ Authors@R: c(
     person("Sebastian", "Weirich", email = "sebastian.weirich@iqb.hu-berlin.de", role = c("aut", "cre")),
     person("Martin", "Hecht", role = c("aut")),
     person("Karoline", "Sachse", role = c("aut")),
-    person("Benjamin", "Becker", role = c("aut")))
+    person("Benjamin", "Becker", role = c("aut")),
+    person("Edna", "Grewers", role = c("ctb")))
 Description: Replication methods to compute some basic statistic operations (means, standard deviations,
   frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple
   imputed variables and/or a clustered sampling structure which both deserve special procedures at least in
