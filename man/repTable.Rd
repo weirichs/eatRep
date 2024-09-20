@@ -19,7 +19,7 @@ repTable(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU
           trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE,
           na.rm=FALSE, expected.values = NULL, doCheck = TRUE, forceTable = FALSE,
           engine = c("survey", "BIFIEsurvey"), scale = 1, rscales = 1, mse=TRUE,
-          rho=NULL, verbose = TRUE, progress = TRUE )}
+          rho=NULL, verbose = TRUE, progress = TRUE, nCores=NULL )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -172,6 +172,10 @@ Logical: Show analysis information on console?
   \item{progress}{
 Logical: Show progress bar on console?
 }
+  \item{nCores}{
+integer (default: NULL), number of cores to use for parallel processing, if \code{engine = "survey"}. If \code{NULL},
+single core processing is used.
+}
 }
 \details{
 Function first creates replicate weights based on PSU and repInd variables according to JK2 procedure
@@ -236,7 +240,7 @@ res1      <- report(freq.tab1, add = list ( domain = "reading" ))
 ### Second example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country. Now we test whether the frequency of each single category
 ### differs between pairs of countries (it's not an overall test ... repTable now
-### calls repMean internally, using dummy variables
+### calls repMean internally, using dummy variables)
 freq.tab2 <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
              type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
              group.differences.by = "country", dependent = "comp", chiSquare = FALSE)
@@ -252,9 +256,7 @@ freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
                  dependent = "comp", chiSquare = FALSE, trend = "year",
                  linkErr = "leComp") })
 res3      <- do.call("rbind", lapply(names(freq.tab3), FUN = function (domain) {
-             report(freq.tab3[[domain]], trendDiffs = TRUE,
-                    add = list ( domain = domain ))
-             }))
+             report(freq.tab3[[domain]], add = list ( domain = domain )) }))
              
 ### Fourth example: similar to example 3. trend estimation using a linking
 ### error data.frame
@@ -271,9 +273,7 @@ freq.tab4 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) 
                  linkErr = linkErrs[which(linkErrs[,"domain"] == subdat[1,"domain"]),])
              })
 res4      <- do.call("rbind", lapply(names(freq.tab4), FUN = function (domain) {
-             report(freq.tab4[[domain]], trendDiffs = TRUE,
-                    add = list ( domain = domain ))
-             }))
+             report(freq.tab4[[domain]], add = list ( domain = domain ))  }))
 
 ### Fifth example: minimal example for three measurement occasions
 ### borrow data from the eatGADS package
@@ -292,5 +292,6 @@ freq.tab5 <- repTable(datL = dat[which(dat[,"dimension"] == "reading"),],
              ID = "idstud", type="none", imp="imp", dependent = "traitLevel",
              chiSquare = FALSE, trend = "year",
              linkErr = lErr[which(lErr[,"domain"] == "reading"),])
-res5      <- report(freq.tab5, trendDiffs = TRUE, add = list ( domain = "reading" ))
+res5      <- report(freq.tab5, add = list ( domain = "reading" ))
+res5A     <- report2(freq.tab5, add = list ( domain = "reading" ))
 }}

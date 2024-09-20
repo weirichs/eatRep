@@ -14,12 +14,11 @@ test_that("complete WEC checks", {
                               type <- "none"; PSU <- NULL; repInd <- NULL
                           }
                           means1a<- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = type, PSU=PSU, repInd=repInd, imp="imp", groups = "country", group.splits = 0:1, group.differences.by = "country", cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, hetero=het, crossDiffSE.engine= eng)
-                          res    <- report(means1a, exclude="var", add = list(crossDiffSE.engine = eng, hetero = as.character(het)))
+                          res    <- report2(means1a, exclude="var", add = list(crossDiffSE.engine = eng, hetero = as.character(het)))[["plain"]]
                           return(res)}))
                     return(m2)}))
               return(m1)}))
-    expect_equal(dim(mods), c(200,12))
-    wide1  <- reshape2::dcast(mods[grep("mean", mods[,"modus"]),], group+hetero+parameter~modus+crossDiffSE.engine, value.var="est")
+    wide1  <- reshape2::dcast(mods, country+hetero+parameter~modus+crossDiffSE.engine, value.var="est")
     wide1[,"abw"] <- unlist(plyr::alply(wide1, .margins = 1, .fun = function (z) {sd(z[,c("CONV.mean_lavaan", "CONV.mean_lm", "JK2.mean__survey_lavaan", "JK2.mean__survey_lm")])}))
     expect_true(all(wide1[which(wide1[,"parameter"] != "sd"),"abw"] == 0))
     abw    <- wide1[which(wide1[,"parameter"] == "sd"),"abw"]

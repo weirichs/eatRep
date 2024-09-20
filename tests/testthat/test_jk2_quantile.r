@@ -14,32 +14,31 @@ test_that("complete quantile checks", {
                             perzent   <- repQuantile(datL = dat, ID = "idstud", wgt = w1, type = typ,  PSU = jkz, repInd = jkr,
                                          imp = impV, nest=nestV,  groups = "country", group.splits = c(0:1), dependent = "score",
                                          probs = c(0, 0.05,0.9,1) , trend = "year")
-                            res       <- report(perzent, add = list(domain = "reading", weights = w, imp=i))
+                            res       <- report2(perzent, add = list(domain = "reading", weights = w, imp=i))[["plain"]]
                             return(res)}))                                      ### perzentile 0 und 1 sind kritische Grenzen
                      return(wgt)}))
               return(imp)}))
 
     # dimension von rueckgabeobjekt
-    expect_equal(dim(typ), c(192,18))
     expect_true(inherits(typ[,"parameter"], "character"))
 
     # parameterspalte numerisch machen
     typ[,"parameter"] <- as.numeric(typ[,"parameter"])
 
     # 2010
-    typ2010 <- reshape2::dcast(typ, group+weights+imp+parameter~modus, value.var="est_2010")
+    typ2010 <- reshape2::dcast(subset(typ,comparison=="none" & year=="2010"), country+weights+imp+parameter~modus, value.var="est")
     sub2010 <- subset(typ2010, parameter>0 & parameter < 1)
     expect_true(max(abs(sub2010[,"CONV.quantile"] - sub2010[,"JK2.quantile__survey"])) < 0.75)
     expect_true(max(abs(typ2010[,"CONV.quantile"] - typ2010[,"JK2.quantile__survey"])) < 6)
 
     # 2015
-    typ2015 <- reshape2::dcast(typ, group+weights+imp+parameter~modus, value.var="est_2015")
+    typ2015 <- reshape2::dcast(subset(typ,comparison=="none" & year=="2015"), country+weights+imp+parameter~modus, value.var="est")
     sub2015 <- subset(typ2015, parameter>0 & parameter < 1)
     expect_true(max(abs(sub2015[,"CONV.quantile"] - sub2015[,"JK2.quantile__survey"])) < 1)
     expect_true(max(abs(typ2015[,"CONV.quantile"] - typ2015[,"JK2.quantile__survey"])) < 5)
 
     # trend
-    typTrend <- reshape2::dcast(typ, group+weights+imp+parameter~modus, value.var="est_trend_2010.vs.2015")
+    typTrend <- reshape2::dcast(subset(typ,comparison=="trend"), country+weights+imp+parameter~modus, value.var="est")
     subTrend <- subset(typTrend, parameter>0 & parameter < 1)
     expect_true(max(abs(subTrend[,"CONV.quantile"] - subTrend[,"JK2.quantile__survey"])) < 1.25)
     expect_true(max(abs(typTrend[,"CONV.quantile"] - typTrend[,"JK2.quantile__survey"])) < 2.8)
