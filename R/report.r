@@ -514,9 +514,17 @@ report <- function ( repFunOut, trendDiffs = deprecated(), add=list(), exclude =
      gvars<- intersect(c(allN[["group"]], allN[["trend"]]), colnames(out))
      if ( length(gvars)>0) { for ( gv in gvars) {out[,gv] <- car::recode(gsub(" - ", ".vs.", gsub(" - total$", ".vs.wholeGroup",out[,gv])), "'total'=NA")}}
      avars<- intersect(c("parameter", "modus", "depVar", "comparison", "label1", names(add), allN[["group"]], allN[["trend"]], "es", "est", "p", "se"), colnames(out))
+     if ("chiSquareTest" %in% out[,"parameter"]) {
+         cat("Chi sqare test results cannot be transferred to old report() structure and will be ignored. Please use report2() instead.")
+         out <- out[which(out[,"parameter"] != "chiSquareTest"),]
+     }
      if(is.null(allN[["trend"]])) {
          outW <- out[,avars]
      }  else  {
+         weg  <- sort(unique(strsplit(paste(gsub(".vs.", " ", out[,allN[["trend"]]]), collapse= " "), " ")[[1]]), decreasing=TRUE)
+         weg1 <- paste("for year", weg)
+         weg2 <- paste("(", lapply(combinat::combn(weg, 2, simplify=FALSE),FUN = paste, collapse=" - "), ")", sep="")
+         for ( w in c(weg1, weg2)) {out[,"label1"] <- eatTools::removePattern(out[,"label1"], w)}
          mvars<- intersect(c("es", "est", "p", "se"), colnames(out))
          outW <- eatTools::makeDataFrame(tidyr::pivot_wider(out[,avars], names_from = allN[["trend"]], values_from = mvars), verbose=FALSE)
      }
