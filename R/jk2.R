@@ -888,7 +888,7 @@ conv.mean      <- function (dat.i , a) {
                                                     dummy2    <- dif.iii[1,]
                                                     dummy2[,"coefficient"] <- "es"
                                                     dummy2[,"value"]       <- dif.iii[which(dif.iii[,"coefficient"] == "est"),"value"] / sqrt(0.5*sum(vgl.iii[,"sd"]^2))
-                                                    return(dif.iii)             ### siehe http://www.vassarstats.net/dist2.html
+                                                    return(rbind(dif.iii, dummy2))# siehe http://www.vassarstats.net/dist2.html
                                                  } }))                          ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
                                           return(ret)}))
                         difs[,"comparison"] <- "groupDiff"
