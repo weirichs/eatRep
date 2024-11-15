@@ -13,7 +13,7 @@ generateRandomJk1Zones (datL, unit, nZones, name = "randomCluster")
 \arguments{
   \item{datL}{Data frame containing at least the primary sampling unit variable}
   \item{unit}{Variable name or column number of the primary sampling unit (i.e.
-  student or class identifier}
+  student or class identifier)}
   \item{nZones}{integer: number of jackknife zones. Note: The umber of jackknife
   zones must not exceed the number of distinct sampling units}
   \item{name}{New name of the jackknife-zone variable in the data set}

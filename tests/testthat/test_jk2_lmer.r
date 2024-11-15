@@ -14,7 +14,7 @@ test_that("repLmer checks", {
                 imp = list(mat = paste0("ASMMAT0",1:5), sci = paste0("ASSSCI0", 1:5)) ))
     mod2d <- repLmer(datL=datL, ID="idstud", wgt = "TOTWGT", L2wgt="SCHWGT", type = "JK2",  PSU = "JKCZONE", repInd = "JKCREP", imp="imp",
                 dependent="mat", formula.fixed=~female + ASBG06A, formula.random=~ASBG06A, doCheck = TRUE, na.rm = FALSE, clusters="idschool", verbose = TRUE)
-    res2d <- report(mod2d)
+    res2d <- report2(mod2d)[["plain"]]
     expect_equal(round(subset(res2d, parameter=="(Intercept)")[,"est"],digits=2), round(subset(mod2c[["stat"]], parameter=="beta_(Intercept)")[,"est"], digits=2))
     expect_equal(round(subset(res2d, parameter=="ASBG06A")[,"est"],digits=1), round(subset(mod2c[["stat"]], parameter=="beta_ASBG06A")[,"est"], digits=1))
     expect_equal(round(subset(res2d, parameter=="female")[,"est"],digits=1), round(subset(mod2c[["stat"]], parameter=="beta_female")[,"est"], digits=1))
