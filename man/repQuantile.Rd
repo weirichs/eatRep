@@ -179,8 +179,8 @@ res       <- report(perzent, add = list(domain = "reading"))
 
 ### Second example: Computes percentile for reading scores conditionally on country,
 ### use 100 bootstrap samples, assume no nested structure 
-perzent   <- repQuantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",
+perzent2  <- repQuantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",
              imp = "imp", groups = "country", dependent = "score",
              probs = seq(0.1,0.9,0.2), nBoot = 100 )
-res       <- report(perzent, add = list(domain = "reading"))
+res2      <- report(perzent, add = list(domain = "reading"))
 }}

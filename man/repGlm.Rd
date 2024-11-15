@@ -19,7 +19,8 @@ repGlm(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU =
         scale = 1, rscales = 1, mse=TRUE, rho=NULL, hetero=TRUE,
         se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"),
         clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"),
-        stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE)}
+        stochasticGroupSizes = FALSE, verbose = TRUE, progress = TRUE,
+        nCores=NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -161,6 +162,10 @@ Logical: Show analysis information on console?
   \item{progress}{
 Logical: Show progress bar on console?
 }
+  \item{nCores}{
+integer (default: NULL), number of cores to use for parallel processing, if \code{engine = "survey"}. If \code{NULL},
+single core processing is used.
+}
 }
 \details{
 Function first creates replicate weights based on \code{PSU} and \code{repInd} variables according to JK2 or
@@ -225,14 +230,5 @@ dat  <- lsa[which(lsa[,"domain"] == "reading"),]
 mod3 <- repGlm(datL = dat, ID = "idstud", wgt = "wgt", imp = "imp", nest = "nest",
         groups = "country",  formula = score~sex, trend = "year")
 res3 <- report(mod3, printGlm = TRUE)
-
-### Example 4: weighted effect coding to estimate whether a specific country's mean
-### differs from the overall mean (whereas the overall population is a composite of 
-### all countries). The procedure adapts the weighted effect coding procedures 
-### described in te Grotenhuis (2017) for multiple imputation and replication methods. 
-mod4 <- repGlm(datL = bt2010read, ID = "idstud", wgt = "wgt", type = "jk2",
-        PSU = "jkzone", repInd = "jkrep", imp = "imp", formula = score~country,
-        useWec=TRUE)
-res4 <- report(mod4, printGlm = FALSE)
 }}
 
