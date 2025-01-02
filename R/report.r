@@ -167,6 +167,9 @@ cleanDF <- function(df){
 
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
+  checkmate::assert_data_frame(dat)
+  checkmate::assert_character(groupCols, null.ok = TRUE)
+  
           if(is.null(groupCols)) {groupCols <- c("group", "parameter")}
           dat <- do.call("rbind", by ( data = dat, INDICES = dat[,groupCols], FUN = function ( x ) {
                  z  <- x[which(x[,"coefficient"] %in% c("est", "se")),]
