@@ -1,6 +1,6 @@
-# eatRep 0.14.7.9000
+# eatRep 0.15.0
 
-* [multicore]
+* multicore computation is supported for all analyses using the survey package
 * computation of group differences using 'group.differences.by' now also works for adjusted means
 * for weighted analyses, the eatRep functions now remove zero weight cases prior to analyses to avoid counting them when determining sample size
 * the eatRep functions now issue more informative alerts if missings occur on dependent/independent or jackknife variables. Missing occurrences concerned as crucial will be caught with an error message
@@ -8,7 +8,7 @@
 * enhanced warning messages if number of jkrep units differ between nests/imputations
 * bugfix in the cross-level differences of group differences computation
 * bugfix if levels of grouping variables contain leading and/or trailing spaces
-* new function `report2` which summarizes the output of the four main functions a little tidier and provides an interface for eatPlot
+* new function `report2` which summarizes the output of the four main functions a little tidier and provides an interface for eatPlot. The old reporting function `report()` is deprecated
 * new function `pool.R2` computes pooled R^2 for multiple imputed and nested multiple imputed regression analyses according to Harel (2009)
 
 # eatRep 0.14.7

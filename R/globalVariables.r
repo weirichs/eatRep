@@ -1,0 +1,10 @@
+utils::globalVariables(unique(c("wgt", "L1wgt", "L2wgt", "type", "PSU", "repInd", "jkfac",
+  "repWgt", "nest", "imp", "toCall", "groups", "refGrp", "group.differences.by",
+  "cross.differences", "group.delimiter", "adjust", "useEffectLiteR", "trend", "linkErr", "na.rm",
+  "forcePooling", "boundary", "doCheck", "separate.missing.indicator", "expected.values", "probs", "nBoot",
+  "bootMethod", "formula", "family", "formula.fixed", "formula.random", "forceSingularityTreatment", "glmTransformation",
+  "correct", "onlyCheck", "poolMethod", "useWec", "reihenfolge", "clusters", "fc",
+  "isRecursive", "depOri", "nCores",
+  "rho", "verbose", "se_type", "mse", "progress", "rscales", "cdse", "group.splits", "dependent", "datL",
+  "crossDiffSE.engine", "modus", "hetero", "ID", "allNam", "doJK", "chiSquare", "comparison", "crossDiffSE",
+  "engine", "forceTable", "group", "independent", "le", "leFrame", "repA", "stochasticGroupSizes", "str1")))

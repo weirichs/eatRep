@@ -11,8 +11,10 @@ Summarizes the output of the four main functions \code{\link{repMean}}, \code{\l
 results.}
 
 \usage{
-report(repFunOut, trendDiffs = deprecated(), add=list(), exclude = c("NcasesValid", "var"), printGlm = FALSE,
-       round = TRUE, digits = 3, printDeviance = FALSE, printSE_correction = FALSE)
+report(repFunOut, trendDiffs = deprecated(), add=list(),
+       exclude = c("NcasesValid", "var"),
+       printGlm = FALSE, round = TRUE, digits = 3, printDeviance = FALSE,
+       printSE_correction = FALSE)
 report2(repFunOut, add=list(), exclude = c("NcasesValid", "var"), printGlm = FALSE,
        round = TRUE, digits = 3, printDeviance = FALSE, printSE_correction = FALSE) }
 \arguments{
