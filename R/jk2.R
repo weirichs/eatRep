@@ -1700,7 +1700,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                    if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').", immediate. = TRUE) }
     ### Umlaute-Bug aus dem LV 2012: workaround
                    if(inherits ( datL[,gg], c("factor", "character"))) {
-                      if(inherits(try(datL[,gg] <- eatTools::cleanifyString(var = datL[,gg])  ),"try-error"))  {datL[,gg] <- eatTools::cleanifyString(var = datL[,gg], oldEncoding = "latin1")}
+                      if(inherits(try(datL[,gg] <- eatTools::cleanifyString(x = datL[,gg])  ),"try-error"))  {datL[,gg] <- eatTools::cleanifyString(x = datL[,gg], oldEncoding = "latin1")}
                    }
              }
           }
