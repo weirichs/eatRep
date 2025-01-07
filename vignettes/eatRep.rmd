@@ -1,12 +1,15 @@
 ---
 title: "Replication analyses with eatRep"
 author: "Sebastian Weirich and Benjamin Becker"
-date: "January 2025"
-output: 
-   html_document:
-      highlight: tango
+date: "`r zoo::as.yearmon(Sys.Date())`"
+output: rmarkdown::html_vignette
+highlight: tango
 bibliography: endnote_bibtex_export.bib
 csl: apa.csl
+vignette: >
+  %\VignetteIndexEntry{Replication analyses with `eatRep`}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 

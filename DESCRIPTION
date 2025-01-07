@@ -24,5 +24,6 @@ NeedsCompilation: no
 Suggests:
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+	zoo
 VignetteBuilder: knitr
