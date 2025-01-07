@@ -21,8 +21,6 @@ URL: https://github.com/weirichs/eatRep
 LazyLoad: yes
 LazyData: yes
 NeedsCompilation: no
-Remotes:
-    weirichs/eatTools
 Suggests:
     testthat,
     knitr,
