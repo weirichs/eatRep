@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   eatRep: eatRep.html
-last_built: 2025-01-08T16:05Z
+last_built: 2025-01-08T16:14Z
 urls:
   reference: https://weirichs.github.io/eatRep/reference
   article: https://weirichs.github.io/eatRep/articles
