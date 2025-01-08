@@ -17,7 +17,7 @@ Description: Replication methods to compute some basic statistic operations (mea
   estimating standard errors. See the package documentation for a more detailed description along with references.
 License: GPL (>= 2)
 Encoding: UTF-8
-URL: https://github.com/weirichs/eatRep
+URL: https://github.com/weirichs/eatRep, https://weirichs.github.io/eatRep/
 LazyLoad: yes
 LazyData: yes
 NeedsCompilation: no

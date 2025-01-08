@@ -7,3 +7,6 @@
 ^\.github$
 ^other_code$
 ^doc$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
