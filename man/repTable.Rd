@@ -228,6 +228,7 @@ rdN1   <- rd[which(rd[,"nest"] == 1),]
 ### First, we only consider year 2010
 rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
 
+\donttest{
 ### First example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country, using a chi-square test to decide whether the distribution
 ### varies between countries (it's an overall test, i.e. with three groups, df1=8).
@@ -236,7 +237,6 @@ freq.tab1 <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
              group.differences.by = "country", dependent = "comp", chiSquare = TRUE)
 res1      <- report(freq.tab1, add = list ( domain = "reading" ))
 
-\donttest{
 ### Second example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
 ### conditionally on country. Now we test whether the frequency of each single category
 ### differs between pairs of countries (it's not an overall test ... repTable now

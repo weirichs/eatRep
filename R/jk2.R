@@ -752,10 +752,10 @@ conv.quantile      <- function ( dat.i , a) {
 jackknife.quantile <- function ( dat.i , a) {
      for ( i in names(a)) { assign(i, a[[i]]) }
      typeS   <- car::recode(type, "'JK2'='JKn'")                                ### typeS steht fuer type_Survey
-     design  <- svrepdesign(data = dat.i[,c(group, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+     design  <- survey::svrepdesign(data = dat.i[,c(group, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
      formel  <- as.formula(paste("~ ",dependent, sep = "") )
     ### Hotfix: return.replicates = FALSE gesetzt, weil es sonst ab survey version 4.1-1 eine fehlermeldung gibt ... weiss nicht, ob man die replicates spaeter nochmal braucht, ich glaube nicht
-     quant   <- svyby(formula = formel, by = as.formula(paste("~", paste(group, collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = FALSE, na.rm = na.rm)
+     quant   <- survey::svyby(formula = formel, by = as.formula(paste("~", paste(group, collapse = " + "))), design = design, FUN = survey::svyquantile, quantiles = probs, return.replicates = FALSE, na.rm = na.rm)
      molt    <- eatTools::facToChar(reshape2::melt(data=quant, id.vars=group, na.rm=FALSE))
      molt[,"parameter"]  <- eatTools::crop(eatTools::removePattern(eatTools::removePattern(molt[,"variable"],paste0("se.", dependent)),dependent), char=".")
      molt    <- do.call("rbind", plyr::alply(molt, .margins = 1, .fun = function (zeile) {
@@ -806,9 +806,9 @@ jackknife.table <- function ( dat.i , a) {
                    for ( i in names(a)) { assign(i, a[[i]]) }
                    dat.i[,dependent] <- factor(dat.i[,dependent], levels = expected.values)
                    typeS     <- car::recode(type, "'JK2'='JKn'")
-                   design    <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+                   design    <- survey::svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                    formel    <- as.formula(paste("~factor(",dependent,", levels = expected.values)",sep=""))
-                   means     <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(group), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
+                   means     <- survey::svyby(formula = formel, by = as.formula(paste("~", paste(as.character(group), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
                    Ns        <- do.call("rbind", by(dat.i, INDICES = dat.i[,group], FUN = function (y) {data.frame ( y[1,group, drop=FALSE], variable = "est____________Ncases", value=length(unique(y[,ID])), stringsAsFactors = FALSE) }))
                    cols      <- match(paste("factor(",dependent,", levels = expected.values)",expected.values,sep=""), colnames(means))
                    colnames(means)[cols] <- paste("est",expected.values, sep="____________")
@@ -832,9 +832,9 @@ jackknife.table <- function ( dat.i , a) {
                                         }  else  {
                                            datSel    <- dat.i
                                         }
-                                        designSel <- svrepdesign(data = datSel[,c(group.differences.by, dependent)], weights = datSel[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(datSel[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+                                        designSel <- survey::svrepdesign(data = datSel[,c(group.differences.by, dependent)], weights = datSel[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(datSel[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                                         formel    <- as.formula(paste("~", group.differences.by ,"+",dependent,sep=""))
-                                        tbl       <- svychisq(formula = formel, design = designSel, statistic = "Chisq")
+                                        tbl       <- survey::svychisq(formula = formel, design = designSel, statistic = "Chisq")
                                         scumm     <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
                                         group     <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
                                         dif.iii   <- data.frame(group = group, parameter = "chiSquareTest", depVar = dependent, modus = paste(modus,"survey", sep="__"), coefficient = c("chi2","df","pValue"), value = c(tbl[["statistic"]],tbl[["parameter"]],tbl[["p.value"]]) , stringsAsFactors = FALSE )
@@ -920,11 +920,11 @@ jackknife.adjust.mean <- function (dat.i , a) {
           for ( i in names(a)) { assign(i, a[[i]]) }
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
-          des  <- svrepdesign(data = dat.i[,c(group, dependent, adjust)], weights = dat.i[,wgt], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE, rho=rho)
+          des  <- survey::svrepdesign(data = dat.i[,c(group, dependent, adjust)], weights = dat.i[,wgt], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE, rho=rho)
           if ( useEffectLiteR ) {
-               ret <- withReplicates(des, funAdjustEL, allNam=a[allNam], return.replicates=TRUE)
+               ret <- survey::withReplicates(des, funAdjustEL, allNam=a[allNam], return.replicates=TRUE)
           }  else  {
-               ret <- withReplicates(des, funAdjust, allNam=a[allNam], return.replicates=TRUE)
+               ret <- survey::withReplicates(des, funAdjust, allNam=a[allNam], return.replicates=TRUE)
           }
           rs   <- m <- data.frame ( group = rep(rownames(as.data.frame ( ret)),2) , depVar = dependent, modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           if(!is.null(group.differences.by))   {
@@ -1083,7 +1083,7 @@ jackknife.mean <- function (dat.i , a) {
           for ( i in names(a)) { assign(i, a[[i]]) }                            ### alles auf den namespace exportieren
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
-          des  <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
+          des  <- survey::svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c(NA,NA,"svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",dependent, sep = \"\")","paste(\"~ \",dependent, sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    ### svyby wird dreimal aufgerufen ...
                   if (is.na(toCall[["FunctionToCall"]])) {                      ### Achtung: N und N.valid sollen jetzt immer ungewichtet bestimmt werden! deshalb wird svy fuer diese ersten beiden nicht mehr gecallt
@@ -1093,7 +1093,7 @@ jackknife.mean <- function (dat.i , a) {
                               return(r1) }))
                   }  else  {
                       do   <- paste("svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(group, collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
-                      res  <- suppressWarnings(eval(parse(text=do)))            ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
+                      res  <- eval(parse(text=do)) |> suppressWarnings()        ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
                       resL <- reshape2::melt( data = res, id.vars = group, variable.name = "coefficient" , na.rm=TRUE)
                       stopifnot(length(table(resL[,"coefficient"])) == 2)
                       resL[,"coefficient"] <- car::recode(resL[,"coefficient"], "'se'='se'; else ='est'")
@@ -1104,8 +1104,8 @@ jackknife.mean <- function (dat.i , a) {
           sds  <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,group], FUN = function (uu) {
                   namen   <- uu[1, group, drop=FALSE]                           ### Warning erklaert in Word-Doc, wird unterdrueckt da irrelevant fuer Paket
                   sub.rep <- repl[ match(uu[,ID], repl[,ID] ) ,  ]
-                  des.uu  <- svrepdesign(data = uu[,c(group, dependent)], weights = uu[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = sub.rep[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
-                  var.uu  <- suppressWarnings(svyvar(x = as.formula(paste("~",dependent,sep="")), design = des.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm))
+                  des.uu  <- survey::svrepdesign(data = uu[,c(group, dependent)], weights = uu[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = sub.rep[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
+                  var.uu  <- survey::svyvar(x = as.formula(paste("~",dependent,sep="")), design = des.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm) |> suppressWarnings()
                   ret     <- data.frame(namen, est = as.numeric(sqrt(coef(var.uu))), se =  as.numeric(sqrt(vcov(var.uu)/(4*coef(var.uu)))), stringsAsFactors = FALSE )
                   return(ret)}) )
           sds  <- data.frame ( reshape2::melt(data = sds, id.vars = group, variable.name = "coefficient" , na.rm=TRUE), parameter = "sd", stringsAsFactors = FALSE)
@@ -1182,8 +1182,8 @@ jackknife.cov <- function (dat.i , a){
           for ( i in names(a)) { assign(i, a[[i]]) }
           typeS<- car::recode(type, "'JK2'='JKn'")
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
-          des  <- svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
-          ret  <- withReplicates(des, groupVersusTotalMean, allNam=a[allNam])
+          des  <- survey::svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
+          ret  <- survey::withReplicates(des, groupVersusTotalMean, allNam=a[allNam])
           rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=a[allNam], refGrp=refGrp, reihenfolge) , depVar = dependent, modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
           return(rs)}
 
@@ -1222,10 +1222,10 @@ jackknife.glm <- function (dat.i , a) {
                             if(doJK) {
                                 modus    <- paste(modus, "survey", sep="__")
                                 typeS    <- car::recode(type, "'JK2'='JKn'")
-                                design   <- svrepdesign(data = sub.dat[,c(group, independent, dependent) ], weights = sub.dat[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(sub.dat[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+                                design   <- survey::svrepdesign(data = sub.dat[,c(group, independent, dependent) ], weights = sub.dat[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(sub.dat[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
                                 if(length(singular) == 0 & isFALSE(a%$$%forceSingularityTreatment) ) {
     ### hier koennen die Warnungen unterdrueckt werden, denn sie werden ja bereits oben ausgegeben (hier nur fuer jedes replicate separat)
-                                   glm.ii  <- svyglm(formula = formula, design = design, return.replicates = FALSE, family = family) |> suppressWarnings()
+                                   glm.ii  <- survey::svyglm(formula = formula, design = design, return.replicates = FALSE, family = family) |> suppressWarnings()
                                 }
                             }
                             summaryGlm     <- summary(glm.ii)
@@ -1256,13 +1256,13 @@ jackknife.glm <- function (dat.i , a) {
                                    stopifnot(length(as.character(formula)) == 3 )
                                    if ( isFALSE(useWec) ) {
                                        warning("Unidentified bug with Nagelkerkes r^2 in singularity treatment. No r^2 is computed.", immediate. = TRUE)
-                                       if ( glmTransformation == "none" )  {resRoh <- withReplicates(design, getOutputIfSingular, allNam=a[allNam],  frml= formula, fam =family)}
-                                       if ( glmTransformation == "sdY" )   {resRoh <- withReplicates(design, getOutputIfSingularT1, allNam=a[allNam],  frml= formula, fam =family)}
+                                       if ( glmTransformation == "none" )  {resRoh <- survey::withReplicates(design, getOutputIfSingular, allNam=a[allNam],  frml= formula, fam =family)}
+                                       if ( glmTransformation == "sdY" )   {resRoh <- survey::withReplicates(design, getOutputIfSingularT1, allNam=a[allNam],  frml= formula, fam =family)}
                                    }  else  {                                   ### untere Zeile: Kontraste fuer jedes replicate separat bestimmen
                                        if ( crossDiffSE.engine == "lavaan") {
                                             if(doJK ) {                         ### mit lavaan und mit replikationsanalyse
-                                                design1<- svrepdesign(data = dat.i[,c(independent, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                ret    <- withReplicates(design1, funadjustLavaanWec, allNam=a[allNam])
+                                                design1<- survey::svrepdesign(data = dat.i[,c(independent, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+                                                ret    <- survey::withReplicates(design1, funadjustLavaanWec, allNam=a[allNam])
                                                 resRoh <- data.frame ( ret, stringsAsFactors=FALSE)
                                                 rownames(resRoh) <- paste0(independent, rownames(resRoh))
                                             }  else  {                          ### mit lavaan, aber ohne ohne Replikationsanalysen
@@ -1273,13 +1273,13 @@ jackknife.glm <- function (dat.i , a) {
                                        }  else  {                               ### bisherge lm-methode
                                             contrasts(dat.i[,as.character(formula)[3]]) <- eatTools::contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[1], weights = dat.i[,wgt])
                                             if(doJK ) {
-                                                design1<- svrepdesign(data = dat.i[,c(independent, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+                                                design1<- survey::svrepdesign(data = dat.i[,c(independent, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
     ### fuer Replikationsanalysen werden die Standardfehler nicht gebraucht, sondern ueber jackknife bestimmt. Man braucht nur die Koeffizienten. Das heisst, hierfuer kann die konventionelle lm() Funktion benutzt werden
     ### Achtung: in untere Zeile MUSS data.frame(...) vorgeschrieben werden, weil das Objekt sonst Klasse 'svrepstat' hat und nicht ge-rbinded werden kann
-                                                resRoh1<- data.frame ( withReplicates(design1, getOutputIfSingularWec, allNam=a[allNam], frml = formula), stringsAsFactors=FALSE)
+                                                resRoh1<- data.frame ( survey::withReplicates(design1, getOutputIfSingularWec, allNam=a[allNam], frml = formula), stringsAsFactors=FALSE)
                                                 contrasts(dat.i[,as.character(formula)[3]]) <- eatTools::contr.wec.weighted(dat.i[,as.character(formula)[3]], omitted=names(table(dat.i[,as.character(formula)[3]]))[length(names(table(dat.i[,as.character(formula)[3]])))], weights =  dat.i[,wgt])
-                                                design2<- svrepdesign(data = dat.i[,c(independent, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                                                resRoh2<- data.frame ( withReplicates(design2, getOutputIfSingularWec, allNam=a[allNam], frml = formula), stringsAsFactors=FALSE)
+                                                design2<- survey::svrepdesign(data = dat.i[,c(independent, dependent) ], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
+                                                resRoh2<- data.frame ( survey::withReplicates(design2, getOutputIfSingularWec, allNam=a[allNam], frml = formula), stringsAsFactors=FALSE)
                                                 resRoh <- rbind(resRoh1, resRoh2)[which(!duplicated(c(row.names(resRoh1), row.names(resRoh2)))),]
                                             }  else  {                          ### linear models with weighted observations: https://www.r-bloggers.com/2015/09/linear-models-with-weighted-observations/
                                                 res1   <- eval(parse(text=createCall ( hetero=hetero, allNam=a[allNam], formula=formula) ), envir=NULL)
@@ -1563,7 +1563,7 @@ doSurveyAnalyses <- function (datL1, a) {
                             return(ret)}
                     beg  <- Sys.time()
                     cl   <- future::makeClusterPSOCK(a%$$%nCores, verbose=FALSE)
-                    anaI <- clusterApply(cl = cl, x = 1:length(unique(datN[,a%$$%imp])), fun = doIt, a=a, pb=pb)
+                    anaI <- parallel::clusterApply(cl = cl, x = 1:length(unique(datN[,a%$$%imp])), fun = doIt, a=a, pb=pb)
                     names(anaI) <- unique(datN[,a%$$%imp])
                     stopCluster(cl)
                     tme  <- eatTools::removePattern(capture.output(print(Sys.time() - beg, digits=3)), pattern="Time difference of ")

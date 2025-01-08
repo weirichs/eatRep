@@ -9,7 +9,7 @@ doBifieAnalyses <- function (dat.i, a){
       jkt  <- car::recode(a$type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
    ### defaults fuer fayfac setzen. Fuer "JK_TIMSS" soll der Wert auf 2 gesetzt werden per default, das passiert aber innerhalb von BIFIE.data.jack, insofern wird der hier auf NULL belassen
 	    if(is.null(a$rho)) {if(jkt == "JK_GROUP") {a$rho <- (length(unique(dat.i[, a%$$%PSU]))-1)/length(unique(dat.i[, a%$$%PSU]))   }}
-      txt  <- capture.output(bo   <- BIFIE.data.jack( data= datL,  wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
+      txt  <- capture.output(bo   <- BIFIEsurvey::BIFIE.data.jack( data= datL,  wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
       if ( isTRUE(a%$$%verbose)) { cat("\n"); printJackInfo(bo=bo, a=a, jkt=jkt, cdata=FALSE)}
       attributes(a$group) <- NULL                                               ### Attribute der Gruppierungsvariablen entfernen, sonst gibt BIFIEsurvey einen Fehler aus
    ### jetzt analysespezifische Subfunktion starten
@@ -87,7 +87,7 @@ aufbNoMultilevel <- function (resM, mv, toCall, allNam, dat.i, modus, grp) {
 
 bifieMean <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus, verbose) {
       if(verbose) {cat(paste0("'BIFIE.univar' for 'call = mean'. dependent = '",allNam[["dependent"]],"'. group(s) = '",paste(allNam[["group"]], collapse="', '"), "'. \n"))}
-      txt  <- capture.output(resM <- BIFIE.univar( BIFIEobj=bifie.obj , vars = allNam[["dependent"]], group=allNam[["group"]] ))
+      txt  <- capture.output(resM <- BIFIEsurvey::BIFIE.univar( BIFIEobj=bifie.obj , vars = allNam[["dependent"]], group=allNam[["group"]] ))
       mv   <- c("Nweight", "Ncases", "M", "M_SE", "M_p", "SD", "SD_SE", "SD_p")
       grp  <- computeGroupDifferences(resM=resM, allNam=allNam, dat.g=dat.g, modus=modus)
       resM <- aufbOut(resM=resM, allNam=allNam, dat.g=dat.g, labsD=labsD)
@@ -96,7 +96,7 @@ bifieMean <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus, v
 
 bifieTable <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus, verbose) {
       if(verbose) {cat(paste0("'BIFIE.freq' for 'call = table'. dependent = '",allNam[["dependent"]],"'. group(s) = '",paste(allNam[["group"]], collapse="', '"), "'. \n"))}
-      txt  <- capture.output(resM <- BIFIE.freq( BIFIEobj=bifie.obj , vars = allNam[["dependent"]], group=allNam[["group"]] ))
+      txt  <- capture.output(resM <- BIFIEsurvey::BIFIE.freq( BIFIEobj=bifie.obj , vars = allNam[["dependent"]], group=allNam[["group"]] ))
       resM[["stat"]][,"perc_p"] <- 2*(1-pnorm(resM[["stat"]][,"perc"] / resM[["stat"]][,"perc_SE"]))
       mv   <- c("Nweight", "Ncases", "perc", "perc_SE", "perc_p")               ### measure.vars fuers reshapen
       stopifnot(is.null(allNam[["group.differences.by"]]))                      ### fuer table darfs keine group.differences.by geben
@@ -105,7 +105,7 @@ bifieTable <- function ( bifie.obj, allNam, dat.g, labsD, toCall, dat.i, modus, 
       return(resML)  }
       
 bifieLmer <- function ( bifie.obj, allNam, dat.g, labsD, modus, formula.fixed, formula.random, verbose) {
-      resM <- BIFIE.twolevelreg( BIFIEobj=bifie.obj, dep=allNam[["dependent"]], formula.fixed=formula.fixed, formula.random=formula.random, idcluster=allNam[["clusters"]], wgtlevel2=allNam[["L2wgt"]], wgtlevel1=allNam[["L1wgt"]], group = allNam[["group"]])
+      resM <- BIFIEsurvey::BIFIE.twolevelreg( BIFIEobj=bifie.obj, dep=allNam[["dependent"]], formula.fixed=formula.fixed, formula.random=formula.random, idcluster=allNam[["clusters"]], wgtlevel2=allNam[["L2wgt"]], wgtlevel1=allNam[["L1wgt"]], group = allNam[["group"]])
       resM <- aufbOut(resM=resM, allNam=allNam, dat.g=dat.g, labsD=labsD)       ### untere Zeile: Aufbereitung fuer multilevel analysen
       resML<- aufbMultilevel(resM=resM, allNam=allNam, modus=modus)
       return(resML)}
@@ -124,7 +124,7 @@ computeGroupDifferences <- function(resM, allNam, dat.g, modus){
                    comb <- data.frame ( combinat::combn(x=x[,"dp"], m=2), stringsAsFactors = FALSE)
                    diffs<- do.call("rbind", lapply(comb, FUN = function ( y ) { ### 'dp' = statistics for derived parameters,siehe BIFIE-Hilfeseite von BIFIE.by
                            dp   <- eval(parse(text=paste("list ( \"groupDiff\" =~ 0 + I(",y[1],"-",y[2],"))")))
-                           resMd<- BIFIE.derivedParameters( resM, derived.parameters=dp )
+                           resMd<- BIFIEsurvey::BIFIE.derivedParameters( resM, derived.parameters=dp )
    ### Achtung: falls 'group.differences.by' definiert, wird bereits auf der innersten Ebene, also quasi jetzt, begonnen, das wieder in die Ergebnisstruktur zurueck zu ueberfuehren
                            if ( length ( res ) == 1) {
                                 rg  <- "all.group=1"                            ### 'rg' = residual groups, hier wird unterschieden, ob es nur eine Gruppierungsvariable gibt
@@ -198,7 +198,7 @@ checkWithinBetweenWeights <- function(dat, allNam){
       }}
 
 printJackInfo <- function(bo, a, jkt, cdata){
-      pre  <- match.call(BIFIE.data.jack, call("BIFIE.data.jack", "datL", wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
+      pre  <- match.call(BIFIEsurvey::BIFIE.data.jack, call("BIFIEsurvey::BIFIE.data.jack", "datL", wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
       txt1 <- capture.output(print(bo))
       start<- min(grep("data with", txt1))
       print(pre)

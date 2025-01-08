@@ -246,6 +246,7 @@ rdN1   <- rd[which(rd[,"nest"] == 1),]
 ### First, we only consider year 2010
 rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
 
+\donttest{
 ### mean estimation
 means1 <- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone",
           repInd = "jkrep", imp="imp", groups = "country", dependent = "score",
@@ -254,7 +255,6 @@ means1 <- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "j
 ### so the user may add new columns in the output using the 'add' argument
 res1   <- report(means1, add = list(domain = "reading"))
 
-\donttest{
 ### Example 1a: Additionally to example 1, we decide to estimate whether
 ### each country's mean differ significantly from the overall mean as well
 ### as from the individual means of the other contries
