@@ -1351,12 +1351,12 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
                            weg3   <- grep("^p$", spl[,"coefficient"])
                            ret    <- reshape2::dcast(spl[-unique(c(weg1, weg2, weg3)),], parameter~coefficient)
                            ret[,"t.value"] <- ret[,"est"] / ret[,"se"]
-                           df     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
+                           df     <- spl[ spl[,"parameter"] == "Ncases" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
                            ret[,"p.value"] <- 2*(1-pt( q = abs(ret[,"t.value"]), df = df ))
                            ret[,"sig"]     <- eatTools::num.to.cat(x = ret[,"p.value"], cut.points = c(0.001, 0.01, 0.05, 0.1), cat.values = c("***", "**", "*", ".", ""))
                            retNR  <- ret
                            ret    <- eatTools::roundDF(ret, digits=digits)
-                           groupNamen <- setdiff(colnames(spl), c("group","depVar","modus", "parameter", "coefficient","value", "comparison"))
+                           groupNamen <- setdiff(colnames(spl), c("group","depVar","modus", "parameter", "coefficient","value", "comparison", "id", "row", "type"))
                            if ( length(groupNamen)>0) {
                                 cat ( paste( "            groups: ", paste( groupNamen, unlist(lapply(spl[1,groupNamen], as.character)), sep=" = ", collapse = "; "),"\n",sep=""))
                            }
@@ -1367,7 +1367,7 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
                                      cat(paste( paste(rep(" ", times = lz),collapse=""), jj, ": ", add[[jj]], "\n", sep=""))
                                 }
                            }
-                           cat ( paste( "dependent Variable: ", as.character(spl[1,"depVar"]), "\n \n", sep=""))
+                           cat ( paste( "dependent Variable: '", as.character(spl[1,"depVar"]), "'\n \n", sep=""))
                            print(ret)
                            r2     <- spl[ spl[,"parameter"] == "R2" ,"value"]
                            cat(paste("\n            R-squared: ",round(r2[1],digits = digits),"; SE(R-squared): ",round(r2[2],digits = digits),"\n",sep=""))
@@ -1378,7 +1378,7 @@ dG <- function ( jk2.out , analyses = NULL, digits = 3, printDeviance, add ) {
                                       }
                                 }
                            }
-                           nn     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] =="est" ,"value"]
+                           nn     <- spl[ spl[,"parameter"] == "Ncases" & spl[,"coefficient"] =="est" ,"value"]
                            cat(paste( round(nn, digits = 2), " observations and ",round(df,digits = 2), " degrees of freedom.",sep="")); cat("\n")
                            if(i != max(analyses)) { cat(paste0(paste(rep("-",times=66),collapse=""),"\n")) }
                      }

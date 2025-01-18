@@ -22,8 +22,9 @@ LazyLoad: yes
 LazyData: yes
 NeedsCompilation: no
 Suggests:
+    weights,
     testthat,
     knitr,
     rmarkdown,
-	zoo
+	  zoo
 VignetteBuilder: knitr
