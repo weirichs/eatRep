@@ -387,7 +387,12 @@ createLabel1 <- function(plain, allNam) {
                         tr <- ""
                      }
                      if(grepl("crossdiff", zeile[["comparison"]],ignore.case=TRUE)) {
-                        cdv<- setdiff(allNam[["group"]], allNam[["group.differences.by"]])
+                        if(grepl("groupdiff", zeile[["comparison"]],ignore.case=TRUE)) {
+                           gdb<- allNam[["group.differences.by"]]
+                        }  else  {
+                           gdb<- NULL
+                        }
+                        cdv<- setdiff(allNam[["group"]], gdb)
                         if ( length(cdv)>0) {
                             cd <- lapply(cdv, FUN = function (v) {
                                     spl <- unlist(strsplit(zeile[[v]], " - "))
