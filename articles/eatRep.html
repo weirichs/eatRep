@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">eatRep</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.15.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.15.1</span>
       </span>
     </div>
 
@@ -102,16 +102,18 @@ are beyond the scope of this vignette—literature recommendations for in
 depth theoretical discussions can be found in the package documentation
 (type <code><a href="../reference/eatRep-package.html">package?eatRep</a></code> into the console). Instead, this
 vignette focuses on some prototypical analyses.</p>
-<p>Furthermore, note that IRT item calibration or “plausible values”
-imputation are not covered in this vignette. All the outlined analyses
-base on survey data in which “plausible values” are already included.
-Such kind of data is provided by the <a href="https://webfs.oecd.org/pisa/" class="external-link">OECD</a> or can be requested from
-the <a href="https://www.iqb.hu-berlin.de/fdz" class="external-link">“Research Data Centre
-(FDZ) at the IQB”</a>. Most of the analyses comprise of descriptive
-statistics (means, standard deviations), frequency distributions, and
-linear or logistic regression models. Usually, sampling designs for
-large-scale assessments have the following, specific
-characteristics:</p>
+<p>Furthermore, note that IRT item calibration <span class="citation">(Hambleton et al., 1991; Hambleton &amp; Jones, 1993;
+Mislevy, Johnson, et al., 1992)</span> or “plausible values” imputation
+<span class="citation">(Davier et al., 2009; Mislevy, Beaton, et al.,
+1992; Monseur &amp; Adams, 2009)</span> are not covered in this
+vignette. All the outlined analyses base on survey data in which
+“plausible values” are already included. Such kind of data is provided
+by the <a href="https://www.oecd.org/en/data/datasets/pisa-2022-database.html" class="external-link">OECD</a>
+or can be requested from the <a href="https://www.iqb.hu-berlin.de/fdz" class="external-link">“Research Data Centre (FDZ) at
+the IQB”</a>. Most of the analyses comprise of descriptive statistics
+(means, standard deviations), frequency distributions, and linear or
+logistic regression models. Usually, sampling designs for large-scale
+assessments have the following, specific characteristics:</p>
 <ol style="list-style-type: decimal">
 <li><p>Often, individuals in survey data are not randomly drawn from the
 population. In educational assessments which aim to compare countries,
@@ -1544,6 +1546,12 @@ predictor.</p>
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0" line-spacing="2">
+<div id="ref-RN11" class="csl-entry">
+Davier, M. von, Gonzalez, E., &amp; Mislevy, R. J. (2009). What are
+plausible values and why are they useful? [Journal Article]. <em>IERI
+Monograph Series: Issues and Methodologies in Large Scale
+Assessments</em>, <em>2</em>, 9–36.
+</div>
 <div id="ref-RN3" class="csl-entry">
 Foy, P., Galia, J., &amp; Li, I. (2008). Scaling the data from the TIMSS
 2007 mathematics and science asssessment [Book Section]. In J. F. Olson,
@@ -1557,6 +1565,17 @@ Schmidt-Catran, A., &amp; Konig, R. (2017). When size matters:
 Advantages of weighted effect coding in observational studies [Journal
 Article]. <em>International Journal of Public Health</em>, <em>62</em>,
 163–167.
+</div>
+<div id="ref-RN366" class="csl-entry">
+Hambleton, R. K., &amp; Jones, R. W. (1993). An NCME instructional
+module on: Comparison of classical test theory and item response theory
+and their applications to test development [Journal Article].
+<em>Educational Measurement: Issues and Practice</em>, <em>12</em>(3),
+38–47.
+</div>
+<div id="ref-RN142" class="csl-entry">
+Hambleton, R. K., Swaminathan, H., &amp; Rogers, H. J. (1991).
+<em>Fundamentals of item response theory</em> [Book]. Sage.
 </div>
 <div id="ref-RN487" class="csl-entry">
 Krewski, D., &amp; Rao, J. N. K. (1981). Inference from stratified
@@ -1573,6 +1592,22 @@ Mayer, A., Dietzfelbinger, L., Rosseel, Y., &amp; Steyer, R. (2016). The
 EffectLiteR approach for analyzing average and conditional effects
 [Journal Article]. <em>Multivariate Behavioral Research</em>,
 <em>51</em>, 374–391.
+</div>
+<div id="ref-RN6" class="csl-entry">
+Mislevy, R. J., Beaton, A. E., Kaplan, B., &amp; Sheehan, K. M. (1992).
+Estimating population characteristics from sparse matrix samples of item
+responses [Journal Article]. <em>Journal of Educational
+Measurement</em>, <em>29</em>, 133–161. <a href="http://search.ebscohost.com/login.aspx?direct=true&amp;db=psyh&amp;AN=1992-41607-001&amp;site=ehost-live" class="external-link">http://search.ebscohost.com/login.aspx?direct=true&amp;db=psyh&amp;AN=1992-41607-001&amp;site=ehost-live</a>
+</div>
+<div id="ref-RN213" class="csl-entry">
+Mislevy, R. J., Johnson, E. G., &amp; Muraki, E. (1992). Scaling
+procedures in NAEP [Journal Article]. <em>Journal of Educational and
+Behavioral Statistics</em>, <em>17</em>(2), 131–154.
+</div>
+<div id="ref-RN394" class="csl-entry">
+Monseur, C., &amp; Adams, R. (2009). Plausible values: How to deal with
+their limitations [Journal Article]. <em>Journal of Applied
+Measurement</em>, <em>10</em>(3), 320–334.
 </div>
 <div id="ref-RN523" class="csl-entry">
 Nachtigall, C., Kröhne, U., Enders, U., &amp; Steyer, R. (2008). Causal
