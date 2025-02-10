@@ -1,6 +1,6 @@
 # eatRep 0.15.1
 
-* bugfix in the presentation of the regression results (reportig function for `repGlm()`)
+* bugfix in the presentation of the regression results (reporting function for `repGlm()`)
 * bugfix in the naming of the label column in the plain sheet of the reporting function `report2()`
 
 # eatRep 0.15.0
