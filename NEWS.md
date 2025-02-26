@@ -1,3 +1,5 @@
+* bugfix in sample size description on `repTable()` for `engine = BIFIEsurvey`
+
 # eatRep 0.15.1
 
 * bugfix in the presentation of the regression results (reporting function for `repGlm()`)

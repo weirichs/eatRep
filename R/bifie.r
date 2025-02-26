@@ -61,9 +61,10 @@ aufbNoMultilevel <- function (resM, mv, toCall, allNam, dat.i, modus, grp) {
           resML[setdiff(1:nrow(resML), grep("_", resML[,"variable"])),"variable"] <- paste(resML[setdiff(1:nrow(resML), grep("_", resML[,"variable"])),"variable"], "est", sep="_")
           resML<- data.frame ( resML, reshape2::colsplit(string = resML[,"variable"], pattern="_", names = c("parameter", "coefficient")),stringsAsFactors = FALSE)
           if ( toCall == "table") {
-               resML <- resML[which(resML[,"parameter"] == "perc"),]
-               resML[,"parameter"] <- resML[,"varval"]
-               resML[,"variable"]  <- resML[,"varval"] <- NULL                  ### in der Ergebnisstruktur darf keine Spalte stehen, die 'variable' heisst
+               ncas  <- resML[which(resML[,"parameter"] == "Ncases"),] |> dplyr::mutate(varval = NULL, variable =NULL)
+               ncas  <- do.call("rbind", by(ncas, INDICES = ncas[,grep("groupval", colnames(ncas), value=TRUE, ignore.case=TRUE)], FUN = function (y) {y |> dplyr::mutate(value = sum(value)) |> dplyr::filter(dplyr::row_number()==1) }))
+               resML <- resML[which(resML[,"parameter"] == "perc"),] |> dplyr::mutate(parameter = varval, variable =NULL, varval = NULL)
+               resML <- rbind(resML, ncas)                                      ### in der Ergebnisstruktur darf keine Spalte stehen, die 'variable' heisst
           }  else {
                resML[,"parameter"] <- car::recode(resML[,"parameter"], "'M'='mean'; 'SD'='sd'; 'Nweight'='NcasesValid'")
                resML[,"variable"]  <- NULL
@@ -71,10 +72,6 @@ aufbNoMultilevel <- function (resM, mv, toCall, allNam, dat.i, modus, grp) {
           resML[,"coefficient"] <- car::recode(resML[,"coefficient"], "'SE'='se'")
           recs <- paste("'",grep("groupval", colnames(resML), value=TRUE) , "' = '" , allNam[["group"]],"'",sep="", collapse="; ")
           colnames(resML) <- car::recode(colnames(resML), recs)
-          if ( toCall == "table") {                                             ### Stichprobengroessen fuer table dazu
-               Ns   <- do.call("rbind", by(dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function (y) {data.frame ( y[1,allNam[["group"]], drop=FALSE], parameter = "Ncases", coefficient="est", value=length(unique(y[,allNam[["ID"]]])), stringsAsFactors = FALSE) }))
-               resML<- plyr::rbind.fill(resML, Ns)
-          }
           resML[,"modus"] <- paste(modus, "BIFIEsurvey", sep="__")
           resML[,"depVar"]<- allNam[["dependent"]]
           resML[,"comparison"] <- NA
