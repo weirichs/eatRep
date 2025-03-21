@@ -1678,7 +1678,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                              txt   <- paste0("datL |> tidyr::unite(\"g\", c(", paste(match(c(allNam[["nest"]],allNam[["imp"]]), colnames(datL)),collapse=", "),"), remove=FALSE)")
                              datL  <- eval(parse(text=txt))
                         }
-                        isUniq<- eatGADS::checkUniqueness2(datL, varName=gg, idVar=allNam[["ID"]], impVar="g")
+                        isUniq<- eatGADS::checkUniqueness2(data.frame(datL), varName=gg, idVar=allNam[["ID"]], impVar="g")
                         if(is.na(isUniq)) {
                             warning("'eatGADS::checkUniqueness2' returns NA. TRUE/FALSE is expected.", immediate. = TRUE)
                             isImp <- TRUE

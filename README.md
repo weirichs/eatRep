@@ -1,4 +1,4 @@
-# eatRep <a href="https://weirichs.github.io/eatRep/"><img src="man/figures/eatRep.svg" align="right" height="14" alt="eatRep website" /></a>
+# eatRep <a href="https://weirichs.github.io/eatRep/"><img src="man/figures/eatRep.png" align="right" height="120" alt="eatRep website" /></a>
  
 <!-- badges: start --> 
 [![CRAN status](https://www.r-pkg.org/badges/version/eatRep)](https://CRAN.R-project.org/package=eatRep)
@@ -8,7 +8,7 @@
 
 ## Overview 
 
-eatRep (Educational Assessment Tools for Replication Methods) provides functions to compute some basic statistic operations (means, standard deviations, frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple imputed variables and/or a clustered sampling structure which both deserve special procedures at least in estimating standard errors.
+eatRep (Educational Assessment Tools for Replication Methods) provides functions to compute some basic statistic operations (means and adjusted means, standard deviations, frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple imputed variables and/or a clustered sampling structure which both deserve special procedures at least in estimating standard errors.
 
 ## Installation
 
@@ -51,7 +51,7 @@ means1 <- repMean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "j
           na.rm=FALSE, doCheck=TRUE, engine = "BIFIEsurvey")
 ### reporting function: the function does not know which content domain is being considered,
 ### so the user may add new columns in the output using the 'add' argument
-res1   <- report(means1, add = list(domain = "reading"))
+res1   <- report2(means1, add = list(domain = "reading"))[["plain"]]
 ```
 
 
