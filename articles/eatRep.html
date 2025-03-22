@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Sebastian
 Weirich and Benjamin Becker</h4>
             
-            <h4 data-toc-skip class="date">Feb 2025</h4>
+            <h4 data-toc-skip class="date">Mar 2025</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/weirichs/eatRep/blob/master/vignettes/eatRep.rmd" class="external-link"><code>vignettes/eatRep.rmd</code></a></small>
       <div class="hidden name"><code>eatRep.rmd</code></div>
@@ -419,13 +419,13 @@ specifying character strings is more straightforward by using the
 <span>             noImp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"IDSTUD"</span>, <span class="st">"TOTWGT"</span>, <span class="st">"JKZONE"</span>, <span class="st">"JKREP"</span>, <span class="st">"female"</span><span class="op">)</span>, </span>
 <span>             imp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span> <span class="op">(</span> math <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ASMMAT"</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>,  </span>
 <span>                       science <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ASSSCI"</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Alternatively, reshaping can be performed with <code><a href="https://rdrr.io/pkg/data.table/man/melt.data.table.html" class="external-link">melt()</a></code>
+<p>Alternatively, reshaping can be performed with <code><a href="https://rdatatable.gitlab.io/data.table/reference/melt.data.table.html" class="external-link">melt()</a></code>
 from the <code>data.table</code> package:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
-<span><span class="va">timssLong2</span><span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/melt.data.table.html" class="external-link">melt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/setDT.html" class="external-link">setDT</a></span><span class="op">(</span><span class="va">data.timss3</span><span class="op">)</span>, </span>
+<span><span class="va">timssLong2</span><span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/melt.data.table.html" class="external-link">melt</a></span><span class="op">(</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/setDT.html" class="external-link">setDT</a></span><span class="op">(</span><span class="va">data.timss3</span><span class="op">)</span>, </span>
 <span>                id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"IDSTUD"</span>, <span class="st">"TOTWGT"</span>, <span class="st">"JKZONE"</span>, <span class="st">"JKREP"</span>, <span class="st">"female"</span><span class="op">)</span>, </span>
-<span>                measure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/patterns.html" class="external-link">patterns</a></span><span class="op">(</span><span class="st">"^ASMMAT"</span>, <span class="st">"^ASSSCI"</span><span class="op">)</span>, </span>
+<span>                measure <span class="op">=</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/patterns.html" class="external-link">patterns</a></span><span class="op">(</span><span class="st">"^ASMMAT"</span>, <span class="st">"^ASSSCI"</span><span class="op">)</span>, </span>
 <span>                value.name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"math"</span>, <span class="st">"science"</span><span class="op">)</span>, variable.name<span class="op">=</span><span class="st">"imp"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>

@@ -69,7 +69,7 @@
       </header><div class="row">
   <div class="contents col-md-9">
 <div class="section level1">
-<div class="page-header"><h1 id="eatrep-">eatRep <a href="https://weirichs.github.io/eatRep/" class="external-link"><img src="reference/figures/eatRep.svg" align="right" height="14" alt="eatRep website"></a>
+<div class="page-header"><h1 id="eatrep-">eatRep <a href="https://weirichs.github.io/eatRep/" class="external-link"><img src="reference/figures/eatRep.png" align="right" height="120" alt="eatRep website"></a>
 <a class="anchor" aria-label="anchor" href="#eatrep-"></a>
 </h1></div>
 <!-- badges: start -->
@@ -77,7 +77,7 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>eatRep (Educational Assessment Tools for Replication Methods) provides functions to compute some basic statistic operations (means, standard deviations, frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple imputed variables and/or a clustered sampling structure which both deserve special procedures at least in estimating standard errors.</p>
+<p>eatRep (Educational Assessment Tools for Replication Methods) provides functions to compute some basic statistic operations (means and adjusted means, standard deviations, frequency tables, percentiles and generalized linear models) in complex survey designs comprising multiple imputed variables and/or a clustered sampling structure which both deserve special procedures at least in estimating standard errors.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -120,7 +120,7 @@
 <span>          na.rm<span class="op">=</span><span class="cn">FALSE</span>, doCheck<span class="op">=</span><span class="cn">TRUE</span>, engine <span class="op">=</span> <span class="st">"BIFIEsurvey"</span><span class="op">)</span></span>
 <span><span class="co">### reporting function: the function does not know which content domain is being considered,</span></span>
 <span><span class="co">### so the user may add new columns in the output using the 'add' argument</span></span>
-<span><span class="va">res1</span>   <span class="op">&lt;-</span> <span class="fu"><a href="reference/report.html">report</a></span><span class="op">(</span><span class="va">means1</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">res1</span>   <span class="op">&lt;-</span> <span class="fu"><a href="reference/report.html">report2</a></span><span class="op">(</span><span class="va">means1</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 </div>
 </div>
   </div>
