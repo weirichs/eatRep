@@ -1486,6 +1486,7 @@ reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, 
         r2  <- lapply(neu[[group]], FUN = function ( x ) {attr(x, "r2")[["R2"]]})
         Nval<- lapply(neu[[group]], FUN = function ( x ) {length(x$fitted.values)})
         mat <- which ( unlist(lapply(grps[[1]], FUN = function ( x ) { paste(as.character(unlist(x)), collapse = group.delimiter)})) == group)
+        Ncas<- lapply(neu[[group]], FUN = function ( x ) {nrow(x$data)})
     ### achtung: manchmal heissen die Spalten im glm-Output 'est', manchmal 'estimate' ... bzw. manchmal 'se', manchmal 'std.error'
         out <- summary(pooled[[group]])
         nams<- findEstSeNames(out)
@@ -1498,7 +1499,7 @@ reconstructResultsStructureGlm <- function ( group, neu, grps, group.delimiter, 
         if ( length(col) == 1) { prm <- as.character(out[,col])}
         if ( length(col) == 0) { prm <- rownames(out)}
         ret <- data.frame ( group=group, depVar =allNam[["dependent"]],modus = modus, comparison = NA, parameter = c(rep(c("Ncases","Nvalid",prm),2),"R2"),
-               coefficient = c(rep(c("est","se"),each=2+length(prm)),"est") , value= c(NA, min(unlist(Nval)),out[,nams[1]], NA, NA, out[,nams[2]], pool.R2(unlist(r2), unlist(Nval), verbose = FALSE )[["m.pooled"]]), grps[[1]][[mat]], stringsAsFactors = FALSE, row.names = NULL)
+               coefficient = c(rep(c("est","se"),each=2+length(prm)),"est") , value= c(Ncas[[1]], min(unlist(Nval)),out[,nams[1]], NA, NA, out[,nams[2]], pool.R2(unlist(r2), unlist(Nval), verbose = FALSE )[["m.pooled"]]), grps[[1]][[mat]], stringsAsFactors = FALSE, row.names = NULL)
         return(ret)}
 
 ### MH wollte in grauer Vorzeit, dass unten stehendes keinen Fehler ergibt; da das aber spaeter schiefgeht, muss es hier eine Fehlermeldung geben
