@@ -880,7 +880,7 @@ conv.mean      <- function (dat.i , a) {
                                                     scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
                                                     group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
                                                     dummy     <- do.call("cbind", lapply ( a%$$%group, FUN = function ( gg ) {
-                                                                 ret <- data.frame ( paste ( rev(unique(vgl.iii[,gg])), collapse = " - "))
+                                                                 ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = " - "))
                                                                  colnames(ret) <- gg
                                                                  return(ret)}))
                                                     dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "mean", coefficient = c("est","se"), depVar = dependent, modus=modus, value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
@@ -910,11 +910,12 @@ conv.mean      <- function (dat.i , a) {
 
 computeTrueDiffAndOtherDiffs <- function (difs, repl, dat, kontr, group.differences.by, value) {
           stopifnot ( nrow(difs) == 2 )
-          refSeq<- names(table(dat[,group.differences.by]))                     ### immer fokusgruppe MINUS referenzgruppe
+          refSeq<- names(table(dat[,group.differences.by]))                     ### immer referenzgruppe MINUS fokusgruppe
           reihe <- match(kontr, refSeq)                                         ### dazu rausfinden, was Referenz ist ...
-          trueD <- difs[match(refSeq[max(reihe)],difs[,group.differences.by]),value] - difs[match(refSeq[min(reihe)],difs[,group.differences.by]),value]
-          if(!missing(repl)) {otherD<- repl[,refSeq[max(reihe)]] - repl[,refSeq[min(reihe)]]} else {otherD<- NULL}
+          trueD <- difs[match(refSeq[min(reihe)],difs[,group.differences.by]),value] - difs[match(refSeq[max(reihe)],difs[,group.differences.by]),value]
+          if(!missing(repl)) {otherD<- repl[,refSeq[min(reihe)]] - repl[,refSeq[max(reihe)]]} else {otherD<- NULL}
           return(list(true = trueD, other = otherD))  }
+
 
 jackknife.adjust.mean <- function (dat.i , a) {
           for ( i in names(a)) { assign(i, a[[i]]) }
@@ -950,7 +951,7 @@ jackknife.adjust.mean <- function (dat.i , a) {
                                               scumm   <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
                                               group   <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
                                               dummy   <- do.call("cbind", lapply ( a%$$%group, FUN = function ( gg ) {
-                                                         ret <- data.frame ( paste ( rev(unique(vgl.iii[,gg])), collapse = " - "))
+                                                         ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = " - "))
                                                          colnames(ret) <- gg
                                                          return(ret)}))
                                               dif.iii <- data.frame(dummy, group = group, vgl = paste(k, collapse = ".vs."), dif = diffs[["true"]], se =  sqrt(sum((diffs[["true"]] - diffs[["other"]])^2)), stringsAsFactors = FALSE )
@@ -1058,7 +1059,7 @@ conv.adjust.mean <- function ( dat.i, a) {
                                             scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
                                             group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
                                             dummy     <- do.call("cbind", lapply ( a%$$%group, FUN = function ( gg ) {
-                                                         ret <- data.frame ( paste ( rev(unique(vgl.iii[,gg])), collapse = " - "))
+                                                         ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = " - "))
                                                          colnames(ret) <- gg
                                                          return(ret)}))
                                             dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), comparison = "groupDiff", parameter = "mean", coefficient = c("est","se"), depVar = dependent, modus=modus, value = c(true.diff, sqrt(sum(vgl.iii[,"se"]^2))) , stringsAsFactors = FALSE )
@@ -1144,7 +1145,7 @@ jackknife.mean <- function (dat.i , a) {
                                               scumm   <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
                                               group   <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
                                               dummy   <- do.call("cbind", lapply ( a%$$%group, FUN = function ( gg ) {
-                                                         ret <- data.frame ( paste ( rev(unique(vgl.iii[,gg])), collapse = " - "))
+                                                         ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = " - "))
                                                          colnames(ret) <- gg    ### obere Zeile: Achtung! Hier muss a%$$%group stehen, nicht group!!
                                                          return(ret)}))
                                               dif.iii <- data.frame(dummy, group = group, vgl = paste(k, collapse = ".vs."), dif = diffs[["true"]], se =  sqrt(sum((diffs[["true"]] - diffs[["other"]])^2)), stringsAsFactors = FALSE )
