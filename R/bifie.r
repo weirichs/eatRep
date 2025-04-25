@@ -118,8 +118,9 @@ computeGroupDifferences <- function(resM, allNam, dat.g, modus){
            col  <- c(eatTools::removeNumeric(col), eatTools::removeNonNumeric(col))
            res  <- setdiff(grep("^groupval", colnames(liste), value=TRUE), paste0("groupval", col[2]))
            grp  <- do.call("rbind", by(data=liste, INDICES = liste[,res], FUN = function ( x ) {
-                   comb <- data.frame ( combinat::combn(x=x[,"dp"], m=2), stringsAsFactors = FALSE)
+                   comb <- combinat::combn(x=x[,"dp"], m=2, simplify=FALSE)
                    diffs<- do.call("rbind", lapply(comb, FUN = function ( y ) { ### 'dp' = statistics for derived parameters,siehe BIFIE-Hilfeseite von BIFIE.by
+                           y    <- sort(y)
                            dp   <- eval(parse(text=paste("list ( \"groupDiff\" =~ 0 + I(",y[1],"-",y[2],"))")))
                            resMd<- BIFIEsurvey::BIFIE.derivedParameters( resM, derived.parameters=dp )
    ### Achtung: falls 'group.differences.by' definiert, wird bereits auf der innersten Ebene, also quasi jetzt, begonnen, das wieder in die Ergebnisstruktur zurueck zu ueberfuehren
@@ -149,7 +150,7 @@ computeGroupDifferences <- function(resM, allNam, dat.g, modus){
                               add <- data.frame ( v1=vs, stringsAsFactors = FALSE)
                               colnames(add) <- allNam[["group.differences.by"]]
                            }                                                    ### untere Zeile: "est" und "es" werden mit minus 1 multipliziert, damit sie konsistent zu den survey-Ergebnissen sind
-                           ret  <- data.frame ( group = paste(rg, vs, sep="___"), depVar = allNam[["dependent"]], modus = paste(modus,"BIFIEsurvey", sep="__"),  comparison = "groupDiff", parameter = "mean", coefficient = c("est", "se", "p", "es"), value = c( (-1) * resMd[["stat"]][["coef"]],resMd[["stat"]][["se"]],resMd[["stat"]][["p"]], (-1)*es),add, stringsAsFactors = FALSE)
+                           ret  <- data.frame ( group = paste(rg, vs, sep="___"), depVar = allNam[["dependent"]], modus = paste(modus,"BIFIEsurvey", sep="__"),  comparison = "groupDiff", parameter = "mean", coefficient = c("est", "se", "p", "es"), value = c(resMd[["stat"]][["coef"]],resMd[["stat"]][["se"]],resMd[["stat"]][["p"]], es),add, stringsAsFactors = FALSE)
                            return(ret)}))
                    return(diffs)}))
       }
