@@ -89,7 +89,7 @@ Third important note: Starting with version 0.15.0, the reporting function repor
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">eatRep</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.15.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.15.2</span>
       </span>
     </div>
 
@@ -203,7 +203,7 @@ Third important note: Starting with version 0.15.0, the reporting function repor
     <div id="details">
     <h2>Details</h2>
 
-<table class="table table"><tr><td>Package:</td><td>eatRep</td></tr><tr><td>Type:</td><td>Package</td></tr><tr><td>Version:</td><td>0.15.1</td></tr><tr><td>Date:</td><td>2025-02-09</td></tr><tr><td>License:</td><td>GPL(&gt;=2)</td></tr></table></div>
+<table class="table table"><tr><td>Package:</td><td>eatRep</td></tr><tr><td>Type:</td><td>Package</td></tr><tr><td>Version:</td><td>0.15.2</td></tr><tr><td>Date:</td><td>2025-04-29</td></tr><tr><td>License:</td><td>GPL(&gt;=2)</td></tr></table></div>
     <div id="author">
     <h2>Author</h2>
     <p>Authors: Sebastian Weirich &lt;sebastian.weirich@iqb.hu-berlin.de&gt;, Martin Hecht &lt;martin.hecht@hu-berlin.de&gt;,
@@ -254,7 +254,7 @@ Third important note: Starting with version 0.15.0, the reporting function repor
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
 </div>
 
       </footer></div>
