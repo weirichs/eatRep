@@ -1,5 +1,8 @@
+# eatRep 0.15.2
+
 * bugfix in the presentation of the regression table `repGlm()`
 * bugfix in sample size description on `repTable()` for `engine = BIFIEsurvey`
+* The direction of the group comparisons has been standardized so that the difference is reference group - focus group
 
 # eatRep 0.15.1
 

@@ -7,4 +7,4 @@ utils::globalVariables(unique(c("wgt", "L1wgt", "L2wgt", "type", "PSU", "repInd"
   "isRecursive", "depOri", "nCores",
   "rho", "verbose", "se_type", "mse", "progress", "rscales", "cdse", "group.splits", "dependent", "datL",
   "crossDiffSE.engine", "modus", "hetero", "ID", "allNam", "doJK", "chiSquare", "comparison", "crossDiffSE",
-  "engine", "forceTable", "group", "independent", "le", "leFrame", "repA", "stochasticGroupSizes", "str1")))
+  "engine", "forceTable", "group", "independent", "le", "leFrame", "repA", "stochasticGroupSizes", "str1", "value", "varval")))
