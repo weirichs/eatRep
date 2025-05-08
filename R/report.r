@@ -493,7 +493,7 @@ createLabel2 <- function(plain, allNam) {
                            } else {
                                kl1 <- "["; kl2 <- "]"; kl3 <- ": "
                            }
-                           comps <- paste(paste0(paste0(kl1, paste(tv, strsplit(zeile[[tv]], " - ")[[1]], sep="="), kl3), comps, kl2), collapse=" - ")
+                           comps <- paste(paste0(paste0(kl1, paste(tv, strsplit(zeile[[tv]], " - ")[[1]], sep="="), kl3), paste(comps, collapse=" - "), kl2), collapse=" - ")
                            if(zeile[["comparison"]] == "trend") {
                               if(length(allNam[["group"]])>0 && !identical (allNam[["group"]], "wholeGroup") ) {
                                  comps <- paste0(comps, ": ", paste(names(zeile[allNam[["group"]]]), zeile[allNam[["group"]]], sep="=", collapse = ", "))

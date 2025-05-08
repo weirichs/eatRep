@@ -413,6 +413,7 @@ eatRep <- function (datL, a) {
           }
           allVar<- c(a[c("ID", "wgt", "L1wgt", "L2wgt", "PSU", "repInd", "repWgt", "nest", "imp", "trend", "linkErr", "group.differences.by", "dependent", "independent", "adjust", "clusters")], list(group = a%$$%groups))
           allNam<- lapply(allVar, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = datL, variable=ii, warnIfMissing = TRUE, stopIfMissingOnVars = c(allVar[["PSU"]], allVar[["repInd"]]))})
+          datL  <- datL[,intersect(unlist(allNam), colnames(datL))]             ### aus performanzgruenden nur die variable beibehalten, die fuer die analyse gebraucht werden
           a     <- c(a[-eatTools::whereAre(names(allNam), names(a), verbose=FALSE)], allNam)
           a[["allNam"]] <- names(allNam)
     ### weil es rekursiv ist, muss der data.frame TROTZDEM in allNam angehangen werden

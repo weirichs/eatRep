@@ -1,6 +1,6 @@
 doBifieAnalyses <- function (dat.i, a){
-      dat.i<- eatTools::facToChar(dat.i[,intersect(unlist(a[a%$$%allNam]), colnames(dat.i))], from = "character", to = "factor")
-      dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)                  ### obere zeile: aus performanzgruenden nur diejenigen variablen aus dem Datensatz auswaehlen, die spaeter auch gebraucht werden
+      dat.i<- eatTools::facToChar(dat.i, from = "character", to = "factor")
+      dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)
       dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")            ### Variablen muessen numerisch sein, geschieht hier ueber kleinen eatGADS Umweg
       dat2 <- sortBifie(dat = dat2, toCall=a$toCall, allNam=a[a%$$%allNam])
       labsD<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == a%$$%dependent),]
