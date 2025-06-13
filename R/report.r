@@ -247,7 +247,7 @@ compare_point_estimates <- function(old_est, new_est, param, old_col, new_col) {
   return()}
 
 reduceDoubleN <- function(jk2){
-          cases1<- which(!duplicated(jk2[ ,-eatTools::whereAre(c("unit_1", "unit_2", "id"),colnames(jk2), verbose=FALSE)]))
+          cases1<- which(!duplicated(jk2[ ,-eatTools::whereAre(c("unit_1", "unit_2", "id", "row"),colnames(jk2), verbose=FALSE)]))
           cases <- unique(jk2[intersect(which(jk2[,"parameter"] %in% c("Ncases", "NcasesValid")),cases1),])
           jk2   <- rbind(jk2[which(jk2[,"parameter"]  %nin% c("Ncases", "NcasesValid")),], cases)
           return(jk2)}

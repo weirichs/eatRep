@@ -67,9 +67,8 @@ Optional: If groups are defined, \code{group.splits} optionally specifies whethe
 in the whole group or overlying groups. See examples for more details.
 }
   \item{group.differences.by}{
-Optional: Specifies variable group differences should be computed for. The corresponding variable must be included in
-the \code{groups} statement. Exception: choose 'wholePop' if you want to estimate each's group difference from the
-overall sample mean. See examples for further details.
+Optional: Single variable name group differences should be computed for. The corresponding variable must be included in
+the \code{groups} statement.
 }
   \item{cross.differences}{
 Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.

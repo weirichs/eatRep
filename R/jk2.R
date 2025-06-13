@@ -1,3 +1,7 @@
+identifyMode <- function ( name, type) {
+            res <- paste0(car::recode(type, "'NONE'='CONV'"),".", name)
+            return(res)}
+
 ### generiert Zeitstempel
 genTS <- function() {
    timeStamp <- eatTools::removeNonNumeric(strsplit(format(Sys.time(), digits = 2L), " ")[[1]][2])
@@ -482,7 +486,6 @@ eatRep <- function (datL, a) {
                   return(ret)
               }  else {
     ### obere Zeile: Ende der inneren Schleife (= Ende des Selbstaufrufs wegen trend) ... das untere wird nun fuer jeden Aufruf abgearbeitet
-                  if( length( setdiff ( a%$$%group.differences.by,a%$$%group)) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
     ### Anzahl der Analysen aufgrund mehrerer Hierarchieebenen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
                   toAppl<- superSplitter(group = a%$$%group, group.splits = a%$$%group.splits, group.differences.by = a%$$%group.differences.by, group.delimiter = a%$$%group.delimiter , dependent=a%$$%dependent )
                   if(a%$$%verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(a%$$%group.splits, collapse = " ") ,"'.", sep=""))}
@@ -770,13 +773,13 @@ jackknife.quantile <- function ( dat.i , a) {
 conv.table      <- function ( dat.i , a) {
      for ( i in names(a)) { assign(i, a[[i]]) }
      tabs <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,group], FUN = function ( sub.dat) {
-             prefix <- data.frame(sub.dat[1,group, drop=FALSE], row.names = NULL, stringsAsFactors = FALSE )
-             foo    <- make.indikator(variable = sub.dat[,dependent], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = "no")
+             prefix <- data.frame(sub.dat[1,group, drop=FALSE], row.names = NULL, stringsAsFactors = FALSE ) |> suppressWarnings()
+             foo    <- data.frame(variable = sub.dat[,dependent], eval(parse(text=paste0("model.matrix(~",dependent,"-1, data = sub.dat)"))), stringsAsFactors = FALSE)
              if (all(dat.i[,wgt] == 1)) {wgts <- NULL } else { wgts <- sub.dat[,wgt]}
              ret    <- data.frame ( prefix , eatTools::descr(foo[,-1, drop = FALSE],p.weights = wgts, na.rm=TRUE)[,c("Mean", "std.err")], stringsAsFactors = FALSE )
-             ret[,"parameter"] <- substring(rownames(ret),5)
+             ret[,"parameter"] <- eatTools::removePattern(rownames(ret), pattern = dependent)
              return(ret)}) )
-     Ns   <- do.call("rbind", by(dat.i, INDICES = dat.i[,group], FUN = function (y) {data.frame ( y[1,group, drop=FALSE], parameter = "Ncases", Mean=length(unique(y[,ID])), stringsAsFactors = FALSE) }))
+     Ns   <- do.call("rbind", by(dat.i, INDICES = dat.i[,group], FUN = function (y) {data.frame ( y[1,group, drop=FALSE], parameter = "Ncases", Mean=length(unique(y[,ID])), stringsAsFactors = FALSE) })) |> suppressWarnings()
      tabs <- plyr::rbind.fill(tabs, Ns)
      if(!is.null(group.differences.by))   {
          m    <- tabs
@@ -805,22 +808,14 @@ conv.table      <- function ( dat.i , a) {
 
 jackknife.table <- function ( dat.i , a) {
                    for ( i in names(a)) { assign(i, a[[i]]) }
-                   dat.i[,dependent] <- factor(dat.i[,dependent], levels = expected.values)
                    typeS     <- car::recode(type, "'JK2'='JKn'")
                    design    <- survey::svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repA[match(dat.i[,ID], repA[,ID] ),-1,drop = FALSE], combined.weights = TRUE, rho=rho)
-                   formel    <- as.formula(paste("~factor(",dependent,", levels = expected.values)",sep=""))
-                   means     <- survey::svyby(formula = formel, by = as.formula(paste("~", paste(as.character(group), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
-                   Ns        <- do.call("rbind", by(dat.i, INDICES = dat.i[,group], FUN = function (y) {data.frame ( y[1,group, drop=FALSE], variable = "est____________Ncases", value=length(unique(y[,ID])), stringsAsFactors = FALSE) }))
-                   cols      <- match(paste("factor(",dependent,", levels = expected.values)",expected.values,sep=""), colnames(means))
-                   colnames(means)[cols] <- paste("est",expected.values, sep="____________")
-                   cols.se   <- grep("^se[[:digit:]]{1,5}$", colnames(means) )
-                   stopifnot(length(cols) == length(cols.se))
-                   colnames(means)[cols.se] <- paste("se____________", expected.values, sep="")
+                   formel    <- as.formula(paste0("~",dependent))
+                   means     <- survey::svyby(formula = formel, by = as.formula(paste("~", paste(as.character(group), collapse = " + "))), design = design, FUN = survey::svymean, deff = FALSE, return.replicates = TRUE)
+                   Ns        <- do.call("rbind", by(dat.i, INDICES = dat.i[,group], FUN = function (y) {data.frame ( y[1,group, drop=FALSE], variable = "estNcases", value=length(unique(y[,ID])), stringsAsFactors = FALSE) })) |> suppressWarnings()
                    molt      <- reshape2::melt(data=means, id.vars=group, na.rm=TRUE)
-                   molt      <- rbind(molt, Ns)
-                   splits    <- data.frame ( do.call("rbind", strsplit(as.character(molt[,"variable"]),"____________")), stringsAsFactors = FALSE)
-                   colnames(splits) <- c("coefficient", "parameter")
-                   ret       <- data.frame ( group = apply(molt[,group,drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = dependent, modus = paste(modus,"survey", sep="__"), comparison = NA, splits, value = molt[,"value"], molt[,group,drop=FALSE], stringsAsFactors = FALSE)
+                   molt      <- rbind(molt, Ns) |> dplyr::mutate(parameter=eatTools::removePattern(as.character(variable),pattern=paste0("^",dependent,"|^se|^est")), coefficient = car::recode(stringr::str_remove(as.character(variable),pattern=parameter), "'se'='se'; else='est'")) |> suppressWarnings()
+                   ret       <- data.frame ( group = apply(molt[,group,drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = dependent, modus = paste(modus,"survey", sep="__"), comparison = NA, molt[,c("coefficient", "parameter", "value")], molt[,group,drop=FALSE], stringsAsFactors = FALSE)
                    if(!is.null(group.differences.by))   {
                       m            <- ret
                       m$comb.group <- apply(m, 1, FUN = function (ii) { eatTools::crop(paste( ii[group], collapse = "."))})
@@ -1938,7 +1933,7 @@ nestsImpsPerGroupComb <- function(datL, allNam, toAppl, gr) {
          if ( any(impNes==0) || any( unlist(grpVar) == FALSE) ) {warning("Number of imputations differ across nests and/or groups!\n", eatTools::print_and_capture(impNes, 3), immediate. = TRUE)}}
 
 prepExpecVal <- function (a) {
-          if(a%$$%toCall=="table") {
+          if(a%$$%toCall=="table") {                                            ### das passiert hier nicht, wenn repTable ueber repMean gewrappt wird
              misInd <- which(is.na(a$datL[,a%$$%dependent]))
              if(isTRUE(a%$$%separate.missing.indicator)) {
                 if(length(misInd)>0) { a$datL[misInd,a%$$%dependent] <- "<NA>"}
@@ -1950,6 +1945,7 @@ prepExpecVal <- function (a) {
                 }
              }
              a$expected.values <- sort(unique(c(a%$$%expected.values, names(table(a$datL[,a%$$%dependent])))))
+             a$datL[,a%$$%dependent] <- factor(a$datL[,a%$$%dependent], levels = a$expected.values)
           }
           return(a)}
 
