@@ -13,7 +13,10 @@ eatRep (Educational Assessment Tools for Replication Methods) provides functions
 ## Installation
 
 ```R
-# Install eatRep from GitHub via
+# Install CRAN version of eatRep
+install.packages("eatRep")
+
+# Install development version of eatRep from GitHub via
 devtools::install_github("weirichs/eatRep")
 ```
 

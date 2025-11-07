@@ -47,8 +47,8 @@ report2 <- function ( repFunOut, add=list(), exclude = c("NcasesValid", "var"), 
                            if ( length( ind ) > 0 ) {stop(paste0("Following names of 'add' are not allowed: '",paste(names(add)[ind], collapse = "', '"), "'."))}
                            for ( u in names(add)) {jk2[,u] <- add[[u]]}
                       }
-                      jk2wide  <- reshape2::dcast(data = jk2[,-eatTools::whereAre(c("group","row", "hierarchy.level"), colnames(jk2), verbose=FALSE)], formula = ... ~ coefficient, value.var = "value")
-                      if ( fun == "glm") {
+                      jk2wide  <- reshape2::dcast(data = unique(jk2[,-eatTools::whereAre(c("group","row", "hierarchy.level"), colnames(jk2), verbose=FALSE)]), formula = ... ~ coefficient, value.var = "value")
+                      if ( fun == "glm") {                                      ### Hotfix: damit fuer glm im Output die Koeffizienten immer zuerst und R2, R2nagel, Nvalid imer dahinter stehen, werden die jetzt voruebergehen umbenannt, dann sortiert und hinterher wieder zurueck benannt
                            jk2wide[,"parameter"] <- car::recode(jk2wide[,"parameter"], "'Nvalid'='zzzzNvalid'; 'R2'='zzzzR2'; 'R2nagel'='zzzzR2nagel'")
                            jk2wide <- data.frame(jk2wide[sort(jk2wide[,"parameter"],decreasing=FALSE,index.return=TRUE)$ix,])
                            jk2wide[,"parameter"] <- car::recode(jk2wide[,"parameter"], "'zzzzNvalid'='Nvalid'; 'zzzzR2'='R2'; 'zzzzR2nagel'='R2nagel'")
@@ -287,7 +287,8 @@ computeTrend <- function(jk2, tv, repFunOut, fun, allNam) {
                ind     <- intersect(which(le[,"trendLevel1"] %in% vgl[[comp]]), which(le[,"trendLevel2"] %in% vgl[[comp]]))
                stopifnot(length(ind)>0)
                le_S    <- le[ind,]
-               stopifnot(all(as.vector(unlist(by(le_S, INDICES = le_S[,c("parameter", "depVar")], nrow))) == 1))
+               le_S_chr<- dplyr::mutate_at(le_S, .vars=c("parameter", "depVar"), .funs=as.character)
+               stopifnot(all(as.vector(unlist(by(le_S_chr, INDICES = le_S_chr[,c("parameter", "depVar")], nrow))) == 1))
                wide    <- merge(wide, le_S[,-na.omit(match(c("trendLevel1", "trendLevel2", "domain"), colnames(le_S)))], by = c("parameter", "depVar"), all = TRUE)
                miss    <- which(is.na(wide[,"le"]))
                if ( length(miss)>0){
