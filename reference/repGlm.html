@@ -387,9 +387,86 @@ When size matters: advantages of weighted effect coding in observational studies
 <span class="r-in"><span><span class="va">dat</span>  <span class="op">&lt;-</span> <span class="va">lsa</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">lsa</span><span class="op">[</span>,<span class="st">"domain"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"reading"</span><span class="op">)</span>,<span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">mod3</span> <span class="op">&lt;-</span> <span class="fu">repGlm</span><span class="op">(</span>datL <span class="op">=</span> <span class="va">dat</span>, ID <span class="op">=</span> <span class="st">"idstud"</span>, wgt <span class="op">=</span> <span class="st">"wgt"</span>, imp <span class="op">=</span> <span class="st">"imp"</span>, nest <span class="op">=</span> <span class="st">"nest"</span>,</span></span>
 <span class="r-in"><span>        groups <span class="op">=</span> <span class="st">"country"</span>,  formula <span class="op">=</span> <span class="va">score</span><span class="op">~</span><span class="va">sex</span>, trend <span class="op">=</span> <span class="st">"year"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> 'timeFormat' is not an exported object from 'namespace:eatTools'</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Method 'mice' is not available for nested imputation. Switch to method 'scalar'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 1'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No sample sizes given. Will not compute standard error of pooled R squared.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No sample sizes given. Will not compute standard error of pooled R squared.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No sample sizes given. Will not compute standard error of pooled R squared.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 1'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No sample sizes given. Will not compute standard error of pooled R squared.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No sample sizes given. Will not compute standard error of pooled R squared.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No sample sizes given. Will not compute standard error of pooled R squared.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
 <span class="r-in"><span><span class="va">res3</span> <span class="op">&lt;-</span> <span class="fu"><a href="report.html">report</a></span><span class="op">(</span><span class="va">mod3</span>, printGlm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'mod3' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Trend group: '2010'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             groups: country = countryA; year = 2010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dependent Variable: 'score'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     parameter     est    se t.value p.value sig</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 (Intercept) 508.643 3.611 140.859   0.000 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     sexmale   6.003 4.962   1.210   0.227    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             R-squared: 0.002; SE(R-squared): 0.002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1034 observations and 1032 degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             groups: country = countryB; year = 2010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dependent Variable: 'score'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     parameter     est    se t.value p.value sig</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 (Intercept) 503.053 4.483 112.221   0.000 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     sexmale  10.068 6.164   1.633   0.103    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             R-squared: 0.004; SE(R-squared): 0.004</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 959 observations and 957 degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             groups: country = countryC; year = 2010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dependent Variable: 'score'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     parameter     est    se t.value p.value sig</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 (Intercept) 526.381 3.684 142.874   0.000 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     sexmale  14.263 5.383   2.649   0.008  **</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             R-squared: 0.008; SE(R-squared): 0.008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1086 observations and 1084 degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ============================================================================</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Trend group: '2015'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             groups: country = countryA; year = 2015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dependent Variable: 'score'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     parameter     est    se t.value p.value sig</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 (Intercept) 507.311 3.676 138.010   0.000 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     sexmale   1.158 5.018   0.231   0.818    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             R-squared: 0; SE(R-squared): 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1037 observations and 1035 degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             groups: country = countryB; year = 2015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dependent Variable: 'score'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     parameter     est    se t.value p.value sig</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 (Intercept) 492.666 4.757 103.563   0.000 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     sexmale   6.548 6.390   1.025   0.306    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             R-squared: 0.002; SE(R-squared): 0.002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 684 observations and 682 degrees of freedom.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ------------------------------------------------------------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             groups: country = countryC; year = 2015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> dependent Variable: 'score'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     parameter     est    se t.value p.value sig</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 (Intercept) 514.175 3.444 149.311   0.000 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     sexmale  12.004 4.813   2.494   0.013   *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             R-squared: 0.005; SE(R-squared): 0.005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1207 observations and 1205 degrees of freedom.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
