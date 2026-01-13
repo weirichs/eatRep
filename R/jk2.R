@@ -371,7 +371,7 @@ eatRep <- function (datL, a) {
                beg   <- Sys.time()                                              ### es muss nicht geschehen, wenn die Funktion nur zum checken benutzt wird oder nur replicates zurueckgeben soll
                a$fc  <- identifyFunctionCall()                                  ### zeitschaetzung fuer CRAN/github rausnehmen
                diffe <- Sys.time() - beg
-               if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("Identify function call: ", eatTools::timeFormat(diffe)))}
+              #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("Identify function call: ", timeFormat(diffe)))}
           }
           a$toCall<- match.arg(a%$$%toCall, choices = argl[["toCall"]])         ### 'oberste' Funktion suchen, die eatRep gecallt hat; zweiter Teil des Aufrufs ist dazu da, dass nicht "by" drinsteht, wenn "repMean" innerhalb einer anderen "by"-Funktion aufgerufen wird
           a$type  <- car::recode(match.arg(arg = toupper(a%$$%type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -418,7 +418,7 @@ eatRep <- function (datL, a) {
               beg   <- Sys.time()
               datL  <- checkGroupVars ( datL = datL, allNam = a[a%$$%allNam], auchUV = auchUV)
               diffe <- Sys.time() - beg
-              if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkGroupVars: ", eatTools::timeFormat(diffe)))}
+              #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkGroupVars: ", timeFormat(diffe)))}
           }
     ### check fuer adjustierungsvariablen: die duerfen nur numerisch oder dichotom sein. dasselbe gilt fuer L1- und L2-Praediktoren in multilevel regressionsmodellen mit BIFIEsurvey
     ### Achtung: ab hier wird der Datensatz in die Argumentenliste mit aufgenommen!
@@ -481,7 +481,7 @@ eatRep <- function (datL, a) {
                   beg   <- Sys.time()                                           ### untere Funktion veraendert ggf. das Datensatzobjekt und allNam
                   a     <- createLoopStructure(a=a)
                   diffe <- Sys.time() - beg
-                  if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("createLoopStructure: ", eatTools::timeFormat(diffe)))}
+                  #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("createLoopStructure: ", timeFormat(diffe)))}
     ### check: wenn cross.differences gemacht werden sollen, dann muessen die faktor levels aller gruppierungsvariablen disjunkt sein (siehe Mail Benjamin, 13.11.2019, 18.11 Uhr)
                   if(!is.null(a%$$%cross.differences)) {
                       if(length(a%$$%group)>1) {
@@ -639,7 +639,7 @@ innerLoop <- function (toAppl, ret, a=a)  {
                 beg   <- Sys.time()
                 chk3  <- checkImpNest(toAppl = toAppl, gr=gr, a=a)
                 diffe <- Sys.time() - beg
-                if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkImpNest: ", eatTools::timeFormat(diffe)))}
+                #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkImpNest: ", timeFormat(diffe)))}
     ### nur fuer repTable(): "expected.values" aufbereiten ... Funktion veraendert Datensatz und expected.values
                 a     <- prepExpecVal (a=a)
                 b     <- a[-match("datL", names(a))]                            ### Datensatz aus Argumentliste entfernen
