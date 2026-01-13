@@ -1,7 +1,7 @@
 identifyMode <- function ( name, type) {
             res <- paste0(car::recode(type, "'NONE'='CONV'"),".", name)
             return(res)}
-            
+
 generateReplicates <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", "Fay"), PSU = NULL, repInd = NULL, doCheck = TRUE, progress = TRUE) {
    modus  <- identifyMode ( name = "mean", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
    repList<- list(ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, toCall = "replicates", engine="survey", modus=modus, verbose=FALSE, group.splits = 0, progress=progress)
@@ -18,7 +18,6 @@ argl <- list(wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("none", "JK2", "JK1", 
         adjust=NULL, useEffectLiteR = TRUE, trend = NULL, linkErr = NULL, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE, separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, formula.fixed=NULL, formula.random=NULL,
         forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct=TRUE, onlyCheck = FALSE, poolMethod = "mice", useWec = FALSE, reihenfolge = NULL, clusters=NULL, fc = NULL, isRecursive = FALSE, depOri = NULL, nCores=NULL)
 
-            
 ### Hilfsfunktion fuer jackknife.glm
 createCall <- function ( hetero, allNam, formula) {
          part1 <- ifelse(hetero, yes = "estimatr::lm_robust(", no = "lm(")
@@ -38,8 +37,6 @@ createCall <- function ( hetero, allNam, formula) {
          }
          part3 <- paste0(part1, part2, ")")
          return(part3)}
-### allNam <- list(wgt = "Gewichtungsvariable")
-### write(createCall(hetero = TRUE, weights = "wgt", clusters = NULL, allNam=allNam), file = "c:/diskdrv/Winword/Psycho/IQB/temp/29_stan_wd/test1.r")
 
 ### Hilfsfunktion fuer eatRep: abhaengige und unabhaengige Variablen identifizieren
 identify_UV_AV <- function ( a, glmerFormula)  {
@@ -329,7 +326,6 @@ repQuantile<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR
             scale = 1, rscales = 1, mse=TRUE, rho=NULL, verbose = TRUE, progress = TRUE)  {
             modus      <- identifyMode ( name = "quantile", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             bootMethod <- match.arg ( bootMethod )                              ### repList = replacement list (welche defaultargumente ueberschrieben werden sollen)
-            datL       <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             repList   <- list(ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile", engine="survey", nest = nest, imp = imp, groups = groups,
                           group.splits = group.splits, cross.differences=cross.differences, trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter,
                           probs=probs, na.rm=na.rm, nBoot=nBoot, bootMethod=bootMethod, doCheck=doCheck, modus=modus, scale = scale, rscales = rscales, mse=mse, rho=rho, verbose=verbose, progress=progress, clusters=NULL)
@@ -343,7 +339,6 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
             poolMethod = c("mice", "scalar") , useWec = FALSE, scale = 1, rscales = 1, mse=TRUE, rho=NULL,
             hetero=TRUE, se_type = c("HC3", "HC0", "HC1", "HC2", "CR0", "CR2"), clusters = NULL, crossDiffSE.engine= c("lavaan", "lm"), stochasticGroupSizes = FALSE, verbose = TRUE,
             progress = TRUE, nCores=NULL) {
-            datL   <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             modus  <- identifyMode ( name = "glm", type = car::recode(match.arg(arg = toupper(type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'") )
             poolMethod <- match.arg(poolMethod)
             crossDiffSE.engine <- match.arg(crossDiffSE.engine)
@@ -359,7 +354,6 @@ repGlm  <- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
 repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2", "JK1"),
             PSU = NULL, repInd = NULL, jkfac = NULL, rho=NULL, imp=NULL, group=NULL, trend = NULL,  dependent, formula.fixed, formula.random,
             doCheck = TRUE, na.rm = FALSE, clusters, verbose = TRUE) {
-            datL   <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             modus  <- identifyMode ( name = "lmer", type = car::recode(match.arg(arg = toupper(type), choices = c("JK2", "JK1")), "'FAY'='Fay'") )
             replList   <- list(ID=ID , wgt = wgt, L1wgt=L1wgt, L2wgt=L2wgt, type=type, PSU = PSU, repInd = repInd, jkfac = jkfac, toCall = "lmer", imp = imp, groups =group, group.splits = length(group), trend = trend, dependent=dependent,
                           formula.fixed=formula.fixed, formula.random=formula.random,engine="BIFIEsurvey", na.rm=na.rm, doCheck=doCheck, modus=modus, verbose=verbose, clusters=clusters, rho=rho)
@@ -367,14 +361,17 @@ repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2
 
 ### Funktion ist nicht user-level, sondern wird von repMean, repTable, repQuantile, repGlm mit entsprechenden Argumenten aufgerufen ... a ist die Argumentenliste 'argl'
 eatRep <- function (datL, a) {
+          options(warn=1)
           a     <- c(argl[setdiff(names(argl), names(a))], a)                   ### hier wird die von der user-level-Funktion (z.B. repMean) uebergebene Argumentenliste um das erweitert, was nicht explizit angegeben, aber von eatRep als default erwartet wird
           datL  <- eatTools::makeDataFrame(datL, name = "datL", minRow = 2, onlyWarn=FALSE)
           if ( isTRUE(a%$$%useWec) ) { a$forceSingularityTreatment <- TRUE; a$poolMethod <- "scalar"}
           if(is.null(a%$$%trend)) {a["linkErr"] <- list(NULL)}                  ### Hotfix ... sonst gibt es einen fehler, wenn kein Trend bestimmt werden soll, aber dennoch 'linkErr' spezifiziert wird
     ### rauskriegen, was der user urspruenglich aufgerufen hat: repMean, repTable, repGlm .. ? das muss nur beim ersten mal der ggf. rekursiven aufrufe geschehen
-          if (is.null(a%$$%fc) && isFALSE(a%$$%onlyCheck)) {                    ### es muss nicht geschehen, wenn die Funktion nur zum checken benutzt wird
-               beg   <- Sys.time()
+          if (is.null(a%$$%fc) && isFALSE(a%$$%onlyCheck) && (a%$$%toCall != "replicates")) {
+               beg   <- Sys.time()                                              ### es muss nicht geschehen, wenn die Funktion nur zum checken benutzt wird oder nur replicates zurueckgeben soll
                a$fc  <- identifyFunctionCall()                                  ### zeitschaetzung fuer CRAN/github rausnehmen
+               diffe <- Sys.time() - beg
+               if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("Identify function call: ", eatTools::timeFormat(diffe)))}
           }
           a$toCall<- match.arg(a%$$%toCall, choices = argl[["toCall"]])         ### 'oberste' Funktion suchen, die eatRep gecallt hat; zweiter Teil des Aufrufs ist dazu da, dass nicht "by" drinsteht, wenn "repMean" innerhalb einer anderen "by"-Funktion aufgerufen wird
           a$type  <- car::recode(match.arg(arg = toupper(a%$$%type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -420,6 +417,8 @@ eatRep <- function (datL, a) {
           if (isFALSE(a%$$%isRecursive)) {                                      ### wird nur gemacht, wenn die Funktion sich nicht wiederholt selbst aufruft
               beg   <- Sys.time()
               datL  <- checkGroupVars ( datL = datL, allNam = a[a%$$%allNam], auchUV = auchUV)
+              diffe <- Sys.time() - beg
+              if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkGroupVars: ", eatTools::timeFormat(diffe)))}
           }
     ### check fuer adjustierungsvariablen: die duerfen nur numerisch oder dichotom sein. dasselbe gilt fuer L1- und L2-Praediktoren in multilevel regressionsmodellen mit BIFIEsurvey
     ### Achtung: ab hier wird der Datensatz in die Argumentenliste mit aufgenommen!
@@ -470,8 +469,7 @@ eatRep <- function (datL, a) {
                   out3   <- lapply(resT, FUN = function ( k ) { k[["out1"]]})
                   ret    <- list(resT = out3, allNam = a[a%$$%allNam], toCall = a%$$%toCall, family=a%$$%family, le=a%$$%le)
                   return(ret)
-              }  else {
-    ### obere Zeile: Ende der inneren Schleife (= Ende des Selbstaufrufs wegen trend) ... das untere wird nun fuer jeden Aufruf abgearbeitet
+              }  else {                                                         ### Ende der inneren Schleife (= Ende des Selbstaufrufs wegen trend) ... das untere wird nun fuer jeden Aufruf abgearbeitet
     ### Anzahl der Analysen aufgrund mehrerer Hierarchieebenen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
                   toAppl<- superSplitter(group = a%$$%group, group.splits = a%$$%group.splits, group.differences.by = a%$$%group.differences.by, group.delimiter = a%$$%group.delimiter , dependent=a%$$%dependent )
                   if(a%$$%verbose){cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(a%$$%group.splits, collapse = " ") ,"'.", sep=""))}
@@ -482,6 +480,8 @@ eatRep <- function (datL, a) {
     ### Achtung: wenn keine Gruppen und/oder Nests und/oder Imputationen spezifiziert sind, erzeuge Variablen mit Werten gleich 1, damit by() funktioniert!
                   beg   <- Sys.time()                                           ### untere Funktion veraendert ggf. das Datensatzobjekt und allNam
                   a     <- createLoopStructure(a=a)
+                  diffe <- Sys.time() - beg
+                  if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("createLoopStructure: ", eatTools::timeFormat(diffe)))}
     ### check: wenn cross.differences gemacht werden sollen, dann muessen die faktor levels aller gruppierungsvariablen disjunkt sein (siehe Mail Benjamin, 13.11.2019, 18.11 Uhr)
                   if(!is.null(a%$$%cross.differences)) {
                       if(length(a%$$%group)>1) {
@@ -505,6 +505,7 @@ eatRep <- function (datL, a) {
                   allRes <- clearTab(allRes, allNam = a[a%$$%allNam], depVarOri = a%$$%depOri, fc=a%$$%fc, toCall=a%$$%toCall, datL = a%$$%datL)
                   allRes <- prepForReport2(out=allRes, info = ret, allNam = a[a%$$%allNam])
                   allRes <- list(resT = list(noTrend = allRes), allNam = a[a%$$%allNam], toCall = a%$$%toCall, family=a%$$%family)
+                  options(warn=0)
                   return(allRes) }} }
 
 ### Hilfsfunktion fuer eatRep(): bereitet output fuer report2() vor. Zum einen werden die Analyse-IDs ergaenzt, und es werden, falls vorhanden, hierarchieebenen ergaenzt
@@ -532,7 +533,7 @@ prepForReport2 <- function(out, info, allNam) {
        gd        <- out[which(out[,"comparison"] != "none"),]
        if ( nrow(gd)>0 && "none" %in% out[,"comparison"]) {
             gd   <- data.frame ( type = "point", do.call("rbind", by(data = gd, INDICES = gd[,c("group", "depVar")], FUN = function (sg) {
-                    suppressWarnings(sg1 <- data.frame ( unique(sg[, c("parameter", setdiff(allNam[["group"]], allNam[["group.differences.by"]])), drop=FALSE]), strsplit(sg[1,allNam[["group.differences.by"]]], ".vs.| - ")[[1]], stringsAsFactors = FALSE))
+                    sg1 <- data.frame ( unique(sg[, c("parameter", setdiff(allNam[["group"]], allNam[["group.differences.by"]])), drop=FALSE]), strsplit(sg[1,allNam[["group.differences.by"]]], ".vs.| - ")[[1]], stringsAsFactors = FALSE) |> suppressWarnings()
                     colnames(sg1)[ncol(sg1)] <- allNam[["group.differences.by"]]
                     sg2 <- merge(sg1, point, by = colnames(sg1), all=FALSE)
                     stopifnot(length(unique(sg2[,"id"])) ==2 || unique(sg1[,"parameter"]) == "chiSquareTest")
@@ -562,7 +563,7 @@ prepareInfo <- function(info, point, allNam) {
                    }
                }
                l2 <- expand.grid(l1, stringsAsFactors = FALSE)
-               suppressWarnings(l2 <- data.frame ( l2, z[,"hierarchy.level", drop=FALSE], stringsAsFactors = FALSE))
+               l2 <- data.frame ( l2, z[,"hierarchy.level", drop=FALSE], stringsAsFactors = FALSE) |> suppressWarnings()
                return(l2)}))
        return(inf)}
 
@@ -581,19 +582,36 @@ checkFactorLevels <- function(a) {
 
 ### Hilfsfunktion fuer eatRep()
 createAnalysisInfTable <- function(toAppl, verbose, allNam) {
-         if ( length ( toAppl ) > 1) {
-               ret <- do.call("rbind", lapply(1:length(toAppl), FUN = function ( y ) {
-               gdb <- attr(toAppl[[y]], "group.differences.by")
-               if ( is.null(gdb)) {gdb <- NA}
-               res <-  data.frame ( analysis.number = y, hierarchy.level = length(toAppl[[y]]), groups.divided.by = paste(toAppl[[y]], collapse=" + "), group.differences.by = gdb)
+         if(length(toAppl) > 1) {
+            ret <- do.call("rbind", lapply(1:length(toAppl), FUN = function (y) {
+                   gdb <- attr(toAppl[[y]], "group.differences.by")
+                   if(is.null(gdb)) {gdb <- NA}
+                   if(length(allNam[["imp"]])>0) {ivar<- allNam[["imp"]]} else {ivar <- ""}
+                   res <-  data.frame ( analysis.number = y, hierarchy.level = length(toAppl[[y]]), dependent.var = allNam[["dependent"]], imp.var = ivar, groups.divided.by = paste(toAppl[[y]], collapse=" + "), group.differences.by = gdb)
     ### Achtung!! adjustiert werden kann nicht fuer die oberste Hierarchieebene (hierarchy level 0) ... fuer analysen auf dieser Ebene wird adjust zu NULL
-               if ( !is.null(allNam[["adjust"]])) {
-                      res[,"adjust"] <- car::recode(res[,"hierarchy.level"], "0='FALSE'; else = 'TRUE'")
-               }
-               return(res)}))
-               if(verbose){cat("\n \n"); print(ret, row.names=FALSE)}
-         }  else  {ret <- NULL}
+                   if (!is.null(allNam[["adjust"]])) {
+                       nams <- printAdjustedVars(allNam[["adjust"]])
+                       res[,"adjust"] <- "FALSE"
+                       ind  <- which(res[,"hierarchy.level"] != 0)
+                       if(length(ind)>0) {res[ind,"adjust"] <- nams}
+                   }
+                   return(res)}))
+            if(verbose){cat("\n \n"); print(ret, row.names=FALSE)}
+         } else {ret <- NULL}
          return(ret)}
+
+### in der Analyseinformation soll nicht nur TRUE/FALSE stehen, ob adjustiert wird, sondern es sollen die Adjustierungsvariablen (ggf. abbreviated) angegeben werden
+printAdjustedVars <- function(vec) {
+     txt   <- paste0("'", paste(vec, collapse="', '"),"'")
+     i     <- length(vec)-1
+     if(nchar(txt) > 70) {abb <- TRUE} else {abb <- FALSE}                      ### abbreviate?
+     while(nchar(txt) > 70) {
+        txt   <- paste0("'", paste(vec[1:i], collapse="', '"),"'")
+        i     <- i-1
+     }   
+     txt   <- paste0(length(vec), " vars: ", txt)
+     if(abb == TRUE) {txt <- paste0(txt, " [truncated ...]")}
+     return(txt)}  
 
 ### Hilfsfunktion fuer eatRep()
 innerLoop <- function (toAppl, ret, a=a)  {
@@ -620,6 +638,8 @@ innerLoop <- function (toAppl, ret, a=a)  {
     ### check: gleichviele Imputationen je Nest und Gruppe? bei mehr als 2 gruppen zusaetzlich pruefen, ob alle paare besetzt sind (Kreuztabelle)
                 beg   <- Sys.time()
                 chk3  <- checkImpNest(toAppl = toAppl, gr=gr, a=a)
+                diffe <- Sys.time() - beg
+                if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkImpNest: ", eatTools::timeFormat(diffe)))}
     ### nur fuer repTable(): "expected.values" aufbereiten ... Funktion veraendert Datensatz und expected.values
                 a     <- prepExpecVal (a=a)
                 b     <- a[-match("datL", names(a))]                            ### Datensatz aus Argumentliste entfernen
@@ -715,24 +735,24 @@ conv.quantile      <- function ( dat.i , a) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,group], FUN = function ( sub.dat) {
                               if( all(sub.dat[,wgt] == 1) )  {                  ### alle Gewichte sind 1 bzw. gleich
                                  ret   <- Hmisc::hdquantile(x = sub.dat[,dependent], se = TRUE, probs = probs,na.rm=na.rm )
-                                 ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(names(ret),2), coefficient = rep(c("est","se"),each=length(ret)),value = c(ret,attr(ret,"se")),sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)
+                                 ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(names(ret),2), coefficient = rep(c("est","se"),each=length(ret)),value = c(ret,attr(ret,"se")),sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE) |> suppressWarnings()
                               } else {                                          ### wenn Gewichte gefordert, koennen SEs ueber Bootstrap bestimmt werden
                                  if(!is.null(nBoot)) {
                                      if(nBoot<5) {nBoot <- 5}
                                      if(bootMethod == "wQuantiles") {           ### Variante 1
                                          x     <- sub.dat[,dependent]
                                          ret   <- boot::boot(data = x, statistic = function ( x, i) {Hmisc::wtd.quantile(x = x[i], weights = sub.dat[i,wgt], probs = probs,na.rm=na.rm )}, R=nBoot)
-                                         ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret$t0, sapply(data.frame(ret$t), sd)), sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)
+                                         ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret$t0, sapply(data.frame(ret$t), sd)), sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)  |> suppressWarnings()
                                      } else {                                   ### Variante 2
                                          ret   <- do.call("rbind", lapply(1:nBoot, FUN = function (b){
                                                   y   <- sample(x = sub.dat[,dependent], size = length(sub.dat[,dependent]), replace = TRUE, prob = sub.dat[,wgt]/sum(sub.dat[,wgt]))
                                                   ret <- Hmisc::hdquantile(x = y, se = FALSE, probs = probs,na.rm=na.rm )
                                                   return(ret)}))
-                                         ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(Hmisc::wtd.quantile(x = sub.dat[,dependent], weights = sub.dat[,wgt], probs = probs,na.rm=na.rm ), sapply(data.frame(ret),sd)) , sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)
+                                         ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(Hmisc::wtd.quantile(x = sub.dat[,dependent], weights = sub.dat[,wgt], probs = probs,na.rm=na.rm ), sapply(data.frame(ret),sd)) , sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)  |> suppressWarnings()
                                      }
                                  } else {
                                      ret   <- Hmisc::wtd.quantile(x = sub.dat[,dependent], weights = sub.dat[,wgt], probs = probs,na.rm=na.rm )
-                                     ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret, rep(NA, length(probs))) , sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)
+                                     ret   <- data.frame (group = paste(sub.dat[1,group,drop=FALSE], collapse=group.delimiter), depVar = dependent, modus = modus, parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret, rep(NA, length(probs))) , sub.dat[1,group,drop=FALSE], stringsAsFactors = FALSE)  |> suppressWarnings()
                                  }
                               }
                               return(ret)}))
@@ -858,7 +878,10 @@ conv.mean      <- function (dat.i , a) {
                           difs         <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                           ret <- do.call("rbind", lapply(kontraste, FUN = function ( k ) {
                                                  if ( sum ( k %in% iii[,group.differences.by]) != length(k) ) {
-                                                    warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                                    if(!a$tempEnv$warningseen){ ### das hier, damit warnung nur einmal angezeigt wird
+                                                       warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                                       a$tempEnv$warningseen <- TRUE
+                                                    }
                                                     return(NULL)
                                                  }  else  {
                                                     vgl.iii   <- iii[iii[,group.differences.by] %in% k ,]
@@ -902,7 +925,6 @@ computeTrueDiffAndOtherDiffs <- function (difs, repl, dat, kontr, group.differen
           if(!missing(repl)) {otherD<- repl[,refSeq[min(reihe)]] - repl[,refSeq[max(reihe)]]} else {otherD<- NULL}
           return(list(true = trueD, other = otherD))  }
 
-
 jackknife.adjust.mean <- function (dat.i , a) {
           for ( i in names(a)) { assign(i, a[[i]]) }
           typeS<- car::recode(type, "'JK2'='JKn'")
@@ -913,7 +935,7 @@ jackknife.adjust.mean <- function (dat.i , a) {
           }  else  {
                ret <- survey::withReplicates(des, funAdjust, allNam=a[allNam], return.replicates=TRUE)
           }
-          rs   <- m <- data.frame ( group = rep(rownames(as.data.frame ( ret)),2) , depVar = dependent, modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          rs   <- m <- data.frame ( group = rep(rownames(as.data.frame ( ret)),2) , depVar = dependent, modus = paste(modus, "survey", sep="__"), comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(as.data.frame (ret))), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE) |> suppressWarnings()
           if(!is.null(group.differences.by))   {
              nCat <- table(as.character(dat.i[,group.differences.by]))
              if ( length(nCat) < 2 ) {
@@ -928,7 +950,10 @@ jackknife.adjust.mean <- function (dat.i , a) {
                 difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                   ret <- do.call("rbind", lapply(kontraste, FUN = function ( k ) {
                                          if ( sum ( k %in% iii[,group.differences.by]) != length(k) ) {
-                                              warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                              if(!a$tempEnv$warningseen){       ### das hier, damit warnung nur einmal angezeigt wird
+                                                  warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                                  a$tempEnv$warningseen <- TRUE
+                                              }
                                               return(NULL)                      ### Quelle fuer dieses Vorgehen:
                                          } else {                               ### Mail SW an ZKD, 07.11.2012, 17.54 Uhr, "in Absprache mit Dirk"
                                               vgl.iii <- iii[iii[,group.differences.by] %in% k ,]
@@ -1023,7 +1048,7 @@ conv.adjust.mean <- function ( dat.i, a) {
                     return(data.frame ( mw = adj, se = se, stringsAsFactors = FALSE))}))
            vals  <- reshape2::melt(means, measure.vars = c("mw", "se"))[,"value"]
        }
-       rs   <- m <- data.frame ( group = rep(names(table(dat.i[,group])) , 2), depVar = dependent, modus = modus, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = length(vals)/2), value = vals, rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+       rs   <- m <- data.frame ( group = rep(names(table(dat.i[,group])) , 2), depVar = dependent, modus = modus, comparison = NA, parameter = "mean", coefficient = rep(c("est", "se"), each = length(vals)/2), value = vals, rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE) |> suppressWarnings()
        if(!is.null(group.differences.by))   {                                   ### jetzt gruppendifferenzen, wenn es welche geben soll
            nCat <- table(as.character(dat.i[,group.differences.by]))
            if ( length(nCat) < 2 ) {
@@ -1037,7 +1062,10 @@ conv.adjust.mean <- function ( dat.i, a) {
                 difs         <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                 ret <- do.call("rbind", lapply(kontraste, FUN = function ( k ) {
                                        if ( sum ( k %in% iii[,group.differences.by]) != length(k) ) {
-                                            warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                            if(!a$tempEnv$warningseen){ ### das hier, damit warnung nur einmal angezeigt wird
+                                                warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                                a$tempEnv$warningseen <- TRUE
+                                            }
                                             return(NULL)
                                        }  else  {
                                             vgl.iii   <- eatTools::makeDataFrame(tidyr::pivot_wider(iii[iii[,group.differences.by] %in% k ,], names_from = "coefficient", values_from = "value"), verbose=FALSE)
@@ -1076,7 +1104,7 @@ jackknife.mean <- function (dat.i , a) {
                   if (is.na(toCall[["FunctionToCall"]])) {                      ### Achtung: N und N.valid sollen jetzt immer ungewichtet bestimmt werden! deshalb wird svy fuer diese ersten beiden nicht mehr gecallt
                       resL <- do.call("rbind", by(data=dat.i, INDICES = dat.i[,group], FUN = function (y){
                               if (toCall[["target"]] == "Ncases") {weg <- 0} else {weg <- length(which(is.na(y[,dependent])))}
-                              r1 <- data.frame ( y[1,group, drop=FALSE], parameter =toCall[["target"]], coefficient="est", value=nrow(y)-weg, stringsAsFactors = FALSE)
+                              r1 <- data.frame ( y[1,group, drop=FALSE], parameter =toCall[["target"]], coefficient="est", value=nrow(y)-weg, stringsAsFactors = FALSE) |> suppressWarnings()
                               return(r1) }))
                   }  else  {
                       do   <- paste("svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(group, collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
@@ -1121,7 +1149,10 @@ jackknife.mean <- function (dat.i , a) {
                 difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                   ret <- do.call("rbind", lapply(kontraste, FUN = function ( k ) {
                                          if ( sum ( k %in% iii[,group.differences.by]) != length(k) ) {
-                                              warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                              if(!a$tempEnv$warningseen){       ### das hier, damit warnung nur einmal angezeigt wird: https://stackoverflow.com/questions/24812271/r-functions-print-warning-only-on-first-call-of-function
+                                                  warning("Cannot compute contrasts for 'group.differences.by = ",group.differences.by,"'.", immediate. = TRUE)
+                                                  a$tempEnv$warningseen <- TRUE
+                                              }
                                               return(NULL)                      ### Quelle fuer dieses Vorgehen:
                                          } else {                               ### Mail SW an ZKD, 07.11.2012, 17.54 Uhr, "in Absprache mit Dirk"
                                               vgl.iii <- iii[iii[,group.differences.by] %in% k ,]
@@ -1171,7 +1202,7 @@ jackknife.cov <- function (dat.i , a){
           repl <- repA[ match(dat.i[,ID], repA[,ID]),]
           des  <- survey::svrepdesign(data = dat.i[,c(group, dependent)], weights = dat.i[,wgt], type=typeS, scale = scale, rscales = rscales, mse=mse, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, rho=rho)
           ret  <- survey::withReplicates(des, groupVersusTotalMean, allNam=a[allNam])
-          rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=a[allNam], refGrp=refGrp, reihenfolge) , depVar = dependent, modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          rs   <- data.frame ( group =  buildString(dat= dat.i,allNam=a[allNam], refGrp=refGrp, reihenfolge) , depVar = dependent, modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = nrow(ret)), value = reshape2::melt(as.data.frame ( ret), measure.vars = colnames(as.data.frame ( ret)))[,"value"], rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,group], FUN = function ( x ) { x[1,group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE) |> suppressWarnings()
           return(rs)}
 
 
@@ -1192,7 +1223,7 @@ conv.cov <- function (dat.i, a){
           covs<- boot::boot(data=dat.i, R = a%$$%nBoot, statistic = function ( x, i) {groupVersusTotalMean(w = x[i,a%$$%wgt], data = x[i,c(a%$$%group, a%$$%dependent)], allNam=a[a%$$%allNam])})
           mns <- colMeans(covs$t)
           ses <- sapply(as.data.frame(covs$t), FUN = sd)                        
-          rs  <- data.frame ( group =  buildString(dat= dat.i,allNam=a[a%$$%allNam], refGrp=a%$$%refGrp, a%$$%reihenfolge) , depVar = a%$$%dependent, modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,a%$$%group], FUN = function ( x ) { x[1,a%$$%group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,a%$$%group], FUN = function ( x ) { x[1,a%$$%group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE)
+          rs  <- data.frame ( group =  buildString(dat= dat.i,allNam=a[a%$$%allNam], refGrp=a%$$%refGrp, a%$$%reihenfolge) , depVar = a%$$%dependent, modus = NA, comparison = "crossDiff", parameter = "mean", coefficient = rep(c("est", "se"), each = length(mns)), value = c(mns, ses), rbind(do.call("rbind",  by(data=dat.i, INDICES = dat.i[,a%$$%group], FUN = function ( x ) { x[1,a%$$%group, drop=FALSE]}, simplify = FALSE)),do.call("rbind",  by(data=dat.i, INDICES = dat.i[,a%$$%group], FUN = function ( x ) { x[1,a%$$%group, drop=FALSE]}, simplify = FALSE))), stringsAsFactors=FALSE) |> suppressWarnings()
           return(rs)}
           
 ### Hilfsfunktion fuer repGlm()
@@ -1438,6 +1469,8 @@ clearTab <- function ( repTable.output, allNam , depVarOri, fc, toCall, datL) {
 
 ### definiert die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) fuer Funktion 'eatRep'
 chooseFunction <- function (datI, a, pb) {
+        a$tempEnv<- new.env(parent = emptyenv())                                ### das hier, damit warnung nur einmal angezeigt wird
+        a$tempEnv$warningseen <- FALSE                                          ### https://stackoverflow.com/questions/24812271/r-functions-print-warning-only-on-first-call-of-function
         pb$tick(); flush.console()
         glms  <- grps <- nams <- NULL                                           ### glms initialisieren, wird ueberschrieben, wenn toCall = 'glm'
         if( a%$$%toCall != "glm" ) {
@@ -1452,6 +1485,7 @@ chooseFunction <- function (datI, a, pb) {
             ana.i <- ana.i[["sub.ana"]]
         }
         ana.i <- data.frame ( ana.i, datI[1,c(a%$$%nest, a%$$%imp),drop=FALSE], stringsAsFactors = FALSE, row.names = NULL)
+        a$tempEnv <- NULL
         return(list(ana.i=ana.i, glms=glms, nams=nams, grps=grps))}
 
 
@@ -1512,7 +1546,7 @@ checkData <- function ( sub.dat, a) {
             }
         }
         nMissing <- length(which(is.na(sub.dat[, dependent])))                  ### es darf NICHT ALLES missing sein
-        if(nMissing == nrow(sub.dat))  { stop(paste0("(At least) some groups without any observed data in dependent variable '",dependent,"'. Please check your data!\n"))}}
+        if(nMissing == nrow(sub.dat))  {stop(paste0("(At least) some groups without any observed data in dependent variable '",dependent,"'. Please check your data!\n"))}}
 
 checkNests <- function (x, allNam, toAppl, gr) {
         if(length(x[,allNam[["ID"]]]) != length(unique(x[,allNam[["ID"]]])))  {stop("ID variable '",allNam[["ID"]],"' is not unique within nests and imputations.")}
@@ -1568,7 +1602,7 @@ doSurveyAnalyses <- function (datL1, a) {
                     innen  <- names(nams)
                     for ( j in 1:length(glms)) { names(glms[[j]]) <- aussen }
                     neu    <- lapply(aussen, FUN = function ( a ) {lapply(innen, FUN = function ( i ) { glms[[i]][[a]]})})
-                    pooled <- lapply(neu, FUN = function ( x ) { mice::pool(mice::as.mira(x)) } )
+                    pooled <- lapply(neu, FUN = function ( x ) { mice::pool(mice::as.mira(x)) } ) |> suppressWarnings()
                     names(pooled) <- names(neu) <- aussen
     ### jetzt muss hier die ergebnisstruktur rekonstruiert werden und 'anaI' genannt werden
                     anaI   <- do.call("rbind", lapply(aussen, FUN = reconstructResultsStructureGlm, neu=neu, grps=grps, group.delimiter=a%$$%group.delimiter, pooled=pooled, allNam=a[a%$$%allNam], modus=a%$$%modus, formula=a%$$%formula))
@@ -1577,6 +1611,7 @@ doSurveyAnalyses <- function (datL1, a) {
                }
                return(anaI)}))
         if ( length(unique(ana[,"modus"])) >1 ) {
+             browser()
              warning("Heterogeneous mode: '", paste(unique(ana[,"modus"]), collapse="', '"),"'", immediate. = TRUE)
         }
         mod <- unique(ana[,"modus"])
@@ -1665,8 +1700,8 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                              datL[,"g"] <- datL[,imps]
                         }  else  {
                              txt   <- paste0("datL |> tidyr::unite(\"g\", c(", paste(match(c(allNam[["nest"]],allNam[["imp"]]), colnames(datL)),collapse=", "),"), remove=FALSE)")
-                             datL  <- eval(parse(text=txt))
-                        }
+                             datL  <- eval(parse(text=txt))                     ### in unterer Zeile muss data.frame(datL) stehen, weil es sonst fehlschlaegt, wenn es aus
+                        }                                                       ### eatModel von tranformToBista aufgerufen wird ...
                         isUniq<- eatGADS::checkUniqueness2(data.frame(datL), varName=gg, idVar=allNam[["ID"]], impVar="g")
                         if(is.na(isUniq)) {
                             warning("'eatGADS::checkUniqueness2' returns NA. TRUE/FALSE is expected.", immediate. = TRUE)
@@ -1689,7 +1724,7 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                    if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').", immediate. = TRUE) }
     ### Umlaute-Bug aus dem LV 2012: workaround
                    if(inherits ( datL[,gg], c("factor", "character"))) {
-                      if(inherits(try(datL[,gg] <- eatTools::cleanifyString(x = datL[,gg])  ),"try-error"))  {datL[,gg] <- eatTools::cleanifyString(x = datL[,gg], oldEncoding = "latin1")}
+                      if(inherits(try(datL[,gg] <- eatTools::cleanifyString(x = datL[,gg]), silent=TRUE  ),"try-error"))  {datL[,gg] <- eatTools::cleanifyString(x = datL[,gg], oldEncoding = "latin1")}
                    }
              }
           }
@@ -1818,9 +1853,6 @@ createLoopStructure <- function (a) {
               if(a%$$%verbose){cat(paste("\nAssume nested structure with ", length(table(a[["datL"]][,a%$$%nest]))," nests and ",length(table(a[["datL"]][,a%$$%imp]))," imputations in each nest. This will result in ",length(table(a[["datL"]][,a%$$%nest]))," x ",length(table(a[["datL"]][,a%$$%imp]))," = ",length(table(a[["datL"]][,a%$$%nest]))*length(table(a[["datL"]][,a%$$%imp]))," imputation replicates.\n",sep=""))}
           }  else  { if(a%$$%verbose){cat("\nAssume unnested structure with ",length(table(a[["datL"]][,a%$$%imp]))," imputations.\n",sep="")}}
           if( is.null(a%$$%nest) ) { a$datL[,"nest"]  <- 1; a$nest  <- "nest" }
-          if(!is.null(a%$$%group)) {                                            ### untere Zeile: das, damit leere Gruppen nicht ueber by() mit geschleift werden, wie es passiert, wenn Gruppen als Faktoren definiert sind
-              for ( jj in a%$$%group )  { a$datL[,jj] <- as.character(a$datL[,jj]) }
-          }
           return(a)}
 
 ### replicates zuweisen bzw. erzeugen
