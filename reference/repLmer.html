@@ -58,7 +58,7 @@ that the function is not suitable for logistic logit/probit models."><!-- mathja
     <div class="ref-description">
     <p>Compute multilevel linear models for complex cluster designs with multiple imputed variables based
 on the Jackknife (JK1, JK2) procedure. Conceptually, the function combines replication
-methods and methods for multiple imputed data. Technically, this is a wrapper for the <code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.twolevelreg.html" class="external-link">BIFIE.twolevelreg</a></code> function
+methods and methods for multiple imputed data. Technically, this is a wrapper for the <code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.twolevelreg.html" class="external-link">BIFIE.twolevelreg</a></code> function
 of the <code>BIFIEsurvey</code> package. <code>repLmer</code> only adds functionality for trend estimation. Please note
 that the function is not suitable for logistic logit/probit models.</p>
     </div>
@@ -107,14 +107,14 @@ Variable name or column number of variable indicating replicate ID. In a jackkni
 variable. If <code>NULL</code>, no cluster structure is assumed and standard errors are computed according to a random sample.</p></dd>
 
   <dt id="arg-jkfac">jkfac<a class="anchor" aria-label="anchor" href="#arg-jkfac"></a></dt>
-<dd><p>Argument is passed to <code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> and specifies the factor for multiplying jackknife replicate
+<dd><p>Argument is passed to <code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> and specifies the factor for multiplying jackknife replicate
 weights.</p></dd>
 
   <dt id="arg-rho">rho<a class="anchor" aria-label="anchor" href="#arg-rho"></a></dt>
 <dd><p>Fay factor for statistical inference. The argument is passed to the <code>fayfac</code> argument of the
-<code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> function from the <code>BIFIEsurvey</code> package. See the
+<code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> function from the <code>BIFIEsurvey</code> package. See the
 corresponding help page for further details. For convenience, if <code>rho = NULL</code> (the default)
-and <code>type = "JK1"</code>, <code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> is called with
+and <code>type = "JK1"</code>, <code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> is called with
 <code>jktype="JK_GROUP"</code> and <code>fayfac = rho</code>, where \(\rho = (N_{cluster} - 1) \times N_{cluster}^{-1}\)</p></dd>
 
 <dt id="arg-imp">imp<a class="anchor" aria-label="anchor" href="#arg-imp"></a></dt>

@@ -108,7 +108,7 @@ standard errors are computed according to a random sample.</p></dd>
 variable. If <code>NULL</code>, no cluster structure is assumed and standard errors are computed according to a random sample.</p></dd>
 
   <dt id="arg-jkfac">jkfac<a class="anchor" aria-label="anchor" href="#arg-jkfac"></a></dt>
-<dd><p>Only applies if <code>engine = "BIFIEsurvey"</code>. Argument is passed to <code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> and specifies
+<dd><p>Only applies if <code>engine = "BIFIEsurvey"</code>. Argument is passed to <code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> and specifies
 the factor for multiplying jackknife replicate weights.</p></dd>
 
   <dt id="arg-repwgt">repWgt<a class="anchor" aria-label="anchor" href="#arg-repwgt"></a></dt>
@@ -213,9 +213,9 @@ See help page of <code><a href="https://rdrr.io/pkg/survey/man/svrepdesign.html"
 <dd><p>Shrinkage factor for weights in Fay's method. If <code>engine = "survey"</code>, argument is passed to the <code>rho</code> argument of
 the <code><a href="https://rdrr.io/pkg/survey/man/svrepdesign.html" class="external-link">svrepdesign</a></code> function from the <code>survey</code> package. See the corresponding help page for further
 details. If <code>engine = "BIFIEsurvey"</code>, argument is passed to the <code>fayfac</code> argument of the
-<code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> function from the <code>BIFIEsurvey</code> package. See the
+<code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code> function from the <code>BIFIEsurvey</code> package. See the
 corresponding help page for further details. For convenience, if <code>rho = NULL</code> (the default)
-and <code>engine = "BIFIEsurvey"</code> and <code>type = "JK1"</code>, <code><a href="https://rdrr.io/pkg/BIFIEsurvey/man/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code>
+and <code>engine = "BIFIEsurvey"</code> and <code>type = "JK1"</code>, <code><a href="https://konradoberwimmer.github.io/BIFIEsurvey/reference/BIFIE.data.jack.html" class="external-link">BIFIE.data.jack</a></code>
 is called with <code>jktype="JK_GROUP"</code> and <code>fayfac = rho</code>, where \(\rho = (N_{cluster} - 1) \times N_{cluster}^{-1}\)</p></dd>
 
   <dt id="arg-hetero">hetero<a class="anchor" aria-label="anchor" href="#arg-hetero"></a></dt>
@@ -349,9 +349,12 @@ https://doi.org/10.3758/s13428-021-01553-1</p>
 <span class="r-in"><span>          dependent <span class="op">=</span> <span class="st">"score"</span>, na.rm<span class="op">=</span><span class="cn">FALSE</span>, doCheck<span class="op">=</span><span class="cn">TRUE</span>, hetero<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 analyse(s) overall according to: 'group.splits = 0 1'.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country              country</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level dependent.var imp.var groups.divided.by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0         score     imp                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1         score     imp           country</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  group.differences.by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               country</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Assume unnested structure with 3 imputations.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Create 92 replicate weights according to JK2 procedure.</span>
@@ -383,11 +386,16 @@ https://doi.org/10.3758/s13428-021-01553-1</p>
 <span class="r-in"><span>          cross.differences <span class="op">=</span><span class="cn">TRUE</span>, crossDiffSE.engine<span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level dependent.var imp.var groups.divided.by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0         score     imp                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1         score     imp           country</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1         score     imp               sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2         score     imp     country + sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  group.differences.by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   sex</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Assume unnested structure with 3 imputations.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Create 92 replicate weights according to JK2 procedure.</span>
@@ -445,11 +453,16 @@ https://doi.org/10.3758/s13428-021-01553-1</p>
 <span class="r-in"><span>          crossDiffSE.engine<span class="op">=</span> <span class="st">"lm"</span>, clusters <span class="op">=</span> <span class="st">"idclass"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level dependent.var imp.var groups.divided.by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0         score     imp                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1         score     imp           country</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1         score     imp               sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2         score     imp     country + sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  group.differences.by</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   sex</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Assume unnested structure with 3 imputations.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Create 92 replicate weights according to JK2 procedure.</span>
@@ -476,58 +489,9 @@ https://doi.org/10.3758/s13428-021-01553-1</p>
 <span class="r-in"><span>          cross.differences <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span>, dependent <span class="op">=</span> <span class="st">"score"</span>, na.rm<span class="op">=</span><span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>          doCheck<span class="op">=</span><span class="cn">TRUE</span>, trend <span class="op">=</span> <span class="st">"year"</span>, linkErr <span class="op">=</span> <span class="st">"leScore"</span>,</span></span>
 <span class="r-in"><span>          crossDiffSE <span class="op">=</span> <span class="st">"wec"</span>, crossDiffSE.engine<span class="op">=</span> <span class="st">"lavaan"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    'wec' method: Assume equally weighted cases.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    'wec' method: Assume equally weighted cases.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> 'timeFormat' is not an exported object from 'namespace:eatTools'</span>
 <span class="r-in"><span><span class="va">res3T</span>  <span class="op">&lt;-</span> <span class="fu"><a href="report.html">report</a></span><span class="op">(</span><span class="va">means3T</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'means3T' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">### Example 3a: like example 3, but providing linking errors in an additional data.frame</span></span></span>
 <span class="r-in"><span><span class="co">### This is optional for two measurement occasions but mandatory if the analysis contains</span></span></span>
@@ -545,60 +509,9 @@ https://doi.org/10.3758/s13428-021-01553-1</p>
 <span class="r-in"><span>          dependent <span class="op">=</span> <span class="st">"score"</span>, na.rm<span class="op">=</span><span class="cn">FALSE</span>, doCheck<span class="op">=</span><span class="cn">TRUE</span>, trend <span class="op">=</span> <span class="st">"year"</span>,</span></span>
 <span class="r-in"><span>          linkErr <span class="op">=</span> <span class="va">linkErr</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">linkErr</span><span class="op">[</span>,<span class="st">"domain"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"reading"</span><span class="op">)</span>,<span class="op">]</span>,</span></span>
 <span class="r-in"><span>          crossDiffSE <span class="op">=</span> <span class="st">"wec"</span>, crossDiffSE.engine<span class="op">=</span> <span class="st">"lavaan"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    'wec' method: Assume equally weighted cases.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    'wec' method: Assume equally weighted cases.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> 'timeFormat' is not an exported object from 'namespace:eatTools'</span>
 <span class="r-in"><span><span class="va">res3a</span>  <span class="op">&lt;-</span> <span class="fu"><a href="report.html">report</a></span><span class="op">(</span><span class="va">means3a</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>No linking errors for parameters 'Ncases', 'NcasesValid', 'sd', 'var'. Linking errors for these parameters will be defaulted to 0.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Found 23 missing linking errors for dependent variable 'score' and parameter(s) 'sd'. Assume linking error of 0 for these cases.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'means3a' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">### Fourth example: using a loop do analyse 'reading' and 'listening' comprehension</span></span></span>
 <span class="r-in"><span><span class="co">### in one function call. Again with group and cross differences and trends, and</span></span></span>
@@ -612,106 +525,10 @@ https://doi.org/10.3758/s13428-021-01553-1</p>
 <span class="r-in"><span>                 cross.differences <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span>, dependent <span class="op">=</span> <span class="st">"score"</span>,</span></span>
 <span class="r-in"><span>                 na.rm<span class="op">=</span><span class="cn">FALSE</span>, doCheck<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                 trend <span class="op">=</span> <span class="st">"year"</span>, linkErr <span class="op">=</span> <span class="st">"leScore"</span>, crossDiffSE.engine<span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  analysis.number hierarchy.level groups.divided.by group.differences.by</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                1               0                                   &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                2               1           country                 &lt;NA&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                3               1               sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                4               2     country + sex                  sex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2010'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Trend group: '2015'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 analyse(s) overall according to: 'group.splits = 0'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Assume nested structure with 2 nests and 3 imputations in each nest. This will result in 2 x 3 = 6 imputation replicates.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: No linking error was defined. Linking error will be defaulted to '0'.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> 'timeFormat' is not an exported object from 'namespace:eatTools'</span>
 <span class="r-in"><span><span class="va">ret4T</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">means4T</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span> <span class="va">domain</span> <span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>          <span class="fu"><a href="report.html">report</a></span><span class="op">(</span><span class="va">means4T</span><span class="op">[[</span><span class="va">domain</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="va">domain</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'means4T' not found</span>
 <span class="r-in"><span>          </span></span>
 <span class="r-in"><span><span class="co">### Fifth example: compute adjusted means, also with trend estimation</span></span></span>
 <span class="r-in"><span><span class="co">### Note: all covariates must be numeric or 0/1 dichotomous</span></span></span>
