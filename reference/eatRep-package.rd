@@ -89,7 +89,7 @@ Third important note: Starting with version 0.15.0, the reporting function repor
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">eatRep</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.15.2.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.15.2.9002</span>
       </span>
     </div>
 
