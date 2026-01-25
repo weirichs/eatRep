@@ -25,13 +25,11 @@ test_that("Old cross differences", {
 
 rd15$sex_logic <- as.logical(as.numeric(rd15$sex) - 1)
 
-test_that("error for two logical grouping variables", {
-  expect_error(capture.output(repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
-           imp="imp", nest="nest", groups = c("sex_logic", "mig"), group.splits = 0:1,
-           cross.differences = FALSE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="old")),
-           "Factor levels of grouping variables are not disjunct.")
-})
-
+#test_that("works for two logical grouping variables", {
+  twoLogic <- repMean(datL = rd15, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+           imp="imp", nest="nest", groups = c("sex_logic", "mig"), group.splits = 0:1,group.differences.by = "mig", 
+           cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE, linkErr = "leScore", crossDiffSE="old", progress=FALSE, verbose=FALSE)
+ results <- report2(twoLogic)[["plain"]]         
 
 test_that("error for string with multiple categories to jk2.mean", {
   rd15_2 <- rd15_1

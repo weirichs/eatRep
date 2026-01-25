@@ -247,7 +247,7 @@ repTable<- function(datL, ID, wgt = NULL, type = c("none", "JK2", "JK1", "BRR", 
 
 repTableList <- function (datL, a) {
             a$crossDiffSE <- "old"                                              ### untere Zeile: warum so kompliziert? 'cross.differences' kann TRUE/FALSE oder eine Liste sein!
-            if(isFALSE(a%$$%cross.differences) == FALSE) {message("To date, only method 'old' is applicable for cross level differences in frequency tables.")}
+            if(isFALSE(a%$$%cross.differences) == FALSE && isTRUE(a%$$%verbose)) {message("To date, only method 'old' is applicable for cross level differences in frequency tables.")}
             a$modus <- identifyMode ( name = "table", type = car::recode(match.arg(arg = toupper(a%$$%type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'"))
             datL  <- eatTools::makeDataFrame ( datL, minRow = 2, onlyWarn=FALSE)
             b     <- a; b[["toCall"]] <- "table"
@@ -361,7 +361,7 @@ repLmer  <- function(datL, ID, wgt = NULL, L1wgt=NULL, L2wgt=NULL, type = c("JK2
 
 ### Funktion ist nicht user-level, sondern wird von repMean, repTable, repQuantile, repGlm mit entsprechenden Argumenten aufgerufen ... a ist die Argumentenliste 'argl'
 eatRep <- function (datL, a) {
-          options(warn=1)
+          #options(warn=1)
           a     <- c(argl[setdiff(names(argl), names(a))], a)                   ### hier wird die von der user-level-Funktion (z.B. repMean) uebergebene Argumentenliste um das erweitert, was nicht explizit angegeben, aber von eatRep als default erwartet wird
           datL  <- eatTools::makeDataFrame(datL, name = "datL", minRow = 2, onlyWarn=FALSE)
           if ( isTRUE(a%$$%useWec) ) { a$forceSingularityTreatment <- TRUE; a$poolMethod <- "scalar"}
@@ -371,7 +371,7 @@ eatRep <- function (datL, a) {
                beg   <- Sys.time()                                              ### es muss nicht geschehen, wenn die Funktion nur zum checken benutzt wird oder nur replicates zurueckgeben soll
                a$fc  <- identifyFunctionCall()                                  ### zeitschaetzung fuer CRAN/github rausnehmen
                diffe <- Sys.time() - beg
-              #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("Identify function call: ", timeFormat(diffe)))}
+              #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("Identify function call: ", eatTools::timeFormat(diffe)))}
           }
           a$toCall<- match.arg(a%$$%toCall, choices = argl[["toCall"]])         ### 'oberste' Funktion suchen, die eatRep gecallt hat; zweiter Teil des Aufrufs ist dazu da, dass nicht "by" drinsteht, wenn "repMean" innerhalb einer anderen "by"-Funktion aufgerufen wird
           a$type  <- car::recode(match.arg(arg = toupper(a%$$%type), choices = c("NONE", "JK2", "JK1", "BRR", "FAY")), "'FAY'='Fay'")
@@ -416,9 +416,9 @@ eatRep <- function (datL, a) {
     ### denn der check fand ja bereits beim ersten mal statt.
           if (isFALSE(a%$$%isRecursive)) {                                      ### wird nur gemacht, wenn die Funktion sich nicht wiederholt selbst aufruft
               beg   <- Sys.time()
-              datL  <- checkGroupVars ( datL = datL, allNam = a[a%$$%allNam], auchUV = auchUV)
+              datL  <- checkGroupVars ( datL = datL, allNam = a[a%$$%allNam], auchUV = auchUV, verbose = a%$$%verbose)
               diffe <- Sys.time() - beg
-              #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkGroupVars: ", timeFormat(diffe)))}
+             # if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkGroupVars: ", eatTools::timeFormat(diffe)))}
           }
     ### check fuer adjustierungsvariablen: die duerfen nur numerisch oder dichotom sein. dasselbe gilt fuer L1- und L2-Praediktoren in multilevel regressionsmodellen mit BIFIEsurvey
     ### Achtung: ab hier wird der Datensatz in die Argumentenliste mit aufgenommen!
@@ -481,14 +481,9 @@ eatRep <- function (datL, a) {
                   beg   <- Sys.time()                                           ### untere Funktion veraendert ggf. das Datensatzobjekt und allNam
                   a     <- createLoopStructure(a=a)
                   diffe <- Sys.time() - beg
-                  #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("createLoopStructure: ", timeFormat(diffe)))}
+                 # if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("createLoopStructure: ", eatTools::timeFormat(diffe)))}
     ### check: wenn cross.differences gemacht werden sollen, dann muessen die faktor levels aller gruppierungsvariablen disjunkt sein (siehe Mail Benjamin, 13.11.2019, 18.11 Uhr)
-                  if(!is.null(a%$$%cross.differences)) {
-                      if(length(a%$$%group)>1) {
-                         lev <- unlist(lapply(a%$$%group, FUN = function ( v ) { unique(as.character(a$datL[,v]))}))
-                         if (length(lev) != length(unique(lev))) {stop("Factor levels of grouping variables are not disjunct.\n")}
-                      }
-                  }
+                  a     <- makeFactorLevelsDisjunct(a)
     ### check: abhaengige Var. numerisch?
                   if(a%$$%toCall %in% c("mean", "quantile", "glm")) {
                      if(!inherits(a[["datL"]][,a%$$%dependent],  c("integer", "numeric"))) {
@@ -505,8 +500,31 @@ eatRep <- function (datL, a) {
                   allRes <- clearTab(allRes, allNam = a[a%$$%allNam], depVarOri = a%$$%depOri, fc=a%$$%fc, toCall=a%$$%toCall, datL = a%$$%datL)
                   allRes <- prepForReport2(out=allRes, info = ret, allNam = a[a%$$%allNam])
                   allRes <- list(resT = list(noTrend = allRes), allNam = a[a%$$%allNam], toCall = a%$$%toCall, family=a%$$%family)
-                  options(warn=0)
+                  #options(warn=0)
                   return(allRes) }} }
+
+### Hilfsfunktion fuer eatRep()
+makeFactorLevelsDisjunct <- function(a) {
+       if(!is.null(a%$$%cross.differences)) {
+           if(length(a%$$%group)>1) {
+              lev <- lapply(a%$$%group, FUN = function ( v ) { unique(as.character(a$datL[,v]))})
+              if(length(unlist(lev)) != length(unique(unlist(lev)))) {
+                 chk <- unlist(lapply(unique(unlist(lev)), FUN = function (l) {grepl("_____", l)}))
+                 if(!all(chk == FALSE)) {
+                    names(lev) <- a$group
+                    stop(paste0("More than five underscores in a row are not allowed in group variable levels \n",print_and_capture(lev, spaces = 5)))
+                 }   
+                 if(isTRUE(a%$$%verbose)) {message("Make factor levels of group variables disjunct.")}
+                 for(gv in a$group) {
+                     if(inherits(a$datL[,gv], c("character", "logical"))) {levs <- as.character(sort(unique(a$datL[,gv])))}
+                     if(inherits(a$datL[,gv], "factor")) {levs <- levels(a$datL[,gv])}
+                     a$datL[,gv] <- factor(paste0(gv,"_____", a$datL[,gv]), levels = paste0(gv,"_____", levs))
+                 }
+              }
+           }
+       }
+       return(a)}          
+
 
 ### Hilfsfunktion fuer eatRep(): bereitet output fuer report2() vor. Zum einen werden die Analyse-IDs ergaenzt, und es werden, falls vorhanden, hierarchieebenen ergaenzt
 prepForReport2 <- function(out, info, allNam) {
@@ -604,8 +622,8 @@ createAnalysisInfTable <- function(toAppl, verbose, allNam) {
 printAdjustedVars <- function(vec) {
      txt   <- paste0("'", paste(vec, collapse="', '"),"'")
      i     <- length(vec)-1
-     if(nchar(txt) > 70) {abb <- TRUE} else {abb <- FALSE}                      ### abbreviate?
-     while(nchar(txt) > 70) {
+     if(nchar(txt) > 60) {abb <- TRUE} else {abb <- FALSE}                      ### abbreviate?
+     while(nchar(txt) > 60) {
         txt   <- paste0("'", paste(vec[1:i], collapse="', '"),"'")
         i     <- i-1
      }   
@@ -639,7 +657,7 @@ innerLoop <- function (toAppl, ret, a=a)  {
                 beg   <- Sys.time()
                 chk3  <- checkImpNest(toAppl = toAppl, gr=gr, a=a)
                 diffe <- Sys.time() - beg
-                #if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkImpNest: ", timeFormat(diffe)))}
+               # if(a%$$%verbose && as.numeric(diffe) > 0.2) {message(paste0("checkImpNest: ", eatTools::timeFormat(diffe)))}
     ### nur fuer repTable(): "expected.values" aufbereiten ... Funktion veraendert Datensatz und expected.values
                 a     <- prepExpecVal (a=a)
                 b     <- a[-match("datL", names(a))]                            ### Datensatz aus Argumentliste entfernen
@@ -919,10 +937,10 @@ conv.mean      <- function (dat.i , a) {
 
 computeTrueDiffAndOtherDiffs <- function (difs, repl, dat, kontr, group.differences.by, value) {
           stopifnot ( nrow(difs) == 2 )
-          refSeq<- names(table(dat[,group.differences.by]))                     ### immer referenzgruppe MINUS fokusgruppe
+          refSeq<- names(table(dat[,group.differences.by]))                     ### immer fokusgruppe MINUS referenzgruppe. Referenzgruppe steht in table sortierung an erster Stelle 
           reihe <- match(kontr, refSeq)                                         ### dazu rausfinden, was Referenz ist ...
-          trueD <- difs[match(refSeq[min(reihe)],difs[,group.differences.by]),value] - difs[match(refSeq[max(reihe)],difs[,group.differences.by]),value]
-          if(!missing(repl)) {otherD<- repl[,refSeq[min(reihe)]] - repl[,refSeq[max(reihe)]]} else {otherD<- NULL}
+          trueD <- difs[match(refSeq[max(reihe)],difs[,group.differences.by]),value] - difs[match(refSeq[min(reihe)],difs[,group.differences.by]),value]
+          if(!missing(repl)) {otherD<- repl[,refSeq[max(reihe)]] - repl[,refSeq[min(reihe)]]} else {otherD<- NULL}
           return(list(true = trueD, other = otherD))  }
 
 jackknife.adjust.mean <- function (dat.i , a) {
@@ -1611,7 +1629,6 @@ doSurveyAnalyses <- function (datL1, a) {
                }
                return(anaI)}))
         if ( length(unique(ana[,"modus"])) >1 ) {
-             browser()
              warning("Heterogeneous mode: '", paste(unique(ana[,"modus"]), collapse="', '"),"'", immediate. = TRUE)
         }
         mod <- unique(ana[,"modus"])
@@ -1632,23 +1649,23 @@ doSurveyAnalyses <- function (datL1, a) {
 checkEngine <- function ( a) {
           if (a%$$%engine == "BIFIEsurvey") {
               if (!is.null(a%$$%nest) ) {
-                  message("Engine 'BIFIEsurvey' currently does not work for nested imputation. Set 'engine' to 'survey'.")
+                  if(isTRUE(a%$$%verbose)) {message("Engine 'BIFIEsurvey' currently does not work for nested imputation. Set 'engine' to 'survey'.")}
                   a$engine <- "survey"
               }
               if ( length(unlist(lapply(c("glm", "quantile"), FUN = function ( y ) {unlist(lapply(c(a%$$%modus, a%$$%toCall), FUN = function (w) { grep(y, w)}))}))) > 0 ) {
-                  message("Engine 'BIFIEsurvey' currently does not work for regression models and quantiles. Set 'engine' to 'survey'.")
+                  if(isTRUE(a%$$%verbose)) {message("Engine 'BIFIEsurvey' currently does not work for regression models and quantiles. Set 'engine' to 'survey'.")}
                   a$engine <- "survey"
               }
               if ( !a%$$%type %in% c("JK2", "JK1", "NONE") ) {
-                  message("Engine 'BIFIEsurvey' currently only works for jackknife 1 and jackknife 2. Set 'engine' to 'survey' due to type = '",a%$$%type,"'.")
+                  if(isTRUE(a%$$%verbose)) {message("Engine 'BIFIEsurvey' currently only works for jackknife 1 and jackknife 2. Set 'engine' to 'survey' due to type = '",a%$$%type,"'.")}
                   a$engine <- "survey"
               }
               if ( !is.null(a%$$%adjust)) {
-                   message("Engine 'BIFIEsurvey' currently does not work for adjusted means. Set 'engine' to 'survey'.")
+                   if(isTRUE(a%$$%verbose)) {message("Engine 'BIFIEsurvey' currently does not work for adjusted means. Set 'engine' to 'survey'.")}
                    a$engine <- "survey"
               }                                                                 ### bifie survey verbieten, wenn frequency table mit chi.square = TRUE und group.differences = TRUE
               if ( a%$$%toCall == "table" && !is.null(a%$$%group.differences.by) ) {
-                   message("Engine 'BIFIEsurvey' currently does not work for chi.square tests of group differences of frequency tables. Set 'engine' to 'survey'.")
+                   if(isTRUE(a%$$%verbose)) {message("Engine 'BIFIEsurvey' currently does not work for chi.square tests of group differences of frequency tables. Set 'engine' to 'survey'.")}
                    a$engine <- "survey"
               }
           }
@@ -1675,16 +1692,22 @@ checkJK.arguments <- function(a) {
                }
           }}
 
-checkGroupVars <- function ( datL, allNam, auchUV) {
+checkGroupVars <- function ( datL, allNam, auchUV, verbose) {
     ### Personen mit Gewicht = 0 ausschliessen, damit sie nicht bei Ncases mitgezaehlt werden
     ### Aber Achtung: Gewicht = NA nicht mit ausschliessen, denn das ist kritisch und soll spaeter ggf. fehlermeldung werfen
           if(!is.null(allNam[["wgt"]])) {
              w0 <- which(datL[,allNam[["wgt"]]] == 0)
              if(length(w0) >0){
                 nID  <- unique(datL[w0,allNam[["ID"]]])
-                message("Remove ",length(nID), " students with zero weights to avoid counting them when determining sample size.")
+                if(verbose){message("Remove ",length(nID), " students with zero weights to avoid counting them when determining sample size.")}
                 datL <- datL[-w0,]
              }
+          }
+    ### wenn user imp und nest definiert hat, sollte es nicht NA oder konstant sein ... eigentlich wuerde dieser check in checkImpNest() mehr Sinn ergeben, 
+    ### aber dort wird ja schon fuer die sicherstellgung der loop structure dat[,"nest"] <- 1 gesetzt, wenn es keine nests gibt, damit die by schleife durchlaeuft. Also muss das hier geschehen
+          for(ii in c(allNam[["nest"]], allNam[["imp"]])) {
+              if( length(unique(na.omit(datL[,ii]))) < 2) {warning(paste0("Variable '",ii,"' is constant!"))}
+              if( any(is.na(datL[,ii]))) {warning(paste0("Variable '",ii,"' contains missing values"))}
           }
           if(!is.null(allNam[["group"]]) || !is.null(auchUV) ) {
              chk <- lapply(allNam[["group"]], FUN = function ( v ) { if ( !inherits(datL[,v],  c("factor", "character", "logical", "integer"))) {stop(paste0("Grouping variable '",v,"' must be of class 'factor', 'character', 'logical', or 'integer'.\n"))} })
@@ -1717,24 +1740,31 @@ checkGroupVars <- function ( datL, allNam, auchUV) {
                         }  else  {
                             d <- datL
                         }
-                        chk2 <- lme4::isNested(d[,allNam[["ID"]]], d[,gg])
+                        chk2 <- reformulas::isNested(d[,allNam[["ID"]]], d[,gg])
                    }  else  {
-                        chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { lme4::isNested(i[,allNam[["ID"]]], i[,gg])}))
+                        chk2 <- all(by(data = datL, INDICES = datL[,c(allNam[["nest"]], allNam[["imp"]])], FUN = function ( i ) { reformulas::isNested(i[,allNam[["ID"]]], i[,gg])}))
                    }
                    if (isFALSE(chk2)) { warning("Grouping variable '",gg,"' is not nested within persons (variable '",allNam[["ID"]],"').", immediate. = TRUE) }
     ### Umlaute-Bug aus dem LV 2012: workaround
                    if(inherits ( datL[,gg], c("factor", "character"))) {
                       if(inherits(try(datL[,gg] <- eatTools::cleanifyString(x = datL[,gg]), silent=TRUE  ),"try-error"))  {datL[,gg] <- eatTools::cleanifyString(x = datL[,gg], oldEncoding = "latin1")}
                    }
+    ### in BT-Kapitelanalysen soll referenzkategorie nicht mehr von Hand mit zzOhneMHG erstellt werden, falls groupDifferencesBy
+    ### das war notwendig, damit immer fokuskategorie - referenzkategorie gerechnet wird. Loesung:  bei gruppierungsvariablen der referenzkategorie ein zzz voranstellen,
+    ### dann allen kategorien den Namen der Gruppierungsvariable selbst voranstellen, damit das problem mit den non-disjoint labels nicht mehr auftritt. in der reportingfunktion beides zuletzt wieder loeschen 
+                   #cats <- table(datL[,gg])
+                   #pref <- c("zzzzzz", rep("", length(cats)-1))
+                   #altne<- data.frame(alt = names(cats), neu = eatTools::crop(paste(pref, gg, names(cats), sep="____"),"____"), stringsAsFactors =FALSE)
+                   #datL[,gg] <- eatTools::recodeLookup(datL[,gg], altne) |> suppressWarnings()
              }
           }
           if(!is.null(allNam[["group"]]) | !is.null(allNam[["independent"]]) ) {
              for ( gg in c(allNam[["group"]], allNam[["independent"]]) ) {
-                 if (inherits ( datL[,gg], "factor")) {                         ### ausserdem duerfen fuer Gruppierungs- und unabhaengig Variablen keine factor levels ohne Beobachtungen drinsein
+                 if (inherits ( datL[,gg], "factor")) {                         ### ausserdem duerfen fuer Gruppierungs- und unabhaengige Variablen keine factor levels ohne Beobachtungen drinsein
                      if ( any(table(datL[,gg]) == 0)) {
                           lev <- names(which(table(datL[,gg]) !=0))
                           nlv <- names(which(table(datL[,gg]) ==0))
-                          message( "Delete level(s) '", paste(nlv, collapse="', '"), "' of grouping or independent variable '",gg,"' without any observations.")
+                          if(verbose){message( "Delete level(s) '", paste(nlv, collapse="', '"), "' of grouping or independent variable '",gg,"' without any observations.")}
                           datL[,gg] <- factor(as.character(datL[,gg]), levels =lev)
                      }
                  }

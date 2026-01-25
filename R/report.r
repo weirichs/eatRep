@@ -2,11 +2,18 @@ report2 <- function ( repFunOut, add=list(), exclude = c("NcasesValid", "var"), 
                      round = TRUE, digits = 3, printDeviance = FALSE, printSE_correction = FALSE) {
           if(is.null(repFunOut)) {return(NULL)}
           allN     <- repFunOut[["allNam"]]
+    ### Achtung: wenn repTable aufgerufen wurde fuer eine polytome Outcomevariable, fuer die dann intern repMean mehrfach hintereinander aufgerufen wird
+    ### (also jeweils fuer die dichotomen Indikatoren der polytomen Variable), gibt es im Output nicht nur eine, sondern mehrere AVs! Falls cross differences
+    ### bestimmt werden sollen, tritt dann eine Fehlermeldung in 'compareParameters()' auf, weil die levels einander nicht mehr zugeordnet werden koennen
+    ### Um das zu verhindern, wird hier ein Hotfix benoetigt, der den Output 'repFunOut' in so viele Listenelemente splittet, wie es AVs gibt. Ueber diese
+    ### Liste wird dann 'report()' geschleift.
           repFunOut<- buildList(repFunOut)
-          out      <- do.call("rbind", lapply(names(repFunOut), FUN = function (rfo) {
+          outList  <- lapply(names(repFunOut), FUN = function (rfo) {
+    ### vorab: alte 'dG'-Funktion zum Anzeigen der Regressionsergebnisse implementieren
                       if ( length(grep("glm", as.character(repFunOut[[rfo]][["resT"]][[1]][1,"modus"]))) ==1 ) {
                            if ( printGlm == TRUE ) { dG(repFunOut[[rfo]], digits = digits, printDeviance = printDeviance, add = add ) }
                       }
+    ### 1. Input extrahieren: diese Variablen dann spaeter an Einzelfunktionen weitergeben!
                       jk2      <- repFunOut[[rfo]][["resT"]]
                       tv       <- repFunOut[[rfo]][["allNam"]][["trend"]]
                       cols     <- c("group", "depVar", "modus", "parameter")
@@ -19,27 +26,36 @@ report2 <- function ( repFunOut, add=list(), exclude = c("NcasesValid", "var"), 
                       }
                       funs     <- c("mean", "table", "quantile", "glm", "lmer")
                       fun      <- funs [ which( unlist(lapply(funs, FUN = function ( f ) { length(grep(f, jk2[[1]][1,"modus"]))})) > 0) ]
+    ### Hotfix: wenn repTable ueber wiederholten Aufrufen von repMean gewrappt wurde, stehen die Ns mehrmals drin, naemlich fuer
+    ### jede Indikatorvariable einer mehrstufigen Faktorvariable separat. Sie sind aber immer gleich. Durch das Mehrmalsdrinstehen
+    ### misslingt das reshapen, deshalb muessen sie jetzt raus
                       if ( fun == "table") {jk2 <- lapply(jk2, reduceDoubleN)}
+    ### 2. cross-level diffs bestimmen: ueberschreibt bzw. erweitert das Objekt 'jk2' ... Achtung: sind nur fuer "mean" oder "table" erlaubt
                       if ( is.list(cl_diffs) ) {
                            jk2 <- lapply(jk2, FUN = function (df) {
                                   ret <- plyr::rbind.fill ( df, computeCrossLevel (df, cols=cols, grpv = grpv, fun = fun, cl_diffs = cl_diffs, allNams = allN))
-                                  ret[,"row"] <- 1:nrow(ret)                    
+                                  ret[,"row"] <- 1:nrow(ret)                    ### neue Zeilennummern vergeben
                                   return(ret) })
                       }
+    ### 2.b) SE correction durchfuehren (siehe Paper Weirich & Hecht)
                       if(!is.null(repFunOut[[rfo]][["SE_correction"]]) && !is.null(repFunOut[[rfo]][["SE_correction"]][[1]])) {
+    ### checks, ob Vergleiche dabei, fuer die keine Korrektur verfuehgbar ist
                           if(length(which(jk2[[1]][["comparison"]] == "crossDiff_of_groupDiff")) > 0 ) {
                               warning("Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.")
                           }
                           mult_hierarchy <- any(unlist(lapply(cl_diffs, function(x) x[2] - x[1] != 1)))
                           if(mult_hierarchy) {warning("Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.")}
+    ### correction durchfuehren
                           jk2 <- lapply(jk2, function(jk2_single) { seCorrect(SE_correction = repFunOut[[rfo]][["SE_correction"]], jk2 = jk2_single, grpv = grpv, allNam=allN, printSE_correction=printSE_correction) })
                       }
+    ### 4. Trend bestimmen (Output wird angereichert)
                       if ( !is.null(tv) ) {
                            jk2 <- computeTrend(jk2 = jk2, repFunOut = repFunOut[[rfo]], tv = tv, fun = fun, allNam=allN)
                       } else {
                            jk2 <- jk2[[1]]
                       }
-                      if ( length(add)>0) {                                     
+    ### 5. 'add' ergaenzen, falls gewuenscht
+                      if ( length(add)>0) {                                     ### necessary checks
                            checkmate::assert_list(add, types="character", unique=TRUE, min.len = 1, names = "unique")
                            if(!all(sapply(add, length) == 1)) {stop("All elements of 'add' must be of length 1.")}
                            dopp<- names(add) %in% colnames(jk2)
@@ -47,16 +63,21 @@ report2 <- function ( repFunOut, add=list(), exclude = c("NcasesValid", "var"), 
                            if ( length( ind ) > 0 ) {stop(paste0("Following names of 'add' are not allowed: '",paste(names(add)[ind], collapse = "', '"), "'."))}
                            for ( u in names(add)) {jk2[,u] <- add[[u]]}
                       }
+    ### 6. reshapen ... Achtung, doof: eigentlich duerfte das 'unique' in der unteren Zeile nicht da stehen, sonst klappt aber bspw. die c-test-Analyse aus MHG-Kapitel des dem BT2024 nicht ... weiss noch nicht genau, warum
                       jk2wide  <- reshape2::dcast(data = unique(jk2[,-eatTools::whereAre(c("group","row", "hierarchy.level"), colnames(jk2), verbose=FALSE)]), formula = ... ~ coefficient, value.var = "value")
                       if ( fun == "glm") {                                      ### Hotfix: damit fuer glm im Output die Koeffizienten immer zuerst und R2, R2nagel, Nvalid imer dahinter stehen, werden die jetzt voruebergehen umbenannt, dann sortiert und hinterher wieder zurueck benannt
                            jk2wide[,"parameter"] <- car::recode(jk2wide[,"parameter"], "'Nvalid'='zzzzNvalid'; 'R2'='zzzzR2'; 'R2nagel'='zzzzR2nagel'")
                            jk2wide <- data.frame(jk2wide[sort(jk2wide[,"parameter"],decreasing=FALSE,index.return=TRUE)$ix,])
                            jk2wide[,"parameter"] <- car::recode(jk2wide[,"parameter"], "'zzzzNvalid'='Nvalid'; 'zzzzR2'='R2'; 'zzzzR2nagel'='R2nagel'")
                       }
+    ### runden, falls gewuenscht
                       if ( isTRUE(round)) {
                            jk2wide <- eatTools::roundDF(jk2wide, digits = digits)
                       }
-                      return(jk2wide)}))
+                      attr(jk2wide, "grpv") <- grpv
+                      return(jk2wide)})
+          out      <- do.call("rbind", outList)            
+    ### IDs umbenennen
           cols     <- grep("^id$|^unit_1$|^unit_2$", colnames(out), value=TRUE)
           alt      <- unique(unlist(out[,cols]))
           altneu   <- data.frame (alt=alt, neu = as.character(as.numeric(as.factor(alt))), stringsAsFactors = FALSE)
@@ -66,11 +87,22 @@ report2 <- function ( repFunOut, add=list(), exclude = c("NcasesValid", "var"), 
                    out[,paste("unit", i, sep="_")] <- car::recode(paste(car::recode(out[,"comparison"], "'crossDiff'='group'; 'groupDiff'='group'; 'trend'='group'; 'none'='NA'; else='comp'"),eatTools::recodeLookup(out[,paste("unit", i, sep="_")], altneu), sep="_"), "'NA_NA'=NA")
               }
           }
-          plain    <- data.frame ( label1 = createLabel1(out, allNam=allN), label2 = createLabel2(out, allNam=allN), out, stringsAsFactors=FALSE) |> dplyr::select(-dplyr::any_of(c("type")))
+    ### Labelspalten ergaenzen
+          plain    <- data.frame ( label1 = createLabel1(out, allNam=allN), label2 = createLabel2(out, allNam=allN), out, stringsAsFactors=FALSE) |> dplyr::select(-dplyr::any_of("type"))
+    ### unerwuenschtes loeschen
           if ( length(exclude)>0) {
                weg <- which(plain[,"parameter"] %in% exclude)
                if ( length(weg)>0) {plain <- plain[-weg,]}
           }
+    ### zurueckbenennen der disjunkten Factor levels 
+          cols     <- c("label1", "label2", setdiff(unique(unlist(lapply(outList, FUN = function(ol) {attr(ol, "grpv")}))), c("id", "row", "type", "unit_1", "unit_2", "hierarchy.level")))
+          doRename <- which(unlist(lapply(cols, FUN = function(col1) {any(grepl("_____", plain[,col1]))})))
+          if(length(doRename)>0) {
+             grpv <- setdiff(cols, c("label1", "label2"))
+             patt <- paste(paste0(grpv, "_____"), collapse="|")
+             for(i in doRename) {plain[,i] <- stringr::str_remove_all(plain[,i], patt)}
+          }
+    ### verschiedene sheets erzeugen
           compar   <- subset(plain, comparison!="none") |> dplyr::select(dplyr::any_of(c("id", "unit_1", "unit_2", "comparison"))) |> unique()
           groups   <- subset(plain, comparison=="none") |> dplyr::select(dplyr::any_of(c("id", allN[["group"]], allN[["trend"]],  names(add)))) |> unique()
           estim    <- plain |> dplyr::select(dplyr::any_of(c("id", "depVar", "parameter", "est", "se", "p", "es")))
@@ -79,72 +111,88 @@ report2 <- function ( repFunOut, add=list(), exclude = c("NcasesValid", "var"), 
           class(ret) <- c("list", "report2")
           return(ret)}
 
+### Hilfsfunktion zur Berechnung von cross-level differences (fuer jk2.mean und jk2.table)
 computeCrossLevel <- function ( jk2, cols, grpv, fun, cl_diffs, allNams) {
        ori <- jk2
+    ### Achtung: rows nur auswaehlen, wenn imput aus jk2.mean stammt, bei jk2.table immer alles nehmen!
        if ( fun == "mean" ) {
             jk2  <- jk2[which(jk2[,"parameter"] %in% c("mean", "sd")),]
        }
        if ( fun %in% c("glm", "table") ) {
             jk2  <- jk2[which(!jk2[,"parameter"] %in% c("Nvalid", "Ncases", "R2", "R2nagel")),]
        }
+    ### cross-level differences koennen fuer comparison=none (--> crossDiff) bestimmt werden oder fuer comparison=groupDiff (--> crossDiff_of_groupDiff)
+    ### letzteres geht allerdings NUR, wenn es mindestens zwei gruppierungsvariablen gibt und wenn group.splits [a]:[b] wobei [b] min. 2 einheiten groesser als [a] sein muss ... letzteres mit inherits(try(...)) workaround
        if(length(allNams[["group"]]) < 2) {jk2 <- jk2[which(jk2[,"comparison"] == "none"),]}
        stopifnot(length(unique(jk2[,"comparison"])) <= 2)
        ret <- do.call("rbind", by ( data = jk2, INDICES = jk2[,"comparison"], FUN = function ( d ) {
-              if ( d[1,"comparison"] != "none") { if(inherits(try(cl_diffs  <- combinat::combn(unique(d[,"hierarchy.level"]),2, simplify=FALSE)  ),"try-error"))  {return(NULL)}}
+              if ( d[1,"comparison"] != "none") { if(inherits(try(cl_diffs  <- combinat::combn(unique(d[,"hierarchy.level"]),2, simplify=FALSE),silent=TRUE ),"try-error"))  {return(NULL)}}
+    ### loop over hierarchy levels ... Vergleichsrichtung wie in eatRep-Funktion festgelegt
               ret2 <- do.call("rbind", lapply ( cl_diffs, FUN = function ( comp_vec ) {
                       redDF_1 <- d[which(d[, "hierarchy.level"] %in% comp_vec),]
                       fac     <- by(data = redDF_1, INDICES = redDF_1[, "hierarchy.level"], FUN = function ( x ) { unique(x[, "group"])})
                       if(length(fac) == 1) {return(NULL)}
+    ### Achtung: nur ineinander geschachtelte CrossLevel-Differenzen werden gebildet
                       all_grp_list <- do.call("rbind", lapply(fac[[1]], function(high_lvl) {
+    ### all comparisons if wholeGroup higher level
                           hl_levels <- unlist(strsplit(high_lvl, ", |_+"))
                           matches   <- unlist(lapply(fac[[2]], FUN = function (single) {
                                        part <- unlist(strsplit(single, ", |_+"))
                                        return(sum(part %in% hl_levels))}))
                           low_lvl   <- fac[[2]][which(matches == max(matches))]
                           vgl       <- expand.grid(high_lvl, low_lvl)
+    ### loop over comparison to be made!
                           grp       <- do.call("rbind", plyr::alply(as.matrix(vgl), .margins = 1, .fun = function(single_comp) {
                                        redDF_2 <- redDF_1[which(redDF_1[,"group"] %in% single_comp),]
+    ### sort corresponding to order in cross.diff object (first number, second number), then that way the difference is calc
                                        redDF_2 <- redDF_2[c(which(redDF_2[, "hierarchy.level"] == comp_vec[1]), which(redDF_2[, "hierarchy.level"] == comp_vec[2])), ]
+    ### calculate difference between all parameters
                                        newRows <- compareParameters(df_allP = redDF_2, grpv = grpv, fun = fun, allNams=allNams)
+    ### Output aufbereiten fuer cross-level diffs von group.diffs
                                        return(newRows)  }))
                           return(grp) }))
                       return(all_grp_list)}))
               return(ret2)}))
        return(ret)}
 
+### Hilfsfunktion fuer crosslevel diffs
 compareParameters <- function(df_allP, grpv, fun, allNams) {
   df_allP <- df_allP[with(df_allP, order(parameter, group)),]
-  df_allP <- df_allP[which(df_allP[,"coefficient"] %in% c("est", "se")),]       
+  df_allP <- df_allP[which(df_allP[,"coefficient"] %in% c("est", "se")),]       ### untere Zeile, for means: extract SDs
   if(identical(fun, "mean")) { df_sd <- df_allP[df_allP[, "parameter"] == "sd", ] }
   out <- do.call("rbind", by ( data = df_allP, INDICES = df_allP[,"parameter"], FUN = function ( df ) {
-     df   <- cleanDF(df)                                                        
-     df   <- df[order(df[,"hierarchy.level"], decreasing = FALSE), ]            
-     meaD <- diff(df[which(df[,"coefficient"] == "est"),"value"])               
-     if ( length(meaD) ==0 || is.na(meaD)) {return(NULL)}
+     df   <- cleanDF(df)                                                        ### checks
+     df   <- df[order(df[,"hierarchy.level"], decreasing = FALSE), ]            ### Direction of crossDiff: Higher vs Lower (eg country vs all)
+     meaD <- diff(df[which(df[,"coefficient"] == "est"),"value"])               ### compute mean difference
+     if ( length(meaD) ==0 || is.na(meaD)) {return(NULL)} 
      if ( !"se" %in% df[, "coefficient"]) {
          warning( "No standard error for parameter '",unique(df[,"parameter"]),"'. Cannot compute standard errors and p value for cross-level difference between '",df[1,"group"],"' and '",df[2,"group"],"'.\n")
          se <- pval <- NA
      }  else  {
-         se  <- sqrt(sum(df[which(df[,"coefficient"] == "se"),"value"]^2))      
+         se  <- sqrt(sum(df[which(df[,"coefficient"] == "se"),"value"]^2))      ### compute SE
          pval<- 2*pnorm(abs(meaD/se), lower.tail=FALSE)
      }
-     es  <- NA                                                                  
+     es  <- NA                                                                  ### effektstaerke
      if ( fun == "mean" && df[1,"parameter"] == "mean" && nrow(df_sd)>0 ) {
          sd_wide <- reshape2::dcast(df_sd[which(df_sd[,"coefficient"] == "est"),], group~parameter, value.var = "value")
+   ### achtung: wenn cross-differences fuer adjusted means gemacht werden, gibt es manchmal keine Standardabweichung fuer Gruppenmittelwerte
+   ### sd_wide hat dann nur eine Zeile. wenn das so ist, kann keine effektstaerke berechnet werden
          if ( nrow(sd_wide) > 1) { es  <- meaD / sqrt(0.5*sum(sd_wide[,"sd"]^2)) }
      }
-     if(nrow(df) == 2 ) {                                                       
-       ret <- rbind (df, df)                                                    
+     if(nrow(df) == 2 ) {                                                       ### uebler Hotfix: ohne Jackknife gibt es keine Se fuer SDs
+       ret <- rbind (df, df)                                                    ### 'df' hat dann nur 2 statt 4 Zeilen
      }  else  {
        ret <- df
      }
      ret[,"comparison"]  <- car::recode(ret[,"comparison"], "'none'='crossDiff'; 'groupDiff'='crossDiff_of_groupDiff'")
      ret[,"coefficient"] <- c("est","se", "p", "es")
      ret[,"value"]       <- c(meaD, se, pval, es)
+   ### Gruppenvariablenspalte anpassen entsprechend neuer Ergebnisstrukturbesprechung
      const <- unlist(lapply(allNams[["group"]], FUN = function (v) {length(unique(ret[,v])) ==1}))
      vars  <- allNams[["group"]][which(!const)]
      foo   <- lapply(vars, FUN = function (v) {stopifnot(any(grepl("total", ret[,v])))})
      for (v in vars) {ret[,v] <- paste0(unique(setdiff(ret[,v], "total")),  " - total")}
+   ### id anpassen
      ret[,"unit_1"] <- sort(unique(ret[,"id"]))[1]
      ret[,"unit_2"] <- sort(unique(ret[,"id"]))[2]
      ret[,"id"]     <- paste(genTS(), paste(as.character(ret[,"row"]), collapse=""), sep="_")
@@ -153,9 +201,8 @@ compareParameters <- function(df_allP, grpv, fun, allNams) {
   return(out)}
 
 cleanDF <- function(df){
-   if(nrow(df) %in% c(2,4)) {return(df)}                                        
-
-
+   if(nrow(df) %in% c(2,4)) {return(df)}                                        ### alles ok
+   if(!nrow(df) %in% c(1,3)){browser()}
    stopifnot(nrow(df) %in% c(1,3))
    valid <- table(df[,"coefficient"])
    weg   <- which(valid != 2)
@@ -167,20 +214,17 @@ cleanDF <- function(df){
 
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
-  checkmate::assert_data_frame(dat)
-  checkmate::assert_character(groupCols, null.ok = TRUE)
-  
           if(is.null(groupCols)) {groupCols <- c("group", "parameter")}
           dat <- do.call("rbind", by ( data = dat, INDICES = dat[,groupCols], FUN = function ( x ) {
                  z  <- x[which(x[,"coefficient"] %in% c("est", "se")),]
                  if ( nrow(z) > 2) {cat("Fehler. x muss maximal 2 zeilen haben.\n")}
                  if ( nrow(z) == 2 ) {
-                      y  <- z[1,]                                               
-                      y[["coefficient"]] <- "p"                                 
+                      y  <- z[1,]                                               ### dazu relevante spalten identifizieren, nach denen gesplittet werden muss
+                      y[["coefficient"]] <- "p"                                 ### erste Zeile von x duplizieren und relevante Werte ersetzen
                       y[["value"]]       <- 2*pnorm(abs(z[which(z[,"coefficient"] == "est"),"value"] / z[which(z[,"coefficient"] == "se"),"value"]), lower.tail=FALSE)
-                      x  <- rbind ( x, y)                                       
+                      x  <- rbind ( x, y)                                       ### Achtung: Signifikanzwert wird hier noch nach numerisch transformiert, muss zurueckgewandelt werden
                  }
-                 return(x)}))                                                   
+                 return(x)}))                                                   ### untere Zeile: wenn 'table' ueber 'jk2.mean' gewrappt wurde, muessen hier die parameterbezeichnungen geaendert werden
           return(dat)}
 
 
@@ -195,6 +239,7 @@ seCorrect <- function( SE_correction, jk2, grpv, allNam, printSE_correction ) {
       ret        <- seCorrect.wec_se_correction (SE_correction, jk2, grpv, allNam, cross_diff, noCrossDiff , year, printSE_correction)
       return(ret)}
 
+### an der falschen Stelle! muss vor Trends passieren!
 seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv, allNam, cross_diff, noCrossDiff, year, printSE_correction ) {
       for(i in seq_along(SE_correction)) {
           single_grpv<- SE_correction[[i]][["focGrp"]]
@@ -206,8 +251,8 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv, allNam, cross
           SEs        <- eatTools::makeDataFrame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"), verbose=FALSE)
           for(param in SEs[["parameter"]]) {
               esc_param <- Hmisc::escapeRegex(param)
-              if(identical(SE_correction[[i]][["refGrp"]], "all")) {            
-                  olds <- lapply(c("est", "se", "p"), FUN = function (coeff) {  
+              if(identical(SE_correction[[i]][["refGrp"]], "all")) {            ### if reference level is the whole group
+                  olds <- lapply(c("est", "se", "p"), FUN = function (coeff) {  ### hier finden: welche urspruenglichen cross-level-Werte sollen durch die WEC-Werte ersetzt werden?
                           old  <- cross_diff[cross_diff$parameter == "mean" & cross_diff[,single_grpv] == paste0(esc_param," - total") & cross_diff$coefficient == coeff, ]
                           cols <- setdiff(allNam[["group"]], single_grpv)
                           if ( length(cols)>0) {
@@ -221,8 +266,8 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv, allNam, cross
                   cross_diff[match(olds[["se"]][,"row"], cross_diff[,"row"]), "value"] <- SEs[SEs[, "parameter"] == param, "se"]
                   if(printSE_correction){cat(paste0(strsplit(class(SE_correction)[1], "_")[[1]][1],": Replace old p value ", paste(round(cross_diff[match(olds[["p"]][,"row"], cross_diff[,"row"]), "value"], digits = 4), collapse=", "), " with ", paste(round(SEs[SEs[, "parameter"] == param, "p"], digits = 4), collapse=", "), "\n"))}
                   cross_diff[match(olds[["p"]][,"row"], cross_diff[,"row"]), "value"] <- SEs[SEs[, "parameter"] == param, "p"]
-              } else {                                                          
-                  old  <- cross_diff                                            
+              } else {                                                          ### if reference level is a subgroup
+                  old  <- cross_diff                                            ### initialisieren
                   ref  <- SE_correction[[i]][["refGrp"]]
                   for ( reihe in 1:nrow(ref)) { old <- old[which(old[,ref[reihe,"groupName"]] == ref[reihe,"groupValue"]),]}
                   old  <- old[which(old[,SE_correction[[i]][["focGrp"]]] == paste0(esc_param, " - total")),]
@@ -246,6 +291,8 @@ compare_point_estimates <- function(old_est, new_est, param, old_col, new_col) {
   }
   return()}
 
+### Hier kann man nicht subset() nehmen, weil es sonst Warnungen beim Paketebauen gibt,
+### da subset() die Spaltennamen unquoted haben will
 reduceDoubleN <- function(jk2){
           cases1<- which(!duplicated(jk2[ ,-eatTools::whereAre(c("unit_1", "unit_2", "id", "row"),colnames(jk2), verbose=FALSE)]))
           cases <- unique(jk2[intersect(which(jk2[,"parameter"] %in% c("Ncases", "NcasesValid")),cases1),])
@@ -262,8 +309,9 @@ buildList <- function(repFunOut){
       return(out)}
 
 computeTrend <- function(jk2, tv, repFunOut, fun, allNam) {
-        jk2_bind<- do.call("rbind", jk2)                                        
-        if(identical(fun, "mean")) {                                            
+        jk2_bind<- do.call("rbind", jk2)                                        ### bind yearwise results
+   ### special for mean: select only mean and sd, reshape le
+        if(identical(fun, "mean")) {                                            ### nur fuer die Falle, fuer die splitVar = TRUE ist, werden Trends berechnet!
             jk2_bind[,"splitVar"] <- jk2_bind[["parameter"]] %in% c("mean", "sd")
         }
         if ( fun %in% c("glm", "table") ) {
@@ -271,15 +319,19 @@ computeTrend <- function(jk2, tv, repFunOut, fun, allNam) {
         }
         if ( identical(fun, "lmer") ) {
             jk2_bind[,"splitVar"] <- !jk2_bind[,"parameter"] %in% c("Nvalid", "R2_Lev2","R2_Lev1","R2_Total","ICC_Uncond","ICC_UncondWB", "ICC_Cond")
-        }                                                                       
+        }                                                                       ### nur fuer diese Koeffizienten werden trends berechnet
         if ( identical(fun, "quantile") ) {
             jk2_bind[,"splitVar"] <- TRUE
         }
         jk2_bind[setdiff(1:nrow(jk2_bind), which(jk2_bind[,"coefficient"] %in% c("est", "se"))),"splitVar"] <- FALSE
-        lev     <- unique(jk2_bind[,tv])                                        
+        lev     <- unique(jk2_bind[,tv])                                        ### calculate trend
         le      <- check2(repFunOut=repFunOut, jk2=jk2_bind, fun=fun, lev=lev)
-        vgl <- combinat::combn(names(jk2),2, simplify=FALSE)                    
+   ### calculate all trends!
+        vgl <- combinat::combn(names(jk2),2, simplify=FALSE)                    ### untere Zeile: Zusaetze fuer alle trendvergleiche (1 vs. 2; 2 vs. 3; 1 vs. 3) machen
+   ### warum muss hier 'unique' stehen? Die paarweisen Trendvergleiche bedeuten, dass die Werte fuer Zeitpunkt 1 sowohl in 1 vs. 2 als auch in 1 vs. 3 drinstehen
+   ### Es soll sie aber nur einmal geben, deshalb unique (nicht schoen, wenn ich ehrlich bin ... )
         adds<- unique(do.call("rbind", lapply( 1:length(vgl), FUN = function ( comp) {
+   ### checks: die selben Zeilen in den paarweise zu vergleichenden Jahren? (fuer GLMs insbesondere testen!)
                jk2_binS<- check1(jk2=jk2[vgl[[comp]]], jk2_bind=jk2_bind[intersect(which(jk2_bind[,"splitVar"] == TRUE), which(jk2_bind[,tv] %in% vgl[[comp]])),], tv=tv, allNam = allNam)
                wide    <- eatTools::makeDataFrame(tidyr::pivot_wider(jk2_binS[,-eatTools::whereAre(c("row","unit_1", "unit_2", "variable"), colnames(jk2_binS), verbose=FALSE)], names_from = c("coefficient",allNam[["trend"]]), values_from = c("value", "id")), verbose=FALSE)
                wide[,"est"]        <- wide[,paste0("value_est_",sort(vgl[[comp]])[2])] - wide[,paste0("value_est_",sort(vgl[[comp]])[1])]
@@ -287,19 +339,24 @@ computeTrend <- function(jk2, tv, repFunOut, fun, allNam) {
                ind     <- intersect(which(le[,"trendLevel1"] %in% vgl[[comp]]), which(le[,"trendLevel2"] %in% vgl[[comp]]))
                stopifnot(length(ind)>0)
                le_S    <- le[ind,]
+   ### pro Kombination aus parameter und depVar darf es nur einen Linkingfehler geben!
                le_S_chr<- dplyr::mutate_at(le_S, .vars=c("parameter", "depVar"), .funs=as.character)
                stopifnot(all(as.vector(unlist(by(le_S_chr, INDICES = le_S_chr[,c("parameter", "depVar")], nrow))) == 1))
+   ### merge linking errors ... aus 'le' die relevanten Jahre auswaehlen: wenn der user die in umgekehrter Reihenfolge, also 2015 in die erste, und 2010 in die zweite Spalte geschrieben hat, muss das jetzt homogenisiert werden
                wide    <- merge(wide, le_S[,-na.omit(match(c("trendLevel1", "trendLevel2", "domain"), colnames(le_S)))], by = c("parameter", "depVar"), all = TRUE)
+   ### check for missing LEs
                miss    <- which(is.na(wide[,"le"]))
                if ( length(miss)>0){
                     warning(paste0("Found ",length(miss)," missing linking errors for dependent variable '",unique(wide[,"depVar"]),"' and parameter(s) '",paste(unique(wide[which(is.na(wide[,"le"])),"parameter"]), collapse="', '"),"'. Assume linking error of 0 for these cases."))
                     wide[which(is.na(wide[,"le"])),"le"] <- 0
                }
+   ### calculate trend SEs and p values
                wide[,"se"] <- sqrt(wide[, paste("value_se_",vgl[[comp]][1],sep="")]^2 + wide[, paste("value_se_",vgl[[comp]][2],sep="")]^2 + wide[, "le"]^2)
                wide[,"p"]  <- 2*pnorm(abs(wide[,"est"]/wide[, "se"]), lower.tail=FALSE)
-               existSD <- "sd" %in% jk2_binS[,"parameter"]                      
+   ### Effect size for means (only for jk2.mean) ... und nur fuer einfachvergleiche! (kein vergleiche von vergleichen)
+               existSD <- "sd" %in% jk2_binS[,"parameter"]                      ### nur wenn standardabweichungen drin stehen, koennen effektstaerken berechnet werden ... Message wird nur fuer ersten Schleifendurchlauf ausgegeben (redundanz vermeiden)
                if(fun == "mean" && !existSD && comp == 1) {message("Cannot find standard deviations in output. Skip computation of effect sizes.")}
-               if (  fun == "mean" && existSD) {                                
+               if (  fun == "mean" && existSD) {                                ### not for groupDiffs as no SD is provided by eatRep, split up data frame and rbind later
                    wide2  <- data.frame (parameter = "mean", tidyr::pivot_wider(jk2_binS[which(jk2_binS[,"comparison"] == "none"),-eatTools::whereAre(c("row","unit_1", "unit_2", "variable"), colnames(jk2_binS), verbose=FALSE)], names_from = c("parameter", "coefficient",allNam[["trend"]]), values_from = c("value", "id")), stringsAsFactors = FALSE)
                    altneu <- data.frame (  alt = paste0("id_mean_est_", vgl[[comp]][1]), neu = paste0("id_est_", vgl[[comp]][1]), stringsAsFactors = FALSE)
                    colnames(wide2) <- eatTools::recodeLookup(colnames(wide2), altneu)
@@ -307,18 +364,23 @@ computeTrend <- function(jk2, tv, repFunOut, fun, allNam) {
                    wide2[,"pooledSD"] <- sqrt(0.5 * (wide2[,paste0("value_sd_est_",vgl[[comp]][1])]^2 + wide2[,paste0("value_sd_est_",vgl[[comp]][2])]^2))
                    wide2[,"es"]       <- (wide2[,paste0("value_mean_est_",sort(vgl[[comp]])[2])] - wide2[,paste0("value_mean_est_",sort(vgl[[comp]])[1])]) / wide2[,"pooledSD"]
                    wide   <- eatTools::mergeAttr(wide,wide2[,intersect(c(allNam[["group"]], altneu[["neu"]],"parameter", "es"), colnames(wide2))], all=TRUE, setAttr=FALSE, xName = "original", yName = "effectSize", verbose=c("unique", "common"))
-               }                                                                
+               }                                                                ### untere zeile: measure vars fuers reshapen
+   ### jetzt wieder so zurueck reshapen, dass es an jk2_bind per rbind angehangen werden kann!
                mvs     <- intersect(c(allNam[["group"]], "est", "se", "p", "es"), colnames(wide))
                jk2Long <- reshape2::melt(data.frame ( wide[,c(paste0("id_est_",vgl[[comp]][1]) , paste0("id_est_",vgl[[comp]][2]), "depVar","group", "modus", "parameter", "comparison",mvs)], matrix (paste0(vgl[[comp]][2], " - ", vgl[[comp]][1]), ncol = 1, nrow = nrow(wide), dimnames = list(NULL, allNam[["trend"]])),stringsAsFactors = FALSE), measure.vars = setdiff(mvs,allNam[["group"]]), na.rm=TRUE, variable.name = "coefficient")
                colnames(jk2Long) <- eatTools::recodeLookup(colnames(jk2Long), data.frame ( alt = c(paste0("id_est_",vgl[[comp]][1]) , paste0("id_est_",vgl[[comp]][2])), neu = c("unit_1", "unit_2"), stringsAsFactors = FALSE))
                return(jk2Long)})))
+   ### id vergeben
         adds[,"id"] <- paste(adds[,"unit_1"], adds[,"unit_2"],sep="_")
         adds<- eatTools::rbind_common(adds, jk2_bind)
-        return(adds) }                                                          
+        return(adds) }                                                          ### obere Zeile: Originaloutput und Zusatz untereinanderbinden, spalte 'splitVar' droppen
 
+### sind die units (bzw. Gruppenkategorien) zwischen Trendkohorten identisch?
 check1 <- function(jk2, jk2_bind, tv, allNam) {
-       stopifnot(length(jk2) == 2)                                              
+    ### alles gegen alles vergleichen
+       stopifnot(length(jk2) == 2)                                              ### mv = merge vars
        mv  <- intersect(c("type", allNam[["group"]], "depVar", "modus", "comparison", "parameter", "coefficient"), colnames(jk2[[1]]))
+    ### unschoen: wenn repTable ueber repMean gewrappt wird, wird fuer jede Kompetenzstufe (1, 2, 3, 4, 5) einmal die sample size ausgegeben, sie ist also fuenfmal da, obwohl sie nur einmal da sein duerfte. deshalb jetzt der zirkus mit duplicated(...)
        dupl<- lapply(jk2, FUN = function (y) {which(!duplicated(y[,c(mv,tv)]))})
        mrge<- merge(jk2[[1]][dupl[[1]],c(mv,tv, "row")], jk2[[2]][dupl[[2]],c(mv,tv, "row")], by = mv, all=FALSE, suffixes = names(jk2))
        stopifnot(nrow(mrge) <= max(sapply(jk2, nrow)))
@@ -336,29 +398,36 @@ check1 <- function(jk2, jk2_bind, tv, allNam) {
        return(jk2B)}
 
 check2 <- function(repFunOut, jk2, fun, lev){
-       wdf <- attr(repFunOut[["le"]], "linkingErrorFrame")                      
+    ### wenn linking error objekt urspruenglich kein data.frame, dann hier einfach durchschleifen
+       wdf <- attr(repFunOut[["le"]], "linkingErrorFrame")                      ### was data.frame?
        if(is.null(wdf)) {
            return(repFunOut[["le"]])
        }  else  {
+    ### notwendige Spalten
            allV  <- list(trendLevel1 = "trendLevel1", trendLevel2 = "trendLevel2", parameter = "parameter", linkingError="linkingError", depVar = "depVar")
            allN  <- lapply(allV, FUN=function(ii) {eatTools::existsBackgroundVariables(dat = repFunOut[["le"]], variable=ii, warnIfMissing = TRUE)})
+    ### AV in linking error objekt enthalten? Achtung! wenn repTable ueber repMean gewrappt wurde, heisst die AV anders. Dann (aber nur dann!) muss das le-Objekt angepasst werden
            le    <- repFunOut[["le"]]
            dv    <- unique(jk2[,"depVar"])
            stopifnot(length(dv)==1)
-           if(!dv %in% le[,"depVar"]) {                                         
+           if(!dv %in% le[,"depVar"]) {                                         ### hier beginnt ggf. der Fall, dass repTable ueber repMean gewrappt wurde und die AV daher anders heisst
                le[,"depVar"] <- paste0(le[,"depVar"], le[,"parameter"])
                if(!dv %in% le[,"depVar"]) {stop(paste0("Cannot found dependent variable '",dv,"' in 'depVar' column of linking error data.frame 'linkErr'."))}
            }
            le  <- le[which(le[,"depVar"] == dv),]
+    ### nur ein Kompetenzbereich?
            le1   <- le[,c("parameter", "trendLevel1", "trendLevel2")]
            if(nrow(le1) != nrow(unique(le1))) {stop("Linking error data.frame 'linkErr' is not unique in 'parameter', 'trendLevel1', 'trendLevel2'. Probable cause: 'linkErr' contains linking errors of multiple competence domains?")}
+    ### gibt es fuer alle Parameter auch linkingfehler? Hier reicht eine warnung aus, da die Linkingfehler in der computeTrend-Funktion rangemergt werden. Da kann man sie dann auf 0 setzen
            add <- setdiff(unique(jk2[,"parameter"]), unique(le[,"parameter"]))
            if ( length(add)>0) { warning(paste0("No linking errors for parameters '",paste(add, collapse="', '"),"'. Linking errors for these parameters will be defaulted to 0."))}
+    ### alle Kombinationen aus jahreszahlen vorhanden? Wenn Jahreszahlen im datensatz character und im Linkingfehlerobjekt numerisch, gibts Probleme, deshalb vereinheitlichen
            years <- eatTools::asNumericIfPossible(sort(unique (jk2[,repFunOut[["allNam"]][["trend"]]])), force.string=FALSE)
            combs <- combinat::combn(x=years, m=2, simplify=FALSE)
            exist <- suppressWarnings(unique(plyr::alply(eatTools::asNumericIfPossible(le,force.string=FALSE), .margins = 1, .fun = function (zeile) {sort(c(zeile[["trendLevel1"]], zeile[["trendLevel2"]]))})))
            drin  <- combs %in% exist
            if(!all(drin)) {stop(paste0("Data contains combination of years '",paste(combs[!drin], collapse="', '"), "' which are not included in linking error data.frame 'linkErr'."))}
+    ### linkingError spalte in le umbenennen
            colnames(le) <- car::recode(colnames(le), "'linkingError'='le'")
            return(le)
        }}
@@ -413,7 +482,7 @@ createLabel1 <- function(plain, allNam) {
                         sig<- unlist(zeile[allNam[["group"]]])
                         col<- setdiff(grep(" - ", sig), grep("total", sig))
                         stopifnot(length(col)==1)
-                        gd <- paste0("of groupDiff (",sig[[col]],")")           
+                        gd <- paste0("of groupDiff (",sig[[col]],")")           ### ocg = other group cols
                         ogc<- setdiff(allNam[["group"]], allNam[["group.differences.by"]])
                         ogc<- unlist(zeile[ogc])
                         weg<- c(grep(" - ", ogc), grep("total", ogc))
@@ -440,7 +509,7 @@ createLabel2 <- function(plain, allNam) {
            tv     <- allNam[["trend"]]
            label2 <- apply(X=plain, MARGIN = 1, FUN = function (zeile){
                      if(zeile[["parameter"]] == "chiSquareTest") {return("chiSquareTest")}
-                     if(zeile[["comparison"]] == "none") {                      
+                     if(zeile[["comparison"]] == "none") {                      ### hier jetzt fuer alles, was kein Vergleich ist
                         if(!is.null(tv)) {
                            pre <- paste0(tv,"=",zeile[[tv]],": ")
                         } else {
@@ -456,7 +525,7 @@ createLabel2 <- function(plain, allNam) {
                      } else {
                         if(length(grep("groupdiff", zeile[["comparison"]], ignore.case=TRUE))==0){
                            IN <- ""
-                        } else {                                                
+                        } else {                                                ### untere Zeile: groupdiff ohne crossdiff ist anders als groupdiff in kombination mit crossdiff
                            if(length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
                               IN <- paste(gv, strsplit(zeile[[gv]], " - ")[[1]], collapse = " - ", sep="=")
                            } else {
@@ -469,8 +538,8 @@ createLabel2 <- function(plain, allNam) {
                         if(length(grep("crossdiff", zeile[["comparison"]], ignore.case=TRUE))>0){
                            cv    <- zeile[allNam[["group"]]]
                            weg   <- setdiff(grep(" - ", cv), grep("total", cv))
-                           if ( length(weg)>0) {                                
-                               cv    <- names(cv[-weg])                         
+                           if ( length(weg)>0) {                                ### umstaendlich aber noetig,
+                               cv    <- names(cv[-weg])                         ### falls weg integer(0) ist, schlaegt das sonst fehl
                            }  else  {
                                cv    <- names(cv)
                            }
@@ -512,6 +581,7 @@ createLabel2 <- function(plain, allNam) {
                      return(comps)})
            return(label2)}
            
+### (einigermassene ... naja: eher schlechte) Rekonstruktion der alten Ergebnisstruktur
 report <- function ( repFunOut, trendDiffs = deprecated(), add=list(), exclude = c("NcasesValid", "var"), printGlm = FALSE,
                      round = TRUE, digits = 3, printDeviance = FALSE, printSE_correction = FALSE) {
      lifecycle::deprecate_warn("0.15.0", "report()", details = c(i = "For the original behavior of report() please use eatRep version 0.14.7: 'https://cran.r-project.org/src/contrib/Archive/eatRep/'"))

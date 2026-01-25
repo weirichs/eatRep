@@ -1,5 +1,8 @@
 doBifieAnalyses <- function (dat.i, a){
       dat.i<- eatTools::facToChar(dat.i, from = "character", to = "factor")
+      for(g in a%$$%group) {
+          if(inherits(dat.i[,g], "factor") == FALSE) {dat.i[,g] <- factor(dat.i[,g])}
+      }
       dat.g<- eatGADS::import_DF(dat.i, checkVarNames = FALSE)
       dat2 <- eatGADS::extractData(dat.g, convertLabels = "numeric")            ### Variablen muessen numerisch sein, geschieht hier ueber kleinen eatGADS Umweg
       dat2 <- sortBifie(dat = dat2, toCall=a$toCall, allNam=a[a%$$%allNam])
@@ -8,8 +11,8 @@ doBifieAnalyses <- function (dat.i, a){
       datL <- by ( data = dat2, INDICES = dat2[,a%$$%imp], FUN = function ( imp.i ) { return(imp.i)})
       jkt  <- car::recode(a$type, "'JK2'='JK_TIMSS'; 'JK1'='JK_GROUP'")
    ### defaults fuer fayfac setzen. Fuer "JK_TIMSS" soll der Wert auf 2 gesetzt werden per default, das passiert aber innerhalb von BIFIE.data.jack, insofern wird der hier auf NULL belassen
-	    if(is.null(a$rho)) {if(jkt == "JK_GROUP") {a$rho <- (length(unique(dat.i[, a%$$%PSU]))-1)/length(unique(dat.i[, a%$$%PSU]))   }}
-      txt  <- capture.output(bo   <- BIFIEsurvey::BIFIE.data.jack( data= datL,  wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
+	  if(is.null(a$rho)) {if(jkt == "JK_GROUP") {a$rho <- (length(unique(dat.i[, a%$$%PSU]))-1)/length(unique(dat.i[, a%$$%PSU]))   }}
+	  txt  <- capture.output(bo   <- BIFIEsurvey::BIFIE.data.jack( data= datL,  wgt = a%$$%wgt, jktype=jkt , jkzone = a%$$%PSU, jkrep = a%$$%repInd, jkfac=a%$$%jkfac, fayfac=a%$$%rho, cdata=FALSE))
       if ( isTRUE(a%$$%verbose)) { cat("\n"); printJackInfo(bo=bo, a=a, jkt=jkt, cdata=FALSE)}
       attributes(a$group) <- NULL                                               ### Attribute der Gruppierungsvariablen entfernen, sonst gibt BIFIEsurvey einen Fehler aus
    ### jetzt analysespezifische Subfunktion starten
@@ -25,6 +28,9 @@ doBifieAnalyses <- function (dat.i, a){
       }
       return(resML)}
 
+#bifie.table <- function( bifiObj , allNam, na.rm, group.delimiter, type, separate.missing.indicator, expected.values, modus){browser()}
+#bifie.quantile <- function(bifiObj , allNam, na.rm, group.delimiter, type, probs, modus){browser()}
+#bifie.glm <- function( bifiObj , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, modus){browser()}
 sortBifie <- function(dat, toCall, allNam) {
       if ( toCall != "lmer") {
            dat <- dat[order(dat[,allNam[["ID"]]]), ]                            ### fuer alles andere als multilevel analysen: sortieren nach ID
@@ -40,12 +46,12 @@ aufbOut <- function (resM, allNam, dat.g, labsD) {
            cols <- grep("groupva", colnames(resM[["stat"]]), value=TRUE)
            stopifnot(length(cols) ==2)
            altn <- data.frame ( alt = cols, neu = paste0(cols, "1"), stringsAsFactors = FALSE)
-           colnames(resM[["stat"]]) <- eatTools::recodeLookup(colnames(resM[["stat"]]), altn)
+           colnames(resM[["stat"]]) <- eatTools::recodeLookup(colnames(resM[["stat"]]), altn) |> suppressWarnings()
       }
       if(length(allNam[["group"]])>0) {
            for ( i in 1:length(allNam[["group"]])) {
                  labsG<- dat.g[["labels"]][which(dat.g[["labels"]][,"varName"] == allNam[["group"]][i]),]
-                 resM[["stat"]][,paste0("groupval", i)] <- eatTools::recodeLookup(resM[["stat"]][,paste0("groupval", i)], labsG[,c("value", "valLabel")])
+                 resM[["stat"]][,paste0("groupval", i)] <- eatTools::recodeLookup(resM[["stat"]][,paste0("groupval", i)], labsG[,c("value", "valLabel")]) |> suppressWarnings()
            }
       }
       if(!is.na(labsD[1,"value"])) {                                            ### nur fuer table: wenn die AV nicht numerisch war, musste sie zuvor fuer BIFIE numerisch gemacht werden
@@ -120,8 +126,8 @@ computeGroupDifferences <- function(resM, allNam, dat.g, modus){
            grp  <- do.call("rbind", by(data=liste, INDICES = liste[,res], FUN = function ( x ) {
                    comb <- combinat::combn(x=x[,"dp"], m=2, simplify=FALSE)
                    diffs<- do.call("rbind", lapply(comb, FUN = function ( y ) { ### 'dp' = statistics for derived parameters,siehe BIFIE-Hilfeseite von BIFIE.by
-                           y    <- sort(y)
-                           dp   <- eval(parse(text=paste("list ( \"groupDiff\" =~ 0 + I(",y[1],"-",y[2],"))")))
+                           y    <- sort(y)                                      ### untere zeile: der referenzwert steht immer an oberster Stelle. Wenn die Differenz Fokus MINUS Referenz sein soll, muss hier y[2]-y[1] stehen
+                           dp   <- eval(parse(text=paste("list ( \"groupDiff\" =~ 0 + I(",y[2],"-",y[1],"))")))
                            resMd<- BIFIEsurvey::BIFIE.derivedParameters( resM, derived.parameters=dp )
    ### Achtung: falls 'group.differences.by' definiert, wird bereits auf der innersten Ebene, also quasi jetzt, begonnen, das wieder in die Ergebnisstruktur zurueck zu ueberfuehren
                            if ( length ( res ) == 1) {

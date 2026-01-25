@@ -12,7 +12,7 @@ test_that("No se_correction for jk2.table", {
   mess <- capture_messages(tab1_wec <- repTable(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
                        type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country", group.splits = 0:1,
                        group.differences.by = "country", dependent = "comp", chiSquare = FALSE, cross.differences = TRUE,
-                       crossDiffSE = "wec", verbose=FALSE, progress = FALSE))
+                       crossDiffSE = "wec", verbose=TRUE, progress = FALSE))
   expect_true("To date, only method 'old' is applicable for cross level differences in frequency tables.\n" %in% mess)
   expect_equal(tab1_old$SE_correction[[1]], NULL)
   expect_equal(tab1_wec$SE_correction[[1]], NULL)
