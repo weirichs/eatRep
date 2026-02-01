@@ -162,6 +162,7 @@ compareParameters <- function(df_allP, grpv, fun, allNams) {
   if(identical(fun, "mean")) { df_sd <- df_allP[df_allP[, "parameter"] == "sd", ] }
   out <- do.call("rbind", by ( data = df_allP, INDICES = df_allP[,"parameter"], FUN = function ( df ) {
      df   <- cleanDF(df)                                                        ### checks
+     if(is.null(df)) {return(NULL)}
      df   <- df[order(df[,"hierarchy.level"], decreasing = FALSE), ]            ### Direction of crossDiff: Higher vs Lower (eg country vs all)
      meaD <- diff(df[which(df[,"coefficient"] == "est"),"value"])               ### compute mean difference
      if ( length(meaD) ==0 || is.na(meaD)) {return(NULL)} 
@@ -202,16 +203,18 @@ compareParameters <- function(df_allP, grpv, fun, allNams) {
 
 cleanDF <- function(df){
    if(nrow(df) %in% c(2,4)) {return(df)}                                        ### alles ok
-   if(!nrow(df) %in% c(1,3)){browser()}
-   stopifnot(nrow(df) %in% c(1,3))
-   valid <- table(df[,"coefficient"])
-   weg   <- which(valid != 2)
-   if ( length(weg) >0) {
-         warning("No '",paste(names(weg), collapse = "', '"), "' for parameter '",unique(df[,"parameter"]),"'. Skip computation of standard errors and p values for cross-level difference between '",df[1,"group"],"' and '",df[2,"group"],"'")
-         df <- df[-eatTools::whereAre(names(weg), df[,"coefficient"], verbose=FALSE),]
+   if(!nrow(df) %in% c(1,3)){
+      warning(paste0("Cannot compute cross-level differences for groups which appear to be derived from each other: \n",eatTools::print_and_capture(unique(df[,setdiff(colnames(df), c("type", "group", "modus", "parameter", "coefficient", "value", "row" , "id", "unit_1", "unit_2"))]), spaces = 5)))
+      df <- NULL
+   } else {
+      valid <- table(df[,"coefficient"])
+      weg   <- which(valid != 2)
+      if ( length(weg) >0) {
+            warning("No '",paste(names(weg), collapse = "', '"), "' for parameter '",unique(df[,"parameter"]),"'. Skip computation of standard errors and p values for cross-level difference between '",df[1,"group"],"' and '",df[2,"group"],"'")
+            df <- df[-eatTools::whereAre(names(weg), df[,"coefficient"], verbose=FALSE),]
+      }
    }
    return(df)}
-
 
 addSig <- function ( dat , groupCols = NULL , allNam = NULL ) {
           if(is.null(groupCols)) {groupCols <- c("group", "parameter")}
