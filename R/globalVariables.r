@@ -1,4 +1,4 @@
-utils::globalVariables(unique(c("wgt", "L1wgt", "L2wgt", "type", "PSU", "repInd", "jkfac",
+utils::globalVariables(unique(c("variable", "wgt", "L1wgt", "L2wgt", "type", "PSU", "repInd", "jkfac",
   "repWgt", "nest", "imp", "toCall", "groups", "refGrp", "group.differences.by",
   "cross.differences", "group.delimiter", "adjust", "useEffectLiteR", "trend", "linkErr", "na.rm",
   "forcePooling", "boundary", "doCheck", "separate.missing.indicator", "expected.values", "probs", "nBoot",

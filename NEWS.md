@@ -1,7 +1,7 @@
 # eatRep 0.15.3
 
 * The levels of multiple grouping variables no longer need to be unique across variables. 
-* group differences are now consistenty computed with 'focus group' - 'reference group', where reference group is defined by the reference level of a factor variable
+* group differences are now consistently computed with 'focus group' - 'reference group', where reference group is defined by the reference level of a factor variable
 * bugfix in the computation of group differences when grouping variable has class 'integer' and `BIFIEsurvey` is called. 
 
 # eatRep 0.15.2

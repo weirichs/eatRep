@@ -512,7 +512,7 @@ makeFactorLevelsDisjunct <- function(a) {
                  chk <- unlist(lapply(unique(unlist(lev)), FUN = function (l) {grepl("_____", l)}))
                  if(!all(chk == FALSE)) {
                     names(lev) <- a$group
-                    stop(paste0("More than five underscores in a row are not allowed in group variable levels \n",print_and_capture(lev, spaces = 5)))
+                    stop(paste0("More than five underscores in a row are not allowed in group variable levels \n",eatTools::print_and_capture(lev, spaces = 5)))
                  }   
                  if(isTRUE(a%$$%verbose)) {message("Make factor levels of group variables disjunct.")}
                  for(gv in a$group) {
