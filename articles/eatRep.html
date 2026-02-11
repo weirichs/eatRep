@@ -90,7 +90,7 @@ Rust, 2014; Rust &amp; Rao, 1996; Wolter, 2007)</span>. Replication
 methods are quite common in the context of survey or large-scale
 assessment data <span class="citation">(Foy et al., 2008)</span> like
 the <a href="https://www.iqb.hu-berlin.de/de/bista/implementation-und-ueberpruefung/bildungstrend/" class="external-link">“National
-Assessment Studies and IQB Trends in Student Achievement”</a> . The
+Assessment Studies and IQB Trends in Student Achievement”</a>. The
 following examples are closely related to the “IQB” context (e.g.,
 jackknife-2 methods are used instead of balanced repeated replicates),
 but may be adapted for PISA or TIMSS analyses as well. For an
@@ -100,18 +100,22 @@ of the <code><a href="../reference/repMean.html">repMean()</a></code> function.<
 <p>Please note that the theoretical foundations of the presented methods
 are beyond the scope of this vignette—literature recommendations for in
 depth theoretical discussions can be found in the package documentation
-(type <code><a href="../reference/eatRep-package.html">package?eatRep</a></code> into the console). Instead, this
-vignette focuses on some prototypical analyses.</p>
-<p>Furthermore, note that IRT item calibration or “plausible values”
-imputation are not covered in this vignette. All the outlined analyses
-base on survey data in which “plausible values” are already included.
-Such kind of data is provided by the <a href="https://webfs.oecd.org/pisa/" class="external-link">OECD</a> or can be requested from
-the <a href="https://fdz.iqb.hu-berlin.de/de/" class="external-link">“Research Data Centre
-(FDZ) at the IQB”</a>. Most of the analyses comprise of descriptive
-statistics (means, standard deviations), frequency distributions, and
-linear or logistic regression models. Usually, sampling designs for
-large-scale assessments have the following, specific
-characteristics:</p>
+(type <code><a href="../reference/eatRep-package.html">package?eatRep</a></code> into the console) and in the
+references at the end of this vignette. Instead, the focus of the
+following sections lie on the demonstration of some prototypical
+analyses.</p>
+<p>Furthermore, note that IRT item calibration <span class="citation">(Hambleton et al., 1991; Hambleton &amp; Jones, 1993;
+Mislevy, Johnson, et al., 1992)</span> or “plausible values” imputation
+<span class="citation">(Davier et al., 2009; Mislevy, Beaton, et al.,
+1992; Monseur &amp; Adams, 2009)</span> are not covered in this
+vignette. All the outlined analyses base on survey data in which
+“plausible values” are already included. Such kind of data is provided
+by the <a href="https://www.oecd.org/en/data/datasets/pisa-2022-database.html" class="external-link">OECD</a>
+or can be requested from the <a href="https://fdz.iqb.hu-berlin.de/de/" class="external-link">“Research Data Centre (FDZ) at
+the IQB”</a>. Most of the analyses comprise of descriptive statistics
+(means, standard deviations), frequency distributions, and linear or
+logistic regression models. Usually, sampling designs for large-scale
+assessments have the following, specific characteristics:</p>
 <ol style="list-style-type: decimal">
 <li><p>Often, individuals in survey data are not randomly drawn from the
 population. In educational assessments which aim to compare countries,
@@ -136,10 +140,14 @@ linear regression models, taking the clustered and/or imputed sample
 into account via replication methods. Trend analyses are possible as
 well. <code>eatRep</code> meets the special features mentioned above (if
 they apply) in the following way:</p>
-<p>1.: include sampling weights for the analyses.</p>
-<p>2.: Use replication methods (Bootstrap, jackknife or “Balanced
-repeated replicates”) for inference statistics.</p>
-<p>3.: Pool the results by applying specific rules <span class="citation">(Little &amp; Rubin, 1987; Rubin, 2003)</span>.</p>
+<ol style="list-style-type: decimal">
+<li><p>include sampling weights for the analyses.</p></li>
+<li><p>Use replication methods (Bootstrap, jackknife or “Balanced
+repeated replicates”) for inference statistics <span class="citation">(Krewski &amp; Rao, 1981; Rust &amp; Rao, 1996; Wolter,
+2007)</span>.</p></li>
+<li><p>Pool the results by applying specific rules <span class="citation">(Little &amp; Rubin, 1987; Rubin,
+2003)</span>.</p></li>
+</ol>
 <p>However, <code>eatRep</code> is also suitable if the data is
 clustered without imputations or imputed without clustered sampling. The
 three mentioned methods (using weights, replication methods, pooling
@@ -148,8 +156,8 @@ methods) can be called independently from each other.</p>
 <div class="section level2">
 <h2 id="installation">0. Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>We recommend to use R version 4.0.0 or higher. <code>eatRep</code> is
-available from CRAN:</p>
+<p><code>eatRep</code> requires R version 4.4 or higher. The package is
+available from <a href="https://cran.r-project.org/web/packages/eatRep/index.html" class="external-link">CRAN</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"eatRep"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -206,8 +214,9 @@ do not occur in multiple columns (<code>reading_2010_score_Imp_1</code>,
 <code>listening_2010_score_Imp_1</code>,
 <code>listening_2015_score_Imp_1</code>, …). <code>score</code> only
 occurs once, and <code>imp</code> defines the imputation, whereas
-<code>domain</code> gives the competence domain. To reshape data between
-the long and wide format, see for example the package <code>tidyr</code>
+<code>domain</code> gives the competence domain, and <code>year</code>
+gives the time of measurement. To reshape data between the long and wide
+format, see for example the package <code>tidyr</code>
 (<code>pivot_wider()</code>, <code>pivot_longer()</code>) or the
 function <code><a href="https://weirichs.github.io/eatTools/reference/wideToLong.html" class="external-link">wideToLong()</a></code> from the package
 <code>eatTools</code>. See section 1.1 for more details about reshaping
@@ -303,12 +312,12 @@ stored in an explicit variable but results from the number of additional
 columns per variable. Long format data stores different imputations of
 the same variable in additional rows. A variable like <code>imp</code>
 defines the number of the imputation.</p>
-<p><code>reshape2</code>, <code>tidyr</code> or <code>data.table</code>
-provide functions for reshaping. Moreover, <code>eatTools</code>
-provides the <code><a href="https://weirichs.github.io/eatTools/reference/wideToLong.html" class="external-link">wideToLong()</a></code> function for easy reshaping into
-the required long format. We illustrate the functionality with the help
-of the wide format exemplary data <code>data.timss3</code> from the
-<code>BIFIEsurvey</code> package:</p>
+<p>R packages <code>reshape2</code>, <code>tidyr</code> or
+<code>data.table</code> provide functions for reshaping. Additionally,
+<code>eatTools</code> provides the <code><a href="https://weirichs.github.io/eatTools/reference/wideToLong.html" class="external-link">wideToLong()</a></code> function
+for easy reshaping into the required long format. We illustrate the
+functionality with the help of the wide format data
+<code>data.timss3</code> from the <code>BIFIEsurvey</code> package:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">data.timss3</span>, package<span class="op">=</span><span class="st">"BIFIEsurvey"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">data.timss3</span>, give.attr <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
@@ -333,8 +342,8 @@ of the wide format exemplary data <code>data.timss3</code> from the
 <span><span class="co">##  $ ASSSCI4: num  560 506 550 597 483 ...</span></span>
 <span><span class="co">##  $ ASMMAT5: num  578 546 457 528 583 ...</span></span>
 <span><span class="co">##  $ ASSSCI5: num  607 565 546 623 578 ...</span></span></code></pre>
-<p>Data contains 4668 rows according to 4668 persons. The following
-variables should be considered for reshaping:</p>
+<p>Exemplary data contains 4668 rows according to 4668 persons. The
+following variables should be considered for reshaping:</p>
 <ul>
 <li>
 <code>IDSTUD</code>: individual student identifier</li>
@@ -485,7 +494,7 @@ single <code>data.frame</code> which can be exported to excel, for
 example, the reporting function <code><a href="../reference/report.html">report2()</a></code> should be
 called.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">resReading</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">resReading</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
 <p>To simplify the graphical visualization of the results using the <a href="https://nickhaf.github.io/eatPlot/" class="external-link">eatPlot</a> package, a new
 reporting function called <code><a href="../reference/report.html">report2()</a></code> was introduced. If you
 are only interested in a tabular representation of the results, it is
@@ -498,10 +507,19 @@ incorporated in the output, the <code>add</code> argument allows to
 define one or multiple additional columns with scalar information of
 character type, for example:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">resReading</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="st">"reading"</span>, year <span class="op">=</span> <span class="st">"2010"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">resReading</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="st">"reading"</span>, year <span class="op">=</span> <span class="st">"2010"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">resReading</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html" class="external-link">any_of</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"label1"</span>, <span class="st">"label2"</span>, <span class="st">"modus"</span>, <span class="st">"comparison"</span>, <span class="st">"id"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>     <span class="fu">rmarkdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgs.rstudio.com/rmarkdown/reference/paged_table.html" class="external-link">paged_table</a></span><span class="op">(</span>options <span class="op">=</span> <span class="va">pgtab_options</span><span class="op">)</span></span></code></pre></div>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["depVar"],"name":[1],"type":["chr"],"align":["left"]},{"label":["parameter"],"name":[2],"type":["chr"],"align":["left"]},{"label":["country"],"name":[3],"type":["chr"],"align":["left"]},{"label":["kb"],"name":[4],"type":["chr"],"align":["left"]},{"label":["year"],"name":[5],"type":["chr"],"align":["left"]},{"label":["est"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["p"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["se"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"score","2":"mean","3":"countryA","4":"reading","5":"2010","6":"511.563","7":"0","8":"3.515"},{"1":"score","2":"mean","3":"countryB","4":"reading","5":"2010","6":"508.601","7":"0","8":"4.651"},{"1":"score","2":"mean","3":"countryC","4":"reading","5":"2010","6":"534.234","7":"0","8":"3.266"},{"1":"score","2":"Ncases","3":"countryA","4":"reading","5":"2010","6":"1034.000","7":"NaN","8":"NaN"},{"1":"score","2":"Ncases","3":"countryB","4":"reading","5":"2010","6":"959.000","7":"NaN","8":"NaN"},{"1":"score","2":"Ncases","3":"countryC","4":"reading","5":"2010","6":"1086.000","7":"NaN","8":"NaN"},{"1":"score","2":"sd","3":"countryA","4":"reading","5":"2010","6":"77.362","7":"0","8":"2.133"},{"1":"score","2":"sd","3":"countryB","4":"reading","5":"2010","6":"85.103","7":"0","8":"3.811"},{"1":"score","2":"sd","3":"countryC","4":"reading","5":"2010","6":"81.846","7":"0","8":"2.777"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 <p>The analysis above includes one grouping variable (“country”) and one
 competence domain (“reading”) without any group comparisons. The output
-therefore is rather sparse.</p>
+contains mean, standard deviation, and sample size. We see that
+<code>countryC</code> has the highest mean and <code>countryB</code> the
+lowest.</p>
 <p>However, the results can be computed according to more than one
 grouping variable. If the results should be computed for each country
 and each migration group, both are specified as grouping variables:</p>
@@ -526,9 +544,9 @@ call:</p>
 <span>           dependent <span class="op">=</span> <span class="st">"score"</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 2 analyse(s) overall according to: 'group.splits = 0 1'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                     NA</span></span>
-<span><span class="co">##                2               1           country                   NA</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                     NA</span></span>
+<span><span class="co">##                2               1         score     imp           country                   NA</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
@@ -536,15 +554,15 @@ call:</p>
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> kb<span class="op">=</span><span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <p>The argument Argument <code>group.splits</code> defines “hierarchy
 levels” for the analyses, indicating whether the analysis should be
-conducted within or across groups. The number of hierarchy levels always
-equals the number of grouping variables plus one. One grouping variable
-means two hierarchy levels, two grouping variables mean three levels,
-and so on. Without any grouping variables, only one level, the “zeroth”
-level, exists. At the zeroth level, no differentiation takes place; all
-statistics are computed for the whole population. With one grouping
-variable (<code>country</code>, for example) two levels can be defined:
-at the zeroth level, statistics are computed for the whole population,
-and at the first level, statistics are computed for
+conducted within or across groups. The total number of hierarchy levels
+always equals the number of grouping variables plus one. One grouping
+variable means two hierarchy levels, two grouping variables mean three
+levels, and so on. Without any grouping variables, only one level, the
+“zeroth” level, exists. At the zeroth level, no differentiation takes
+place; all statistics are computed for the whole population. With one
+grouping variable (<code>country</code>, for example) two levels can be
+defined: at the zeroth level, statistics are computed for the whole
+population, and at the first level, statistics are computed for
 <code>countryA</code>, <code>countryB</code>, and <code>countryC</code>
 separately. With two grouping variables (<code>country</code> and
 migration background: <code>mig</code>), three hierarchy levels are
@@ -575,8 +593,8 @@ the number of grouping variables.</p>
 <p>Do boys and girls significantly differ in their mean competencies? Do
 Bavarian students outperform Saxonian students in “reading”? Is the mean
 score of Canadian students significantly above the OECD average? These
-examples can be distinguished regarding whether both units, which should
-be compared, share the same hierarchy level. Differences within a
+examples can be distinguished regarding whether or not both units, which
+should be compared, share the same hierarchy level. Differences within a
 hierarchy level (e.g., boys vs. girls) are referred to as “group
 differences”. Differences between (adjacent) hierarchy levels (e.g.,
 Canadian vs. OECD average, as Canada itself is part of the OECD average)
@@ -625,11 +643,11 @@ whole group:</p>
 <span>           group.differences.by <span class="op">=</span> <span class="st">"sex"</span>, dependent <span class="op">=</span> <span class="st">"score"</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country                 &lt;NA&gt;</span></span>
-<span><span class="co">##                3               1               sex                  sex</span></span>
-<span><span class="co">##                4               2     country + sex                  sex</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country                 &lt;NA&gt;</span></span>
+<span><span class="co">##                3               1         score     imp               sex                  sex</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex                  sex</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
@@ -643,11 +661,11 @@ for the whole group:</p>
 <span>           group.differences.by <span class="op">=</span> <span class="st">"country"</span>, dependent <span class="op">=</span> <span class="st">"score"</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
@@ -722,25 +740,24 @@ vs. level 0. The following command should be called:</p>
 <span>           dependent <span class="op">=</span> <span class="st">"score"</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Warning in repMeanList(datL = datL, a = a): Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> kb<span class="op">=</span><span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span></code></pre>
 <p><code>cross.differences</code> requests a list of numeric vectors
 with distinct elements each. Each vector must consist of two integers,
 specifying the hierarchy levels for which cross-differences should be
@@ -756,47 +773,28 @@ difference “boys vs. girls” in the total population. Note that we
 explicitly assume heteroscedastic variance in cross-level difference
 estimation by setting <code>hetero = TRUE</code> and
 <code>clusters = "idclass"</code>:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repMean.html">repMean</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">bt2010read</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
 <span>           repInd <span class="op">=</span> <span class="st">"jkrep"</span>, imp<span class="op">=</span><span class="st">"imp"</span>, groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"country"</span>, <span class="st">"sex"</span><span class="op">)</span>, group.splits <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>, </span>
 <span>           group.differences.by <span class="op">=</span> <span class="st">"sex"</span>, cross.differences <span class="op">=</span> <span class="cn">TRUE</span>, dependent <span class="op">=</span> <span class="st">"score"</span>, </span>
 <span>           progress <span class="op">=</span> <span class="cn">FALSE</span>, clusters <span class="op">=</span> <span class="st">"idclass"</span>, hetero <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country                 &lt;NA&gt;</span></span>
-<span><span class="co">##                3               1               sex                  sex</span></span>
-<span><span class="co">##                4               2     country + sex                  sex</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country                 &lt;NA&gt;</span></span>
+<span><span class="co">##                3               1         score     imp               sex                  sex</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex                  sex</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## Compute cross level differences using 'wec' method. Assume heteroscedastic variances.</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 32 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 60 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 40 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 91 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> kb<span class="op">=</span><span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span></code></pre>
 <p>In the output data.frame created by <code><a href="../reference/report.html">report2()</a></code>,
 cross-level differences of group differences are marked with the entry
 <code>crossDiff_of_groupDiff</code> in the <code>comparison</code>
@@ -850,7 +848,7 @@ the <code>bt</code> data. In the function call, the trend variable
 <code>linkErr = "leScore"</code> have to be defined. Without specifying
 the <code>linkErr</code> argument, the linking error is defaulted to
 0.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">btread</span>  <span class="op">&lt;-</span> <span class="va">bt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">bt</span><span class="op">[</span>,<span class="st">"domain"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"reading"</span><span class="op">)</span>,<span class="op">]</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repMean.html">repMean</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">btread</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
 <span>           repInd <span class="op">=</span> <span class="st">"jkrep"</span>, imp<span class="op">=</span><span class="st">"imp"</span>, groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"country"</span>, <span class="st">"sex"</span><span class="op">)</span>, group.splits <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">2</span>, </span>
@@ -860,11 +858,11 @@ the <code>linkErr</code> argument, the linking error is defaulted to
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
@@ -873,30 +871,15 @@ the <code>linkErr</code> argument, the linking error is defaulted to
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## Warning in repMeanList(datL = datL, a = a): Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## Trend group: '2010'</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Trend group: '2015'</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span>
-<span><span class="co">##</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
@@ -907,12 +890,22 @@ the <code>linkErr</code> argument, the linking error is defaulted to
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
+<pre><code><span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Trend group: '2010'</span></span>
+<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
+<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
+<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Trend group: '2015'</span></span>
+<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
+<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
+<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
+<pre><code><span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span> </span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="loops-across-non-nested-grouping-variables">2.6 Loops across non-nested (grouping) variables<a class="anchor" aria-label="anchor" href="#loops-across-non-nested-grouping-variables"></a>
@@ -941,11 +934,11 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
@@ -954,17 +947,15 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## Warning in repMeanList(datL = datL, a = a): Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
@@ -975,10 +966,9 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## </span></span>
+<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
+<pre><code><span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
+<pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
@@ -988,18 +978,17 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## </span></span>
+<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
+<pre><code><span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
+<pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
@@ -1008,17 +997,15 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 4 analyse(s) overall according to: 'group.splits = 0 1 2'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by</span></span>
-<span><span class="co">##                1               0                                   &lt;NA&gt;</span></span>
-<span><span class="co">##                2               1           country              country</span></span>
-<span><span class="co">##                3               1               sex                 &lt;NA&gt;</span></span>
-<span><span class="co">##                4               2     country + sex              country</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by</span></span>
+<span><span class="co">##                1               0         score     imp                                   &lt;NA&gt;</span></span>
+<span><span class="co">##                2               1         score     imp           country              country</span></span>
+<span><span class="co">##                3               1         score     imp               sex                 &lt;NA&gt;</span></span>
+<span><span class="co">##                4               2         score     imp     country + sex              country</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## Warning in repMeanList(datL = datL, a = a): Computation of cross level differences using 'wec' method is only possible for differences according to adjacent levels. Non-adjacent levels will be ignored.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
@@ -1029,10 +1016,9 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span>
-<span><span class="co">##</span></span>
-<span><span class="co">## </span></span>
+<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
+<pre><code><span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
+<pre><code><span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
@@ -1042,8 +1028,8 @@ cross-level, and trend differences.</p>
 <span><span class="co">## Trend group: '2015'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
+<span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
+<pre><code><span><span class="co">## Note: No linking error was defined. Linking error will be defaulted to '0'.</span></span></code></pre>
 <p>The <code>by</code>-loop around <code>repMean</code> splits the data
 in two subsets which are analyzed consecutively. The
 <code>results</code> object is a list with two elements, “listening” and
@@ -1051,30 +1037,19 @@ in two subsets which are analyzed consecutively. The
 elements separately. We now see that the argument <code>add</code> can
 help to distinguish both resulting data.frames. First, the processing is
 demonstrated without using a loop:</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] "listening" "reading"</span></span></code></pre>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">resultsListening</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">[[</span><span class="st">"listening"</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb <span class="op">=</span> <span class="st">"listening"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span></code></pre>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">resultsReading</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">[[</span><span class="st">"reading"</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span></code></pre>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">allResults1</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span> <span class="op">(</span><span class="va">resultsListening</span>, <span class="va">resultsReading</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">resultsListening</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">[[</span><span class="st">"listening"</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb <span class="op">=</span> <span class="st">"listening"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">resultsReading</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">[[</span><span class="st">"reading"</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">allResults1</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span> <span class="op">(</span><span class="va">resultsListening</span>, <span class="va">resultsReading</span><span class="op">)</span></span></code></pre></div>
 <p>Using a loop shortens the call, especially if more than two
 competence domains are used:</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">allResults2</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span> <span class="va">x</span> <span class="op">)</span> <span class="op">{</span> </span>
-<span>                           <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for 'crossDiff_of_groupDiff' is currently not supported.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Standard error correction for crossDifferences across multiple hierarchy levels is currently not supported.</span></span></code></pre>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">allResults2</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="va">allResults2</span><span class="op">)</span></span></code></pre></div>
+<span>                           <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">allResults2</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="va">allResults2</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="adjusted-means">2.7 Adjusted means<a class="anchor" aria-label="anchor" href="#adjusted-means"></a>
@@ -1099,11 +1074,11 @@ numeric. For polytomous variables (e.g., language at home: “german”,
 indicator variables must be generated beforehand. In the following
 example, we transform the non-numeric adjustment variables
 <code>sex</code> and <code>mig</code> to be numeric.</p>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">bt2010read</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sex"</span>, <span class="st">"mig"</span>, <span class="st">"ses"</span><span class="op">)</span><span class="op">]</span>, <span class="va">class</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">##       sex       mig       ses </span></span>
 <span><span class="co">##  "factor" "logical" "numeric"</span></span></code></pre>
-<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bt2010read</span><span class="op">[</span>,<span class="st">"sexnum"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">car</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/car/man/recode.html" class="external-link">recode</a></span><span class="op">(</span><span class="va">bt2010read</span><span class="op">[</span>,<span class="st">"sex"</span><span class="op">]</span>, <span class="st">"'male'=0; 'female'=1"</span>, </span>
 <span>                         as.factor <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">bt2010read</span><span class="op">[</span>,<span class="st">"mignum"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">bt2010read</span><span class="op">[</span>,<span class="st">"mig"</span><span class="op">]</span><span class="op">)</span></span>
@@ -1111,16 +1086,15 @@ example, we transform the non-numeric adjustment variables
 <span>           repInd <span class="op">=</span> <span class="st">"jkrep"</span>, imp<span class="op">=</span><span class="st">"imp"</span>, groups <span class="op">=</span> <span class="st">"country"</span>, group.splits <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, </span>
 <span>           cross.differences <span class="op">=</span> <span class="cn">TRUE</span>, adjust <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sexnum"</span>, <span class="st">"mignum"</span>, <span class="st">"ses"</span><span class="op">)</span>, </span>
 <span>           dependent <span class="op">=</span> <span class="st">"score"</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in repMeanList(datL = datL, a = a): To date, for adjusted means, cross-level differences can only be computed with method 'old'. Set 'crossDiffSE' to 'old'.</span></span>
-<span><span class="co">## 2 analyse(s) overall according to: 'group.splits = 0 1'.</span></span>
+<pre><code><span><span class="co">## 2 analyse(s) overall according to: 'group.splits = 0 1'.</span></span>
 <span><span class="co">##  </span></span>
-<span><span class="co">##  analysis.number hierarchy.level groups.divided.by group.differences.by adjust</span></span>
-<span><span class="co">##                1               0                                     NA  FALSE</span></span>
-<span><span class="co">##                2               1           country                   NA   TRUE</span></span>
+<span><span class="co">##  analysis.number hierarchy.level dependent.var imp.var groups.divided.by group.differences.by                            adjust</span></span>
+<span><span class="co">##                1               0         score     imp                                     NA                             FALSE</span></span>
+<span><span class="co">##                2               1         score     imp           country                   NA 3 vars: 'sexnum', 'mignum', 'ses'</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">results</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> kb<span class="op">=</span><span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <p>Please note that, to date, cross-level differences for adjusted means
 can only be computed using the methods <code>old</code>. In the zeroth
@@ -1153,7 +1127,7 @@ incorporation of linking errors, if desired, must be done by hand
 likewise. The following example illustrates the procedure. The standard
 error of the trend estimate is computed as the square root of the sum of
 the squared standard errors for 2010, 2015 and the link:</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">btread</span>  <span class="op">&lt;-</span> <span class="va">bt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">bt</span><span class="op">[</span>,<span class="st">"domain"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"reading"</span><span class="op">)</span>,<span class="op">]</span></span>
 <span><span class="va">btread</span><span class="op">[</span>,<span class="st">"sexnum"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">car</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/car/man/recode.html" class="external-link">recode</a></span><span class="op">(</span><span class="va">btread</span><span class="op">[</span>,<span class="st">"sex"</span><span class="op">]</span>, <span class="st">"'male'=0; 'female'=1"</span>, as.factor <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">btread</span><span class="op">[</span>,<span class="st">"mignum"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">btread</span><span class="op">[</span>,<span class="st">"mig"</span><span class="op">]</span><span class="op">)</span></span>
@@ -1171,13 +1145,15 @@ the squared standard errors for 2010, 2015 and the link:</p>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 1'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 62 replicate weights according to JK2 procedure.</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 1'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 65 replicate weights according to JK2 procedure.</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 1'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 48 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="va">results</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
@@ -1200,7 +1176,7 @@ competence levels?”). In theory, you can test for each competence level
 females differ. The comparisons, however, are not independent—a
 Bonferroni correction might be appropriate then. In the following, both
 variants are sketched:</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">### first example: group comparisons with a chi^2-Test: we check for each country </span></span>
 <span><span class="co">### whether the distribution of competence levels differs between males and females</span></span>
 <span><span class="va">freq1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repTable.html">repTable</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">bt2010read</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
@@ -1210,33 +1186,21 @@ variants are sketched:</p>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res1</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">freq1</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> kb <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <p>In the second example, the group comparisons are conducted applying
 five separate <em>t</em> tests. For each country and each single
 competence level, <code><a href="../reference/repTable.html">repTable()</a></code> checks whether the
 distribution differs between males and females. Technically,
 <code><a href="../reference/repMean.html">repMean()</a></code> is called five times consecutively.</p>
-<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">freq2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repTable.html">repTable</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">bt2010read</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
 <span>         repInd<span class="op">=</span><span class="st">"jkrep"</span>, imp<span class="op">=</span><span class="st">"imp"</span>, groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"country"</span>, <span class="st">"sex"</span><span class="op">)</span>, group.differences.by <span class="op">=</span> <span class="st">"sex"</span>, </span>
 <span>         cross.differences <span class="op">=</span> <span class="cn">FALSE</span>, dependent <span class="op">=</span> <span class="st">"comp"</span>, chiSquare <span class="op">=</span> <span class="cn">FALSE</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res2</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">freq2</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span> kb <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <p>In <code><a href="../reference/repTable.html">repTable()</a></code>, the computation of cross-level
 differences and trends works analogously to <code><a href="../reference/repMean.html">repMean()</a></code>.</p>
@@ -1250,8 +1214,8 @@ have several dichotomous criteria (e.g. “failed to reach minimal
 standard”, “pass regular standard”, “pass optimal standard”),
 represented by several variables. A <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply()</a></code> loop ca be
 applied then:</p>
-<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">### abhaengige Variablen definieren</span></span>
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># define dependent variables</span></span>
 <span><span class="va">DVs</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"failMin"</span>, <span class="st">"passReg"</span>, <span class="st">"passOpt"</span><span class="op">)</span></span>
 <span><span class="va">freq3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">DVs</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span><span class="va">dv</span><span class="op">)</span> <span class="op">{</span> </span>
 <span>         <span class="fu"><a href="../reference/repTable.html">repTable</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">bt2010read</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
@@ -1260,16 +1224,10 @@ applied then:</p>
 <span>            dependent <span class="op">=</span> <span class="va">dv</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
 <p>The reporting function <code><a href="../reference/report.html">report()</a></code> must be called three
 times, likewise in a <code><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply()</a></code> loop:</p>
-<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">allResults3</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">freq3</span>, <span class="va">report</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -1281,7 +1239,7 @@ we want to analyze three dependent variables for two domains. Hence, a
 two-stage loop for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">3\times 2=6</annotation></semantics></math>
 analyses is necessary:</p>
-<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">DVs</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"failMin"</span>, <span class="st">"passReg"</span>, <span class="st">"passOpt"</span><span class="op">)</span></span>
 <span><span class="va">freq4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">DVs</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span><span class="va">dv</span><span class="op">)</span> <span class="op">{</span> </span>
 <span>         <span class="va">f4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/by.html" class="external-link">by</a></span> <span class="op">(</span> data <span class="op">=</span> <span class="va">bt2010</span>, INDICES <span class="op">=</span> <span class="va">bt2010</span><span class="op">[</span>,<span class="st">"domain"</span><span class="op">]</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span><span class="va">sub.dat</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1291,24 +1249,9 @@ analyses is necessary:</p>
 <span>                         dependent <span class="op">=</span> <span class="va">dv</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">}</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
-<span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
-<span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
 <p>To convert the results in a more user-friendly format:</p>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">allResults4</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">freq4</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span><span class="va">av</span><span class="op">)</span> <span class="op">{</span> </span>
 <span>                       <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">av</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span> <span class="va">x</span> <span class="op">)</span> <span class="op">{</span> </span>
 <span>                         <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">av</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span><span class="op">}</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span>
@@ -1318,7 +1261,7 @@ that each dependent variable potentially has its own linking error. If
 so, one solution is to store the variable name along with its linking
 error in a <code>data.frame</code> and use an <code><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply()</a></code>
 loop:</p>
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">### two-stage nested loop with trend analysis</span></span>
 <span><span class="co">### first we define the dependent variables (dv) and their linking errors (le)</span></span>
 <span><span class="va">DVs</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span> <span class="op">(</span> dv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"failMin"</span>, <span class="st">"passReg"</span>, <span class="st">"passOpt"</span><span class="op">)</span>, </span>
@@ -1342,7 +1285,7 @@ loop:</p>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
@@ -1354,7 +1297,7 @@ loop:</p>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
@@ -1366,7 +1309,7 @@ loop:</p>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
@@ -1378,7 +1321,7 @@ loop:</p>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
@@ -1390,7 +1333,7 @@ loop:</p>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span>
-<span><span class="co">##</span></span>
+<span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Trend group: '2010'</span></span>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 2'.</span></span>
@@ -1403,15 +1346,11 @@ loop:</p>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
 <p>To convert the results in a more user-friendly format:</p>
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">allResults5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">freq5</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span><span class="va">av</span><span class="op">)</span> <span class="op">{</span> </span>
 <span>                       <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">av</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span> <span class="va">x</span> <span class="op">)</span> <span class="op">{</span> </span>
-<span>                          <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">av</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span><span class="op">}</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in FUN(X[[i]], ...): Found 6 missing linking errors for dependent variable 'failMin' and parameter(s) 'NcasesValid'. Assume linking error of 0 for these cases.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Found 6 missing linking errors for dependent variable 'passReg' and parameter(s) 'NcasesValid'. Assume linking error of 0 for these cases.</span></span>
-<span><span class="co">## Warning in FUN(X[[i]], ...): Found 6 missing linking errors for dependent variable 'passOpt' and parameter(s) 'NcasesValid'. Assume linking error of 0 for these cases.</span></span></code></pre>
-<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">allResults5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="va">allResults5</span><span class="op">)</span></span></code></pre></div>
+<span>                          <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">av</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>kb<span class="op">=</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span><span class="op">}</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">allResults5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="st">"rbind"</span>, <span class="va">allResults5</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -1423,7 +1362,7 @@ the computation of group differences is not supported yet.
 <code>probs</code> argument. The following example illustrates the usage
 of the function for the domain “reading” for 2010 and 2015. We compute
 the 5., 10., 25., 75., 90., and 95. percentile:</p>
-<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">btRead</span> <span class="op">&lt;-</span> <span class="va">bt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">bt</span><span class="op">[</span>,<span class="st">"domain"</span><span class="op">]</span> <span class="op">==</span> <span class="st">"reading"</span><span class="op">)</span>,<span class="op">]</span></span>
 <span><span class="va">quan</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repQuantile.html">repQuantile</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">btRead</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
 <span>               repInd <span class="op">=</span> <span class="st">"jkrep"</span>, imp<span class="op">=</span><span class="st">"imp"</span>, groups <span class="op">=</span> <span class="st">"country"</span>, trend <span class="op">=</span> <span class="st">"year"</span>, </span>
@@ -1440,21 +1379,21 @@ the 5., 10., 25., 75., 90., and 95. percentile:</p>
 <span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 1'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 73 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report</a></span><span class="op">(</span><span class="va">quan</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">quan</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="regression-analyses-repglm">5. Regression analyses (repGlm)<a class="anchor" aria-label="anchor" href="#regression-analyses-repglm"></a>
 </h2>
 <p><code>repGlm</code> allows to estimate linear and logistic regression
 models. To date, trend analyses do not incorporate linking errors. The
-reporting function <code><a href="../reference/report.html">report()</a></code> optionally allows to print the
+reporting function <code><a href="../reference/report.html">report2()</a></code> optionally allows to print the
 results to the console (if <code>printGlm</code> is set to
 <code>TRUE</code>). In the first example, the regression of reading
 competence on sex, SES is estimated in each country separately. For a
 valid interpretation of interaction effects, SES variable is
 standardized within each imputation:</p>
-<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bt2010read</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/by.html" class="external-link">by</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">bt2010read</span>, INDICES <span class="op">=</span> <span class="va">bt2010read</span><span class="op">[</span>,<span class="st">"imp"</span><span class="op">]</span>, FUN <span class="op">=</span> <span class="kw">function</span> <span class="op">(</span> <span class="va">i</span> <span class="op">)</span> <span class="op">{</span> </span>
 <span>                <span class="va">i</span><span class="op">[</span>,<span class="st">"ses_std"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">i</span><span class="op">[</span>,<span class="st">"ses"</span><span class="op">]</span><span class="op">)</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span>                <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">i</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span>
@@ -1465,12 +1404,12 @@ standardized within each imputation:</p>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 1'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb92"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res1</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">reg1</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span>, printGlm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##        Trend group: 'noTrend'.</span></span>
-<span><span class="co">##             groups: type = point; country = countryA; row = 1; id = 14574361_1</span></span>
+<span><span class="co">##             groups: country = countryA</span></span>
 <span><span class="co">##             domain: reading</span></span>
-<span><span class="co">## dependent Variable: score</span></span>
+<span><span class="co">## dependent Variable: 'score'</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">##         parameter     est    se t.value p.value sig</span></span>
 <span><span class="co">## 1     (Intercept) 505.837 4.428 114.243   0.000 ***</span></span>
@@ -1481,9 +1420,9 @@ standardized within each imputation:</p>
 <span><span class="co">##             R-squared: 0.115; SE(R-squared): NA</span></span>
 <span><span class="co">## 1034 observations and 1030 degrees of freedom.</span></span>
 <span><span class="co">## ------------------------------------------------------------------</span></span>
-<span><span class="co">##             groups: type = point; country = countryB; row = 4; id = 14574361_4</span></span>
+<span><span class="co">##             groups: country = countryB</span></span>
 <span><span class="co">##             domain: reading</span></span>
-<span><span class="co">## dependent Variable: score</span></span>
+<span><span class="co">## dependent Variable: 'score'</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">##         parameter     est    se t.value p.value sig</span></span>
 <span><span class="co">## 1     (Intercept) 499.044 4.624 107.934   0.000 ***</span></span>
@@ -1494,9 +1433,9 @@ standardized within each imputation:</p>
 <span><span class="co">##             R-squared: 0.181; SE(R-squared): NA</span></span>
 <span><span class="co">## 959 observations and 955 degrees of freedom.</span></span>
 <span><span class="co">## ------------------------------------------------------------------</span></span>
-<span><span class="co">##             groups: type = point; country = countryC; row = 7; id = 14574361_7</span></span>
+<span><span class="co">##             groups: country = countryC</span></span>
 <span><span class="co">##             domain: reading</span></span>
-<span><span class="co">## dependent Variable: score</span></span>
+<span><span class="co">## dependent Variable: 'score'</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">##         parameter     est    se t.value p.value sig</span></span>
 <span><span class="co">## 1     (Intercept) 525.240 3.788 138.663   0.000 ***</span></span>
@@ -1510,19 +1449,18 @@ standardized within each imputation:</p>
 the regular standard was passed (<code>passReg</code>) is the dependent
 variable. The variable <code>country</code> is now used as a
 predictor.</p>
-<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reg2</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/repGlm.html">repGlm</a></span><span class="op">(</span>datL <span class="op">=</span> <span class="va">bt2010read</span>, ID<span class="op">=</span><span class="st">"idstud"</span>, wgt<span class="op">=</span><span class="st">"wgt"</span>, type<span class="op">=</span><span class="st">"jk2"</span>, PSU<span class="op">=</span><span class="st">"jkzone"</span>, </span>
 <span>               repInd <span class="op">=</span> <span class="st">"jkrep"</span>, imp<span class="op">=</span><span class="st">"imp"</span>, formula <span class="op">=</span> <span class="va">passReg</span><span class="op">~</span><span class="va">country</span><span class="op">*</span><span class="va">ses_std</span>, </span>
 <span>               family<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial</a></span><span class="op">(</span>link<span class="op">=</span><span class="st">"logit"</span><span class="op">)</span>, progress <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
 <pre><code><span><span class="co">## 1 analyse(s) overall according to: 'group.splits = 0'.</span></span>
 <span><span class="co">## Assume unnested structure with 3 imputations.</span></span>
 <span><span class="co">## Create 92 replicate weights according to JK2 procedure.</span></span></code></pre>
-<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res2</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/report.html">report2</a></span><span class="op">(</span><span class="va">reg2</span>, add <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>domain <span class="op">=</span> <span class="st">"reading"</span><span class="op">)</span>, printGlm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[[</span><span class="st">"plain"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">##        Trend group: 'noTrend'.</span></span>
-<span><span class="co">##             groups: type = point; row = 1; id = 14575099_1</span></span>
 <span><span class="co">##             domain: reading</span></span>
-<span><span class="co">## dependent Variable: passReg</span></span>
+<span><span class="co">## dependent Variable: 'passReg'</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">##                 parameter    est    se t.value p.value sig</span></span>
 <span><span class="co">## 1             (Intercept) -0.227 0.115  -1.972   0.049   *</span></span>
@@ -1544,6 +1482,12 @@ predictor.</p>
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0" line-spacing="2">
+<div id="ref-RN11" class="csl-entry">
+Davier, M. von, Gonzalez, E., &amp; Mislevy, R. J. (2009). What are
+plausible values and why are they useful? [Journal Article]. <em>IERI
+Monograph Series: Issues and Methodologies in Large Scale
+Assessments</em>, <em>2</em>, 9–36.
+</div>
 <div id="ref-RN3" class="csl-entry">
 Foy, P., Galia, J., &amp; Li, I. (2008). Scaling the data from the TIMSS
 2007 mathematics and science asssessment [Book Section]. In J. F. Olson,
@@ -1557,6 +1501,17 @@ Schmidt-Catran, A., &amp; Konig, R. (2017). When size matters:
 Advantages of weighted effect coding in observational studies [Journal
 Article]. <em>International Journal of Public Health</em>, <em>62</em>,
 163–167.
+</div>
+<div id="ref-RN366" class="csl-entry">
+Hambleton, R. K., &amp; Jones, R. W. (1993). An NCME instructional
+module on: Comparison of classical test theory and item response theory
+and their applications to test development [Journal Article].
+<em>Educational Measurement: Issues and Practice</em>, <em>12</em>(3),
+38–47.
+</div>
+<div id="ref-RN142" class="csl-entry">
+Hambleton, R. K., Swaminathan, H., &amp; Rogers, H. J. (1991).
+<em>Fundamentals of item response theory</em> [Book]. Sage.
 </div>
 <div id="ref-RN487" class="csl-entry">
 Krewski, D., &amp; Rao, J. N. K. (1981). Inference from stratified
@@ -1573,6 +1528,22 @@ Mayer, A., Dietzfelbinger, L., Rosseel, Y., &amp; Steyer, R. (2016). The
 EffectLiteR approach for analyzing average and conditional effects
 [Journal Article]. <em>Multivariate Behavioral Research</em>,
 <em>51</em>, 374–391.
+</div>
+<div id="ref-RN6" class="csl-entry">
+Mislevy, R. J., Beaton, A. E., Kaplan, B., &amp; Sheehan, K. M. (1992).
+Estimating population characteristics from sparse matrix samples of item
+responses [Journal Article]. <em>Journal of Educational
+Measurement</em>, <em>29</em>, 133–161.
+</div>
+<div id="ref-RN213" class="csl-entry">
+Mislevy, R. J., Johnson, E. G., &amp; Muraki, E. (1992). Scaling
+procedures in NAEP [Journal Article]. <em>Journal of Educational and
+Behavioral Statistics</em>, <em>17</em>(2), 131–154.
+</div>
+<div id="ref-RN394" class="csl-entry">
+Monseur, C., &amp; Adams, R. (2009). Plausible values: How to deal with
+their limitations [Journal Article]. <em>Journal of Applied
+Measurement</em>, <em>10</em>(3), 320–334.
 </div>
 <div id="ref-RN523" class="csl-entry">
 Nachtigall, C., Kröhne, U., Enders, U., &amp; Steyer, R. (2008). Causal
