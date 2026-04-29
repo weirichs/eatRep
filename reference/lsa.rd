@@ -79,83 +79,33 @@ domain by subsetting according to the <code>domain</code> column.</p>
 
     <div id="format">
     <h2>Format</h2>
-    <p>'data.frame':   77322 obs. of  25 variables</p><dl><dt>year</dt>
-<dd><p>Year of evaluation</p></dd>
-
-    <dt>idstud</dt>
-<dd><p>individual student identification</p></dd>
-
-    <dt>idclass</dt>
-<dd><p>class identifier</p></dd>
-
-    <dt>wgt</dt>
-<dd><p>Total case weight</p></dd>
-
-    <dt>L2wgt</dt>
-<dd><p>School weight (level 2 weight)</p></dd>
-
-    <dt>L1wgt</dt>
-<dd><p>Student weight (level 1 weight)</p></dd>
-
-    <dt>jkzone</dt>
-<dd><p>jackknifing zone (jk2)</p></dd>
-
-    <dt>jkrep</dt>
-<dd><p>jackknife replicate</p></dd>
-
-    <dt>imp</dt>
-<dd><p>Number of imputation</p></dd>
-
-    <dt>nest</dt>
-<dd><p>Number of nest (for nested imputation only)</p></dd>
-
-    <dt>country</dt>
-<dd><p>The country an examinee stems from</p></dd>
-
-    <dt>sex</dt>
-<dd><p>student's sex</p></dd>
-
-    <dt>ses</dt>
-<dd><p>student's socio-economical status</p></dd>
-
-    <dt>mig</dt>
-<dd><p>student's migration background</p></dd>
-
-  	<dt>domain</dt>
-<dd><p>The domain the corresponding score belongs to</p></dd>
-
-  	<dt>score</dt>
-<dd><p>student's achievement score (corresponding to the domain reading or listening, and to the imputation 1, 2, or 3)</p></dd>
-
-  	<dt>comp</dt>
-<dd><p>student's competence level</p></dd>
-
-  	<dt>failMin</dt>
-<dd><p>dichotomous indicator whether the student fails to fulfill the minimal standard</p></dd>
-
-  	<dt>passReg</dt>
-<dd><p>dichotomous indicator whether the student fulfills at least the regular standard</p></dd>
-
-  	<dt>passOpt</dt>
-<dd><p>dichotomous indicator whether the student fulfills the optimal standard</p></dd>
-
-  	<dt>leSore</dt>
-<dd><p>linking error of each student's achievement score</p></dd>
-
-  	<dt>leComp</dt>
-<dd><p>linking error of each student's competence level</p></dd>
-
-  	<dt>leFailMin</dt>
-<dd><p>linking error of each student's indicator of failing to fulfill the minimal standard</p></dd>
-
-  	<dt>lePassReg</dt>
-<dd><p>linking error of each student's indicator of fulfilling the regular standard</p></dd>
-
-  	<dt>lePassOpt</dt>
-<dd><p>linking error of each student's indicator of fulfilling the optimal standard</p></dd>
-
-
-</dl></div>
+    <p>'data.frame':   77322 obs. of  25 variables
+    yearYear of evaluation
+    idstudindividual student identification
+    idclassclass identifier
+    wgtTotal case weight
+    L2wgtSchool weight (level 2 weight)
+    L1wgtStudent weight (level 1 weight)
+    jkzonejackknifing zone (jk2)
+    jkrepjackknife replicate
+    impNumber of imputation
+    nestNumber of nest (for nested imputation only)
+    countryThe country an examinee stems from
+    sexstudent's sex
+    sesstudent's socio-economical status
+    migstudent's migration background
+  	domainThe domain the corresponding score belongs to
+  	scorestudent's achievement score (corresponding to the domain reading or listening, and to the imputation 1, 2, or 3)
+  	compstudent's competence level
+  	failMindichotomous indicator whether the student fails to fulfill the minimal standard
+  	passRegdichotomous indicator whether the student fulfills at least the regular standard
+  	passOptdichotomous indicator whether the student fulfills the optimal standard
+  	leSorelinking error of each student's achievement score
+  	leComplinking error of each student's competence level
+  	leFailMinlinking error of each student's indicator of failing to fulfill the minimal standard
+  	lePassReglinking error of each student's indicator of fulfilling the regular standard
+  	lePassOptlinking error of each student's indicator of fulfilling the optimal standard</p>
+    </div>
     <div id="source">
     <h2>Source</h2>
     <p>Simulated data</p>
