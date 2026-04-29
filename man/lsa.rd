@@ -23,7 +23,6 @@ domain by subsetting according to the \code{domain} column.
 \usage{data(lsa)}
 
 \format{'data.frame':   77322 obs. of  25 variables
-  \describe{
     \item{year}{Year of evaluation}
     \item{idstud}{individual student identification}
     \item{idclass}{class identifier}
@@ -49,7 +48,6 @@ domain by subsetting according to the \code{domain} column.
   	\item{leFailMin}{linking error of each student's indicator of failing to fulfill the minimal standard}
   	\item{lePassReg}{linking error of each student's indicator of fulfilling the regular standard}
   	\item{lePassOpt}{linking error of each student's indicator of fulfilling the optimal standard}
- }
 }
 
 \source{Simulated data}

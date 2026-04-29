@@ -1046,7 +1046,7 @@ conv.adjust.mean <- function ( dat.i, a) {
                     frml<- paste0(dependent, " ~ ", paste(adjust, collapse = " + "))
                     if ( all(dat.i[,wgt] == 1) ) {                              ### ohne Gewichte
                          reg <- lm(as.formula(frml), data = gr)                 ### ungewichtete Regression linear
-                         x_m <- sapply(dat.i[,adjust], mean)                    ### ungewichtete Mittelwerte der adjustierungsvariablen
+                         x_m <- sapply(dat.i[,adjust, drop=FALSE], mean)        ### ungewichtete Mittelwerte der adjustierungsvariablen
                     }  else  {                                                  ### untere Zeile: gewichtete Regression
                          reg <- eval(parse(text = paste0("lm(as.formula(frml), data = gr, weights = ",wgt, ")")))
                          x_m <- unlist(lapply (adjust, FUN = function (u) { Hmisc::wtd.mean(dat.i[,u], weights = dat.i[,wgt])}))
@@ -1822,7 +1822,7 @@ checkForAdjustmentAndLmer <- function(datL, a, groupWasNULL) {
           
 checkNameConvention <- function( allNam) {
           na    <- c("N_weightedValid", "N_weighted",  "wgtOne", "wgtOne2","le", "variable", "est", "se")
-          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable", "Freq", "id", "unit_1", "unit_2", "comb.group", "row", "coef", "label1", "label2", "hierarchy.level")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr", "comparison", "sum", "trendvariable", "g", "le", "splitVar", "rowNr", "variable", "Freq", "id", "unit_1", "unit_2", "comb.group", "row", "coef", "label1", "label2", "hierarchy.level", "type")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr", "variable")
           naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           if(length(naGr1)>0)  {stop(paste0("Following name(s) of grouping variables in data set are forbidden due to danger of confusion with result structure:\n     '", paste(allNam[["group"]][naGr1], collapse="', '"), "'\n  Please rename these variable(s) in the data set.\n"))}

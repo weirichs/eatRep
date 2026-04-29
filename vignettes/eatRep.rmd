@@ -265,7 +265,7 @@ We use `country` as a grouping variable---all analyses are computed for each cou
 
 
 ``` r
-lme4::isNested(bt2010[,"idstud"], bt2010[,"country"])
+reformulas::isNested(bt2010[,"idstud"], bt2010[,"country"])
 ```
 
 ```
@@ -273,7 +273,7 @@ lme4::isNested(bt2010[,"idstud"], bt2010[,"country"])
 ```
 
 ``` r
-lme4::isNested(bt2010[,"idstud"], bt2010[,"domain"])
+reformulas::isNested(bt2010[,"idstud"], bt2010[,"domain"])
 ```
 
 ```
