@@ -42,13 +42,13 @@ For each imputed data set in each measurement, i.e. in the inner loop, the eatRe
   the appropriate survey function is called. The process is repeated for each imputed dataset and the
   results of the analyses are pooled. The pooling procedure varies in relation to the type of variable to be
   pooled. For examples, means or regression coefficients are pooled according to Rubin (1987) or Rubin (2003).
-  \(R^2\) is pooled according to Harel (2009), using a Fisher z-transformation. Chi-square distributed values
+  \(R^2\) is pooled according to Harel (2009), using a Fisher z-transformation. \(\Chi^2\) distributed values
   are pooled according to Thomas and Rao (1990) for clustered data and according to Enders (2010) and
   Allison (2002) for multiple imputed data. For trend analyses, the whole process is repeated two times
   (according to the two measurements) and the difference of the estimates are computed along with their
   pooled standard errors.
 Without trend estimation, the outer loop has only one cycle (instead of two). Without multiple imputations,
-  the middle loop has only one cycle. Without a clustered sampling structure (i.e, in a random sample), the
+  the middle loop has only one cycle. Without a clustered sampling structure (i.e., in a random sample), the
   inner loop has only one cycle. Without trend, imputation and clustered structure, no replication is performed
   at all. To compute simple mean estimates, for example, eatRep then simply calls mean instead
   of svymean from the survey package. A special case occurs with nested multiple imputation.
@@ -167,13 +167,13 @@ Third important note: Starting with version 0.15.0, the reporting function repor
   the appropriate <code>survey</code> function is called. The process is repeated for each imputed dataset and the
   results of the analyses are pooled. The pooling procedure varies in relation to the type of variable to be
   pooled. For examples, means or regression coefficients are pooled according to Rubin (1987) or Rubin (2003).
-  \(R^2\) is pooled according to Harel (2009), using a Fisher <em>z</em>-transformation. Chi-square distributed values
+  \(R^2\) is pooled according to Harel (2009), using a Fisher <em>z</em>-transformation. \(\Chi^2\) distributed values
   are pooled according to Thomas and Rao (1990) for clustered data and according to Enders (2010) and
   Allison (2002) for multiple imputed data. For trend analyses, the whole process is repeated two times
   (according to the two measurements) and the difference of the estimates are computed along with their
   pooled standard errors.</p>
 <p>Without trend estimation, the outer loop has only one cycle (instead of two). Without multiple imputations,
-  the middle loop has only one cycle. Without a clustered sampling structure (i.e, in a random sample), the
+  the middle loop has only one cycle. Without a clustered sampling structure (i.e., in a random sample), the
   inner loop has only one cycle. Without trend, imputation and clustered structure, no replication is performed
   at all. To compute simple mean estimates, for example, <code>eatRep</code> then simply calls <code>mean</code> instead
   of <code>svymean</code> from the <code>survey</code> package. A special case occurs with nested multiple imputation.
