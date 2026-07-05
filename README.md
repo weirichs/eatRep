@@ -1,4 +1,4 @@
-# eatRep <a href="https://weirichs.github.io/eatRep/"><img src="man/figures/eatRep.png" align="right" height="120" alt="eatRep website" /></a>
+# eatRep <a href="https://weirichs.github.io/eatRep/"><img src="man/figures/logo.png" align="right" width="120" alt="eatRep logo" /></a>
  
 <!-- badges: start --> 
 [![CRAN status](https://www.r-pkg.org/badges/version/eatRep)](https://CRAN.R-project.org/package=eatRep)
