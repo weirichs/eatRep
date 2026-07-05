@@ -253,7 +253,7 @@ seCorrect.wec_se_correction <- function( SE_correction, jk2, grpv, allNam, cross
           if(inherits(SE_correction, "wec_se_correction")) {SEs[, "parameter"] <- gsub(paste0("^", single_grpv), "", SEs[, "parameter"])}
           SEs        <- eatTools::makeDataFrame(tidyr::pivot_wider(SEs, names_from = "coefficient", values_from = "value"), verbose=FALSE)
           for(param in SEs[["parameter"]]) {
-              esc_param <- Hmisc::escapeRegex(param)
+              esc_param <- eatTools::cleanifyString(param)
               if(identical(SE_correction[[i]][["refGrp"]], "all")) {            ### if reference level is the whole group
                   olds <- lapply(c("est", "se", "p"), FUN = function (coeff) {  ### hier finden: welche urspruenglichen cross-level-Werte sollen durch die WEC-Werte ersetzt werden?
                           old  <- cross_diff[cross_diff$parameter == "mean" & cross_diff[,single_grpv] == paste0(esc_param," - total") & cross_diff$coefficient == coeff, ]
